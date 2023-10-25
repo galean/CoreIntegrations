@@ -12,6 +12,7 @@ public protocol CoreSettingsProtocol: AnyObject {
     var appsFlyerKey: String { get }
     var attributionServerSecret: String { get }
     var subscriptionsSecret: String { get }
+    var revenuecatApiKey: String { get }
     
     var amplitudeSecret: String { get }
     

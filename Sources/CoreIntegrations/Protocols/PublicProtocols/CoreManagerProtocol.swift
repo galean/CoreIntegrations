@@ -5,12 +5,13 @@
 //  Created by Andrii Plotnikov on 03.10.2023.
 //
 import UIKit
-import PurchasesIntegration
 import AppsflyerIntegration
 import AttributionServerIntegration
 import AppTrackingTransparency
 import AnalyticsIntegration
 import FirebaseIntegration
+import RevenueCat
+import RevenueCatIntegration
 
 //public struct CoreManagerResult {
 //    var isIPAT: Bool
@@ -35,19 +36,16 @@ public protocol CoreManagerProtocol {
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data)
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
     func handleATTPermission(_ status: ATTrackingManager.AuthorizationStatus)
-    func purchase(_ purchaseID: String, quantity: Int, atomically: Bool,
-                  completion: @escaping (_ result: PurchasesPurchaseResult) -> Void)
-    /**
-     Called to check is user - a premium user, typically in all our applications all purchases make user premium. But to make it more correct - you provide Sets or subscriptions or purchases, if at least one of them is paid and active - user is considered as a premium and method is returning this purchase details.  
-     You typically use this method calling by a "Restore" button on the paywall, and also on application start, to check is user still a premium user and can use all your premium features
-     */
-    func verifyPremium(premiumSubscriptionIds: Set<String>,
-                       premiumPurchaseIds: Set<String>,
-                       completion: @escaping (_ result: PurchasesVerifyPremiumResult) -> Void)
-    /**
-     This method is more specific, typically in 95% of our applications you shouldn't use it. It's specifically to check ALL given purchases are paid or not and gives a list of all of such. It can be used if you have several subscription groups in the app, or different non-consumables to unlock different feature, so then you can use this method to get all paid purchases and then handle the result to lock/unlock different features.
-     */
-    func restore(subscriptionIds: Set<String>,
-                 purchaseIds: Set<String>,
-                 completion: @escaping (_ result: PurchasesVerifyResult) -> Void)
+    
+    func purchase(_ package: Package) async -> RevenueCatPurchaseResult
+    func purchase(_ package: Package, completion: @escaping (_ result: RevenueCatPurchaseResult) -> Void)
+    
+    func restorePurchases(completion: @escaping (_ result: RevenueCatRestoreResult) -> Void)
+    func verifyPurchases(completion: @escaping (_ result: RevenueCatRestoreResult) -> Void)
+    func verifyPremium(completion: @escaping (_ result: RevenueCatVerifyPremiumResult) -> Void)
+    func restorePremium(completion: @escaping (_ result: RevenueCatVerifyPremiumResult) -> Void)
+    
+    func package(withID packageID: String, inOfferingWithID offeringID: String, completion: @escaping (_ package: Package?) -> Void)
+    func offering(withID id: String, completion: @escaping (_ offering: Offering?) -> Void)
+    func offerings(completion: @escaping (_ offerings: Offerings?) -> Void)
 }

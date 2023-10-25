@@ -11,11 +11,12 @@ enum InternalConfigurationEvent: String, ConfigurationEvent {
     case attConcentGiven = "attConcentGiven"
     case remoteConfigLoaded = "remoteConfigLoaded"
     case appsflyerWeb2AppHandled = "appsflyerWeb2AppHandled"
+    case revenueCatConfigured = "revenueCatConfigured"
     case attributionServerHandled = "attributionServerHandled"
 
     var isFirstStartOnly: Bool {
         switch self {
-        case .remoteConfigLoaded:
+        case .remoteConfigLoaded, .revenueCatConfigured:
             return false
         case .attConcentGiven, .appsflyerWeb2AppHandled, .attributionServerHandled:
             return true
