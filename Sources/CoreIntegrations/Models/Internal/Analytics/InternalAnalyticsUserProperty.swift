@@ -1,0 +1,19 @@
+//
+//  InternalUserProperty.swift
+//  
+//
+//  Created by Andrii Plotnikov on 02.10.2023.
+//
+
+import Foundation
+import AnalyticsIntegration
+
+enum InternalUserProperty: String, CaseIterable, AmplitudeAnalyzableUserProperty {
+    case att_status
+    case store_country
+    case subscription_type
+    
+    public var key: String {
+        return rawValue
+    }
+}
