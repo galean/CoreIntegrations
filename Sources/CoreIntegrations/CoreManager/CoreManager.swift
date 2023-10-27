@@ -107,7 +107,7 @@ public class CoreManager {
     
     @objc public func applicationDidBecomeActive() {
         let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
-        let uuid = AttributionServerManager.shared.installResultData?.userUUID
+        let uuid = AttributionServerManager.shared.savedUserUUID
         let id = savedIDFV ?? uuid ?? AttributionServerManager.shared.uniqueUserID
         if let id {
             appsflyerManager?.customerUserID = id
