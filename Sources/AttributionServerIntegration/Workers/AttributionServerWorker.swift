@@ -97,8 +97,12 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
                 completion([:])
                 return
             }
-            let jsonResult = try? JSONSerialization.jsonObject(with: data) as? [String: String] ?? [:]
-            completion(jsonResult)
+            let jsonResult = try? JSONSerialization.jsonObject(with: data) as? [String: NSObject] ?? [:]
+            let result = jsonResult?.reduce(into: [String:String]()) {
+                partialResult, result in
+                partialResult[result.key] = "\(result.value)"
+            }
+            completion(result)
             
         }
         task.resume()
