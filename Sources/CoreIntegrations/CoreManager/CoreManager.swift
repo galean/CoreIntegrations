@@ -237,7 +237,8 @@ public class CoreManager {
             let asaResult = AttributionServerManager.shared.installResultData
             let isIPAT = asaResult?.isIPAT ?? false
             let deepLinkResult = self.appsflyerManager?.deeplinkResult ?? [:]
-            let isASA = asaResult?.asaAttribution["campaign_name"] as? String != nil
+            let isASA = (asaResult?.asaAttribution["campaignName"] as? String != nil) ||
+            (asaResult?.asaAttribution["campaign_name"] as? String != nil)
             var isRedirect = false
             if deepLinkResult["network"] != nil {
                 isRedirect = true
