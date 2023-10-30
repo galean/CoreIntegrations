@@ -20,7 +20,7 @@ let package = Package(
         .package(url: "https://github.com/AppsFlyerSDK/AppsFlyerFramework-Dynamic", from: "6.0.0"),
         .package(url: "https://github.com/amplitude/analytics-connector-ios.git", from: "1.0.0"),
         .package(url: "https://github.com/amplitude/Amplitude-iOS", from: "8.0.0"),
-        .package(url: "https://github.com/bizz84/SwiftyStoreKit.git", branch: "master"),
+        .package(url: "https://github.com/RevenueCat/purchases-ios", from: "4.25.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -31,8 +31,8 @@ let package = Package(
                     "FacebookIntegration",
                     "AnalyticsIntegration",
                     "FirebaseIntegration",
-                    "PurchasesIntegration",
                     "AttributionServerIntegration",
+                    "RevenueCatIntegration"
                 ],
                 linkerSettings: [
                   .linkedFramework("UIKit", .when(platforms: [.iOS])),
@@ -76,14 +76,15 @@ let package = Package(
                   .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]
         ),
-        .target(name: "PurchasesIntegration",
-                dependencies: [
-                    .product(name: "SwiftyStoreKit", package: "SwiftyStoreKit")
-                ],
-                path: "Sources/PurchasesIntegration",
-                linkerSettings: [
-                  .linkedFramework("UIKit", .when(platforms: [.iOS])),
-                ]
+        .target(
+            name: "RevenueCatIntegration",
+            dependencies: [
+                .product(name: "RevenueCat", package: "purchases-ios")
+            ],
+            path: "Sources/RevenueCatIntegration",
+            linkerSettings: [
+                .linkedFramework("UIKit", .when(platforms: [.iOS])),
+            ]
         ),
         .target(name: "AttributionServerIntegration",
                 path: "Sources/AttributionServerIntegration",

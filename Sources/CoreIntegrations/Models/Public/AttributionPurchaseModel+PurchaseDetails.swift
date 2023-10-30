@@ -7,20 +7,15 @@
 
 import Foundation
 import AttributionServerIntegration
-import SwiftyStoreKit
+import StoreKit
+import RevenueCatIntegration
 
 extension AttributionPurchaseModel {
-    init(swiftyDetails details: PurchaseDetails) {
-        let price = CGFloat(truncating: details.product.price)
-        let introductoryPrice: CGFloat?
-        if let introPrice = details.product.introductoryPrice?.price {
-            introductoryPrice = CGFloat(truncating: introPrice)
-        } else {
-            introductoryPrice = nil
-        }
-        let currencyCode = details.product.priceLocale.currencyCode ?? ""
-        let purchaseID = details.product.productIdentifier
-        
+    init(rcDetails: RevenueCatPurchaseInfo) {
+        let price = rcDetails.price
+        let introductoryPrice = rcDetails.introductoryPrice
+        let currencyCode = rcDetails.currencyCode
+        let purchaseID = rcDetails.productID
         
         self.init(price: price, introductoryPrice: introductoryPrice,
              currencyCode: currencyCode, subscriptionIdentifier: purchaseID)

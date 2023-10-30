@@ -7,8 +7,9 @@
 
 import Foundation
 import UIKit
-import PurchasesIntegration
 import AppTrackingTransparency
+import RevenueCatIntegration
+import RevenueCat
 
 extension CoreManager: CoreManagerProtocol {
 //    public static var publicResult: CoreManagerResult {
@@ -48,39 +49,116 @@ extension CoreManager: CoreManagerProtocol {
         InternalConfigurationEvent.attConcentGiven.markAsCompleted()
     }
     
-    public func purchase(_ purchaseID: String, quantity: Int, atomically: Bool, completion: @escaping (PurchasesIntegration.PurchasesPurchaseResult) -> Void) {
-        purchaseManager?.purchase(purchaseID, quantity: quantity, atomically: atomically, completion: {
-            result in
+    public func purchase(_ package: Package) async -> RevenueCatPurchaseResult {
+        guard let revenueCatManager else {
+            assertionFailure()
+            return .error(error: "Integration error")
+        }
+        
+        let result = await revenueCatManager.purchase(package)
+        switch result {
+        case .success(let details):
+            self.handlePurchaseSuccess(purchaseInfo: details)
+        default:
+            break
+        }
+        
+        return result
+    }
+    
+    public func purchase(_ package: Package, completion: @escaping (_ result: RevenueCatPurchaseResult) -> Void) {
+        guard let revenueCatManager else {
+            assertionFailure()
+            completion(.error(error: "Integration error"))
+            return
+        }
+        
+        revenueCatManager.purchase(package) { result in
             switch result {
             case .success(let details):
-                self.sendSubscriptionTypeUserProperty(identifier: details.productId)
-                self.sendPurchaseToAttributionServer(details)
-                self.sendPurchaseToFacebook(details)
-                self.sendPurchaseToAppsflyer(details)
+                self.handlePurchaseSuccess(purchaseInfo: details)
+                self.sendSubscriptionTypeUserProperty(identifier: details.productID)
             default:
                 break
             }
-            
             completion(result)
-        })
+        }
     }
     
-    public func verifyPremium(premiumSubscriptionIds: Set<String>, premiumPurchaseIds: Set<String>, completion: @escaping (PurchasesIntegration.PurchasesVerifyPremiumResult) -> Void) {
-        purchaseManager?.verifyPremium(premiumSubscriptionIds: premiumSubscriptionIds,
-                                       premiumPurchaseIds: premiumPurchaseIds,
-                                       completion: { result in
+    public func verifyPremium(completion: @escaping (_ result: RevenueCatVerifyPremiumResult) -> Void) {
+        guard let revenueCatManager else {
+            assertionFailure()
+            completion(.error)
+            return
+        }
+        revenueCatManager.verifyPremium { result in
             switch result {
-            case .premium(let receiptItem):
-                self.sendSubscriptionTypeUserProperty(identifier: receiptItem.productId)
+            case .premium(let subscriptionID):
+                self.sendSubscriptionTypeUserProperty(identifier: subscriptionID)
             default:
                 break
             }
             completion(result)
-        })
+        }
+        revenueCatManager.verifyPremium(completion: completion)
     }
     
-    public func restore(subscriptionIds: Set<String>, purchaseIds: Set<String>, completion: @escaping (PurchasesIntegration.PurchasesVerifyResult) -> Void) {
-        purchaseManager?.restore(subscriptionIds: subscriptionIds, purchaseIds: purchaseIds,
-                                 completion: completion)
+    public func restorePremium(completion: @escaping (_ result: RevenueCatVerifyPremiumResult) -> Void) {
+        guard let revenueCatManager else {
+            assertionFailure()
+            completion(.error)
+            return
+        }
+        revenueCatManager.restorePremium(completion: completion)
+    }
+    
+    public func verifyPurchases(completion: @escaping (_ result: RevenueCatRestoreResult) -> Void) {
+        guard let revenueCatManager else {
+            assertionFailure()
+            completion(.error)
+            return
+        }
+        
+        revenueCatManager.verifyPurchases(completion: completion)
+    }
+    
+    public func restorePurchases(completion: @escaping (_ result: RevenueCatRestoreResult) -> Void) {
+        guard let revenueCatManager else {
+            assertionFailure()
+            completion(.error)
+            return
+        }
+        
+        revenueCatManager.restorePurchases(completion: completion)
+    }
+    
+    public func package(withID packageID: String, inOfferingWithID offeringID: String, completion: @escaping (_ package: Package?) -> Void) {
+        guard let revenueCatManager else {
+            assertionFailure()
+            completion(nil)
+            return
+        }
+        
+        revenueCatManager.package(withID: packageID, inOfferingWithID: offeringID, completion: completion)
+    }
+    
+    public func offering(withID id: String, completion: @escaping (_ offering: Offering?) -> Void) {
+        guard let revenueCatManager else {
+            assertionFailure()
+            completion(nil)
+            return
+        }
+        
+        revenueCatManager.offering(withID: id, completion: completion)
+    }
+    
+    public func offerings(completion: @escaping (_ offerings: Offerings?) -> Void) {
+        guard let revenueCatManager else {
+            assertionFailure()
+            completion(nil)
+            return
+        }
+        
+        revenueCatManager.offerings(completion: completion)
     }
 }

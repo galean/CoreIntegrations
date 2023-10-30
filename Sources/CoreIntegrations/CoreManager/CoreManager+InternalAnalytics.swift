@@ -14,12 +14,12 @@ import StoreKit
 extension CoreManager {
     func sendFirstLaunchEvent() {
         InternalAnalyticsEvent.first_launch.log()
+        analyticsManager?.forceEventsUpload()
     }
     
     func sendAttEvent(answer: Bool) {
         sendATTProperty(answer: answer)
         InternalAnalyticsEvent.att_permission.log(parameter: answer)
-        analyticsManager?.forceEventsUpload()
     }
     
     func sendATTProperty(answer: Bool) {
@@ -61,7 +61,6 @@ extension CoreManager {
         parameters = parameters + deepLinkResult
         
         InternalAnalyticsEvent.test_distribution.log(parameters: parameters)
-        analyticsManager?.forceEventsUpload()
     }
     
     func sendStoreCountryUserProperty() {

@@ -9,13 +9,12 @@ import UIKit
 import AppsflyerIntegration
 import FacebookIntegration
 import AttributionServerIntegration
-import PurchasesIntegration
 import AppTrackingTransparency
 import Foundation
 import StoreKit
-import SwiftyStoreKit
 import AnalyticsIntegration
 import FirebaseIntegration
+import RevenueCatIntegration
 
 /*
     I think it would be good to split CoreManager into different manager parts - for default configuration, for additional configurations like analytics, test_distribution etc, and for purchases and purchases attribution part
@@ -32,8 +31,8 @@ public class CoreManager {
     var configuration: CoreConfigurationProtocol?
     var appsflyerManager: AppfslyerManagerProtocol?
     var facebookManager: FacebookManagerProtocol?
-    var purchaseManager: PurchasesManagerProtocol?
-    
+    var revenueCatManager: RevenueCatManager?
+
     var firebaseManager: FirebaseManager?
     var analyticsManager: AnalyticsManager?
         
@@ -86,8 +85,7 @@ public class CoreManager {
             configureATT()
         }
 
-        let subscriptionSecret = configuration.appSettings.subscriptionsSecret
-        purchaseManager = PurchasesManager(subscriptionSecret: subscriptionSecret)
+        revenueCatManager = RevenueCatManager(apiKey: configuration.appSettings.revenuecatApiKey)
         
         firebaseManager = FirebaseManager()
         firebaseManager?.configure()
@@ -114,9 +112,16 @@ public class CoreManager {
         if let id {
             appsflyerManager?.customerUserID = id
             appsflyerManager?.startAppsflyer()
-            self.facebookManager?.userID = id
-            self.firebaseManager?.setUserID(id)
-            self.analyticsManager?.setUserID(id)
+            facebookManager?.userID = id
+            firebaseManager?.setUserID(id)
+            analyticsManager?.setUserID(id)
+            revenueCatManager?.configure(uuid: id, appsflyerID: self.appsflyerManager?.appsflyerID,
+                                         fbAnonID: self.facebookManager?.anonUserID, completion: { isConfigured in
+                guard isConfigured != nil else {
+                    return
+                }
+                InternalConfigurationEvent.revenueCatConfigured.markAsCompleted()
+            })
         }
         
         if configuration?.useDefaultATTRequest == true {
@@ -184,6 +189,14 @@ public class CoreManager {
             }
             self.appsflyerManager?.customerUserID = result.userUUID
             self.appsflyerManager?.startAppsflyer()
+            
+            self.revenueCatManager?.configure(uuid: result.userUUID, appsflyerID: self.appsflyerManager?.appsflyerID,
+                                         fbAnonID: self.facebookManager?.anonUserID, completion: { isConfigured in
+                guard let isConfigured else {
+                    return
+                }
+                InternalConfigurationEvent.revenueCatConfigured.markAsCompleted()
+            })
 
             self.facebookManager?.userID = result.userUUID
             self.firebaseManager?.setUserID(result.userUUID)
@@ -191,33 +204,38 @@ public class CoreManager {
         }
     }
     
-    func sendPurchaseToAttributionServer(_ details: PurchaseDetails) {
-        let tlmamDetals = AttributionPurchaseModel(swiftyDetails: details)
+    func handlePurchaseSuccess(purchaseInfo: RevenueCatPurchaseInfo) {
+        self.sendPurchaseToAttributionServer(purchaseInfo)
+        self.sendPurchaseToFacebook(purchaseInfo)
+        self.sendPurchaseToAppsflyer(purchaseInfo.introductoryPrice != nil)
+    }
+    
+    func sendPurchaseToAttributionServer(_ details: RevenueCatPurchaseInfo) {
+        let tlmamDetals = AttributionPurchaseModel(rcDetails: details)
         AttributionServerManager.shared.syncPurchase(data: tlmamDetals)
     }
     
-    func sendPurchaseToFacebook(_ purchase: PurchaseDetails) {
+    private func sendPurchaseToFacebook(_ details: RevenueCatPurchaseInfo) {
         guard facebookManager != nil else {
             return
         }
         
-        let isTrial = purchase.product.introductoryPrice != nil
-        let trialPrice = purchase.product.introductoryPrice?.price.doubleValue ?? 0
-        let price = purchase.product.price.doubleValue
-        let currencyCode = purchase.product.priceLocale.currencyCode ?? ""
+        let isTrial = details.introductoryPrice != nil
+        let trialPrice = details.introductoryPrice ?? 0
+        let price = details.price
+        let currencyCode = details.currencyCode
         let analData = FacebookPurchaseData(isTrial: isTrial,
-                                            subcriptionID: purchase.product.productIdentifier,
+                                            subcriptionID: details.productID,
                                             trialPrice: trialPrice, price: price,
                                             currencyCode: currencyCode)
         self.facebookManager?.sendPurchaseAnalytics(analData)
     }
     
-    func sendPurchaseToAppsflyer(_ purchase: PurchaseDetails) {
+    private func sendPurchaseToAppsflyer(_ isTrial: Bool) {
         guard appsflyerManager != nil else {
             return
         }
-        
-        let isTrial = purchase.product.introductoryPrice != nil
+
         if isTrial {
             self.appsflyerManager?.logTrialPurchase()
         }
