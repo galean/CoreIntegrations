@@ -215,7 +215,7 @@ open class AttributionServerManager {
                 attributionToSend = attribution
                 attributionToSend.removeValue(forKey: "uuid")
                 attributionToSend.removeValue(forKey: "isAB")
-                isAB = attribution["isAB"] as? Bool ?? false
+                isAB = ((attribution["isAB"] ?? "0") as NSString).boolValue
             } else {
                 attributionToSend = [String: String]()
             }
