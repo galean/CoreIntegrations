@@ -205,7 +205,7 @@ open class AttributionServerManager {
         }
     }
     
-    fileprivate func handleSendInstallResponse(_ response: [String: Any]?,
+    fileprivate func handleSendInstallResponse(_ response: [String: String]?,
                                                parameters: AttributionInstallRequestModel,
                                                completion: @escaping (AttributionManagerResult?) -> Void) {
         if let result = response, let uuid = result["uuid"] as? String {

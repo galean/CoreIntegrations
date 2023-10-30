@@ -65,7 +65,7 @@ public class AttributionServerWorker {
 
 extension AttributionServerWorker: AttributionServerWorkerProtocol {
     func sendInstallAnalytics(parameters: AttributionInstallRequestModel, authToken: String,
-                              completion: @escaping (([String: Any]?) -> Void)) {
+                              completion: @escaping (([String: String]?) -> Void)) {
         let jsonDataOrNil = try? JSONEncoder().encode(parameters)
         
         guard let url = installURL, let jsonData = jsonDataOrNil else {
@@ -97,8 +97,12 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
                 completion([:])
                 return
             }
-            let jsonResult = try? JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
-            completion(jsonResult)
+            let jsonResult = try? JSONSerialization.jsonObject(with: data) as? [String: NSObject] ?? [:]
+            let result = jsonResult?.reduce(into: [String:String]()) {
+                partialResult, result in
+                partialResult[result.key] = "\(result.value)"
+            }
+            completion(result)
             
         }
         task.resume()

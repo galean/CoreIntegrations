@@ -9,7 +9,7 @@ import Foundation
 
 internal protocol AttributionServerWorkerProtocol {
     func sendInstallAnalytics(parameters: AttributionInstallRequestModel, authToken: AttributionServerToken,
-                              completion: @escaping (([String: Any]?) -> Void))
+                              completion: @escaping (([String: String]?) -> Void))
     func sendPurchaseAnalytics(analytics: AttrubutionPurchaseRequestModel,
                                userId: AttributionUserUUID,
                                authToken: AttributionServerToken,
