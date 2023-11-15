@@ -21,7 +21,7 @@ public enum PurchaseType: Int {
 }
 
 public struct Purchase: Hashable {
-    public let package: Package
+    let package: Package
     
     init(package: Package) {
         self.package = package
