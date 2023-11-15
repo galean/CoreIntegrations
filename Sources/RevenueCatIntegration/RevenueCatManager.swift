@@ -15,6 +15,8 @@ public class RevenueCatManager: NSObject {
         self.apiKey = apiKey
     }
     
+    public var storedOfferings: Offerings?
+    
     public func configure(uuid: String, appsflyerID: String?, fbAnonID: String?, completion: @escaping (Bool?) -> Void) {
         guard Purchases.isConfigured == false else {
             completion(nil)
@@ -81,12 +83,12 @@ public class RevenueCatManager: NSObject {
         }
         
         
-        Purchases.shared.getOfferings { offerings, error in
+        Purchases.shared.getOfferings {[weak self] offerings, error in
             guard let offerings, error == nil else {
                 completion(nil)
                 return
             }
-            
+            self?.storedOfferings = offerings
             completion(offerings)
         }
     }

@@ -117,9 +117,9 @@ public class CoreManager {
             analyticsManager?.setUserID(id)
             revenueCatManager?.configure(uuid: id, appsflyerID: self.appsflyerManager?.appsflyerID,
                                          fbAnonID: self.facebookManager?.anonUserID, completion: { isConfigured in
-                guard isConfigured != nil else {
-                    return
-                }
+//                guard isConfigured != nil else {
+//                    return
+//                }
                 InternalConfigurationEvent.revenueCatConfigured.markAsCompleted()
             })
         }
@@ -192,9 +192,9 @@ public class CoreManager {
             
             self.revenueCatManager?.configure(uuid: result.userUUID, appsflyerID: self.appsflyerManager?.appsflyerID,
                                          fbAnonID: self.facebookManager?.anonUserID, completion: { isConfigured in
-                guard let isConfigured else {
-                    return
-                }
+//                guard let isConfigured else {
+//                    return
+//                }
                 InternalConfigurationEvent.revenueCatConfigured.markAsCompleted()
             })
 
