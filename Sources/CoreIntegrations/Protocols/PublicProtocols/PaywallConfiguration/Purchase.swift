@@ -23,40 +23,40 @@ public enum PurchaseType: Int {
 public struct Purchase: Hashable {
     public let package: Package
     
-    internal init(package: Package) {
+    init(package: Package) {
         self.package = package
     }
     
-    var storeProduct: StoreProduct {
+    public var storeProduct: StoreProduct {
         return package.storeProduct
     }
     
-    var isSubscription: Bool {
+    public var isSubscription: Bool {
         let isSubscription = package.storeProduct.productType == .autoRenewableSubscription || package.storeProduct.productType == .nonRenewableSubscription
         return isSubscription
     }
     
-    var purchaseType:PurchaseType {
+    public var purchaseType:PurchaseType {
         return PurchaseType(rawValue: package.packageType.rawValue) ?? .unknown
     }
     
-    var identifier:String {
+    public var identifier:String {
         return package.storeProduct.productIdentifier
     }
     
-    var localisedPrice: String {
+    public var localisedPrice: String {
         return package.localizedPriceString
     }
     
-    var localizedIntroductoryPriceString: String? {
+    public var localizedIntroductoryPriceString: String? {
         return package.localizedIntroductoryPriceString
     }
     
-    var priceFloat: CGFloat {
+    public var priceFloat: CGFloat {
         CGFloat(NSDecimalNumber(decimal: package.storeProduct.price).floatValue)
     }
     
-    var periodString: String {
+    public var periodString: String {
         let count = package.storeProduct.subscriptionPeriod?.value ?? 0
         switch package.storeProduct.subscriptionPeriod?.unit {
         case .day:
@@ -75,7 +75,7 @@ public struct Purchase: Hashable {
         }
     }
     
-    var trialPeriodString: String {
+    public var trialPeriodString: String {
         switch package.storeProduct.introductoryDiscount?.subscriptionPeriod.unit {
         case .day:
             return "day"
@@ -90,11 +90,11 @@ public struct Purchase: Hashable {
         }
     }
     
-    var periodCount: Int {
+    public var periodCount: Int {
         return package.storeProduct.subscriptionPeriod?.value ?? 0
     }
     
-    var trialCount: Int {
+    public var trialCount: Int {
         return package.storeProduct.introductoryDiscount?.subscriptionPeriod.value ?? 0
     }
 }
