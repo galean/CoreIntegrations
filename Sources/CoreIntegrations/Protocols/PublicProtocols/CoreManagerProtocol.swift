@@ -20,8 +20,9 @@ import RevenueCatIntegration
 //    var fbgoogleredictedPaywallName: String
 //}
 
-public protocol CoreManagerProtocol {
+public protocol CoreManagerProtocol  {
     static var shared: CoreManagerProtocol { get }
+    
     static var uniqueUserID: String? { get }
 
     func application(_ application: UIApplication,
@@ -36,8 +37,8 @@ public protocol CoreManagerProtocol {
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
     func handleATTPermission(_ status: ATTrackingManager.AuthorizationStatus)
     
-    func purchase(_ purchase: Purchase) async -> RevenueCatPurchaseResult
-    func purchase(_ purchase: Purchase, completion: @escaping (_ result: RevenueCatPurchaseResult) -> Void)
+//    func purchase(_ purchase: Purchase) async -> RevenueCatPurchaseResult
+//    func purchase(_ purchase: Purchase, completion: @escaping (_ result: RevenueCatPurchaseResult) -> Void)
     
     func restorePurchases(completion: @escaping (_ result: RevenueCatRestoreResult) -> Void)
     func verifyPurchases(completion: @escaping (_ result: RevenueCatRestoreResult) -> Void)
@@ -49,6 +50,7 @@ public protocol CoreManagerProtocol {
 //    func offerings(completion: @escaping (_ offerings: Offerings?) -> Void)
 //     func storedOfferings() -> Offerings?
     
-    func purchases(config:any PaywallConfiguration, completion: @escaping (_ purchases: [Purchase]) -> Void)
-    func storedPurchases(config:any PaywallConfiguration) -> [Purchase] 
+//    func purchases(config:any PaywallConfiguration, completion: @escaping (_ purchases: [Purchase]) -> Void)
+//    func storedPurchases(config:any PaywallConfiguration) -> [Purchase] 
 }
+

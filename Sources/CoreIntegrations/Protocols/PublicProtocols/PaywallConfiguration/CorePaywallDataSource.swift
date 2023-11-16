@@ -8,13 +8,13 @@
 import Foundation
 
 public protocol CorePaywallDataSource {
-    associatedtype PaywallInitialConfiguration: PaywallConfiguration
+    associatedtype PaywallInitialConfiguration: CorePaywallConfiguration
     
-    var all: [PaywallInitialConfiguration] { get }
+    var allConfigs: [PaywallInitialConfiguration] { get }
 }
 
 public extension CorePaywallDataSource {
-    var all: [PaywallInitialConfiguration] {
+    var allConfigs: [PaywallInitialConfiguration] {
         return PaywallInitialConfiguration.allCases as! [Self.PaywallInitialConfiguration]
     }
 }
