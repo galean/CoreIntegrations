@@ -132,44 +132,80 @@ extension CoreManager: CoreManagerProtocol {
         revenueCatManager.restorePurchases(completion: completion)
     }
     
-    public func package(withID packageID: String, inOfferingWithID offeringID: String, completion: @escaping (_ package: Package?) -> Void) {
+    public func purchases(config:any PaywallConfiguration, completion: @escaping (_ purchases: [Purchase]) -> Void) {
         guard let revenueCatManager else {
             assertionFailure()
-            completion(nil)
-            return
-        }
-        
-        revenueCatManager.package(withID: packageID, inOfferingWithID: offeringID, completion: completion)
-    }
-    
-    public func offering(withID id: String, completion: @escaping (_ offering: Offering?) -> Void) {
-        guard let revenueCatManager else {
-            assertionFailure()
-            completion(nil)
-            return
-        }
-        
-        revenueCatManager.offering(withID: id, completion: completion)
-    }
-    
-    public func offerings(completion: @escaping (_ offerings: Offerings?) -> Void) {
-        guard let revenueCatManager else {
-            assertionFailure()
-            completion(nil)
+            completion([])
             return
         }
         if let storedOfferings = revenueCatManager.storedOfferings {
-            completion(storedOfferings)
+            let purchases = mapPurchases(config: config, offerings: storedOfferings)
+            completion(purchases)
             return
         }
-        revenueCatManager.offerings(completion: completion)
+        revenueCatManager.offerings {[weak self] offerings in
+            let purchases = self?.mapPurchases(config: config, offerings: offerings) ?? []
+            completion(purchases)
+        }
     }
     
-    public func storedOfferings() -> Offerings? {
+    private func mapPurchases(config:any PaywallConfiguration, offerings: Offerings?) -> [Purchase] {
+        guard let offerings = offerings, let offering = offerings[config.id] else {return []}
+        var subscriptions:[Purchase]?
+        offering.availablePackages.forEach { package in
+            let subscription = Purchase(package: package)
+            subscriptions?.append(subscription)
+        }
+        return subscriptions ?? []
+    }
+    
+    public func storedPurchases(config:any PaywallConfiguration) -> [Purchase] {
         guard let revenueCatManager else {
             assertionFailure()
-            return nil
+            return []
         }
-        return revenueCatManager.storedOfferings
+        let purchases = mapPurchases(config: config, offerings: revenueCatManager.storedOfferings)
+        return purchases
     }
+    
+//    public func package(withID packageID: String, inOfferingWithID offeringID: String, completion: @escaping (_ package: Package?) -> Void) {
+//        guard let revenueCatManager else {
+//            assertionFailure()
+//            completion(nil)
+//            return
+//        }
+//        
+//        revenueCatManager.package(withID: packageID, inOfferingWithID: offeringID, completion: completion)
+//    }
+//    
+//    public func offering(withID id: String, completion: @escaping (_ offering: Offering?) -> Void) {
+//        guard let revenueCatManager else {
+//            assertionFailure()
+//            completion(nil)
+//            return
+//        }
+//        
+//        revenueCatManager.offering(withID: id, completion: completion)
+//    }
+//    
+//    public func offerings(completion: @escaping (_ offerings: Offerings?) -> Void) {
+//        guard let revenueCatManager else {
+//            assertionFailure()
+//            completion(nil)
+//            return
+//        }
+//        if let storedOfferings = revenueCatManager.storedOfferings {
+//            completion(storedOfferings)
+//            return
+//        }
+//        revenueCatManager.offerings(completion: completion)
+//    }
+//    
+//    public func storedOfferings() -> Offerings? {
+//        guard let revenueCatManager else {
+//            assertionFailure()
+//            return nil
+//        }
+//        return revenueCatManager.storedOfferings
+//    }
 }

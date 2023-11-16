@@ -23,13 +23,12 @@ import RevenueCatIntegration
 public protocol CoreManagerProtocol {
     static var shared: CoreManagerProtocol { get }
     static var uniqueUserID: String? { get }
-//    static var publicResult: CoreManagerResult { get }
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?,
                      coreCofiguration configuration: CoreConfigurationProtocol,
                      coreDelegate delegate: CoreManagerDelegate)
-//    func applicationDidBecomeActive()
+
     func application( _ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] ) -> Bool
     func application(_ application: UIApplication, continue userActivity: NSUserActivity,
                      restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool
@@ -45,8 +44,11 @@ public protocol CoreManagerProtocol {
     func verifyPremium(completion: @escaping (_ result: RevenueCatVerifyPremiumResult) -> Void)
     func restorePremium(completion: @escaping (_ result: RevenueCatVerifyPremiumResult) -> Void)
     
-    func package(withID packageID: String, inOfferingWithID offeringID: String, completion: @escaping (_ package: Package?) -> Void)
-    func offering(withID id: String, completion: @escaping (_ offering: Offering?) -> Void)
-    func offerings(completion: @escaping (_ offerings: Offerings?) -> Void)
-    func storedOfferings() -> Offerings?
+//    func package(withID packageID: String, inOfferingWithID offeringID: String, completion: @escaping (_ package: Package?) -> Void)
+//    func offering(withID id: String, completion: @escaping (_ offering: Offering?) -> Void)
+//    func offerings(completion: @escaping (_ offerings: Offerings?) -> Void)
+//     func storedOfferings() -> Offerings?
+    
+    func purchases(config:any PaywallConfiguration, completion: @escaping (_ purchases: [Purchase]) -> Void)
+    func storedPurchases(config:any PaywallConfiguration) -> [Purchase] 
 }
