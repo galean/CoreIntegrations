@@ -76,12 +76,24 @@ public class RevenueCatManager: NSObject {
         }
     }
     
+    public func offerings() async -> Offerings? {
+        guard Purchases.isConfigured else {
+            return nil
+        }
+        
+        do {
+            let result = try await Purchases.shared.offerings()
+            return result
+        } catch {
+            return nil
+        }
+    }
+    
     public func offerings(completion: @escaping (_ offerings: Offerings?) -> Void) {
         guard Purchases.isConfigured else {
             completion(nil)
             return
         }
-        
         
         Purchases.shared.getOfferings {[weak self] offerings, error in
             guard let offerings, error == nil else {
@@ -95,7 +107,6 @@ public class RevenueCatManager: NSObject {
     
     public func purchase(_ package: Package) async -> RevenueCatPurchaseResult {
         guard Purchases.isConfigured else {
-//            completion()
             return .error(error: "Integration error")
         }
         

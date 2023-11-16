@@ -17,10 +17,15 @@ public extension CorePaywallConfiguration {
     }
     
     //add error to result
-    func purchases(completion: @escaping ([Purchase]?) -> Void) {
+    func purchases(completion: @escaping ([Purchase]) -> Void) {
         CoreManager.internalShared.purchases(config: self) { purchases in
             completion(purchases)
         }
     }
-    //add async await
+
+    func purchases() async -> [Purchase] {
+        let result = await CoreManager.internalShared.purchases(config: self)
+        return result
+    }
+    
 }

@@ -118,9 +118,7 @@ public class CoreManager {
             analyticsManager?.setUserID(id)
             revenueCatManager?.configure(uuid: id, appsflyerID: self.appsflyerManager?.appsflyerID,
                                          fbAnonID: self.facebookManager?.anonUserID, completion: { isConfigured in
-//                guard isConfigured != nil else {
-//                    return
-//                }
+
                 InternalConfigurationEvent.revenueCatConfigured.markAsCompleted()
             })
         }
@@ -193,9 +191,7 @@ public class CoreManager {
             
             self.revenueCatManager?.configure(uuid: result.userUUID, appsflyerID: self.appsflyerManager?.appsflyerID,
                                          fbAnonID: self.facebookManager?.anonUserID, completion: { isConfigured in
-//                guard let isConfigured else {
-//                    return
-//                }
+
                 InternalConfigurationEvent.revenueCatConfigured.markAsCompleted()
             })
 
@@ -297,10 +293,8 @@ public class CoreManager {
                           remoteResult: [String: String]) {
         allConfigs.forEach { config in
             let remoteValue = remoteResult[config.key]
-            let defaultValue = config.defaultValue
             
             guard let remoteValue else {
-//                config.updateValue(defaultValue)
                 return
             }
             
@@ -309,11 +303,22 @@ public class CoreManager {
                 value = remoteValue
                 config.updateValue(value)
             }
-//            else {
-//                value = defaultValue
-//            }
-            
         }
+    }
+ 
+    public func purchases(config:any CorePaywallConfiguration) async -> [Purchase] {
+        guard let revenueCatManager else {
+            assertionFailure()
+            return []
+        }
+        if let storedOfferings = revenueCatManager.storedOfferings {
+            let purchases = mapPurchases(config: config, offerings: storedOfferings)
+            return purchases
+        }
+        let result = await revenueCatManager.offerings()
+        
+        let purchases = mapPurchases(config: config, offerings: result)
+        return purchases
     }
     
     public func purchases(config:any CorePaywallConfiguration, completion: @escaping (_ purchases: [Purchase]) -> Void) {
@@ -363,7 +368,6 @@ class ConfigurationResultManager {
     
     func calculateResult() -> CoreManagerResult {
         // get appsflyer info
-        let deepLinkResult = deepLinkResult ?? [:]
         
         let generalPaywallName = self.getGeneralPaywallName(generalPaywalConfig: InternalRemoteABTests.ab_paywall_general)
         let fbGooglePaywallName = self.getFbGooglePaywallName(fbGooglePaywalConfig: InternalRemoteABTests.ab_paywall_fb_google)
