@@ -340,12 +340,12 @@ public class CoreManager {
     
     private func mapPurchases(config:any CorePaywallConfiguration, offerings: Offerings?) -> [Purchase] {
         guard let offerings = offerings, let offering = offerings[config.id] else {return []}
-        var subscriptions:[Purchase]?
+        var subscriptions:[Purchase] = []
         offering.availablePackages.forEach { package in
             let subscription = Purchase(package: package)
-            subscriptions?.append(subscription)
+            subscriptions.append(subscription)
         }
-        return subscriptions ?? []
+        return subscriptions
     }
     
     private func storedPurchases(config:any CorePaywallConfiguration) -> [Purchase] {
