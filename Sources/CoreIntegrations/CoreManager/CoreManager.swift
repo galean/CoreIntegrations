@@ -306,59 +306,7 @@ public class CoreManager {
         }
     }
  
-    public func purchases(config:any CorePaywallConfiguration) async -> [Purchase] {
-        guard let revenueCatManager else {
-            assertionFailure()
-            return []
-        }
-        if let storedOfferings = revenueCatManager.storedOfferings {
-            let purchases = mapPurchases(config: config, offerings: storedOfferings)
-            return purchases
-        }
-        let result = await revenueCatManager.offerings()
-        
-        let purchases = mapPurchases(config: config, offerings: result)
-        return purchases
-    }
-    
-    public func purchases(config:any CorePaywallConfiguration, completion: @escaping (_ purchases: [Purchase]) -> Void) {
-        guard let revenueCatManager else {
-            assertionFailure()
-            completion([])
-            return
-        }
-        if let storedOfferings = revenueCatManager.storedOfferings {
-            let purchases = mapPurchases(config: config, offerings: storedOfferings)
-            completion(purchases)
-            return
-        }
-        revenueCatManager.offerings {[weak self] offerings in
-            let purchases = self?.mapPurchases(config: config, offerings: offerings) ?? []
-            completion(purchases)
-        }
-    }
-    
-    private func mapPurchases(config:any CorePaywallConfiguration, offerings: Offerings?) -> [Purchase] {
-        guard let offerings = offerings, let offering = offerings[config.id] else {return []}
-        var subscriptions:[Purchase] = []
-        offering.availablePackages.forEach { package in
-            let subscription = Purchase(package: package)
-            subscriptions.append(subscription)
-        }
-        return subscriptions
-    }
-    
-    private func storedPurchases(config:any CorePaywallConfiguration) -> [Purchase] {
-        guard let revenueCatManager else {
-            assertionFailure()
-            return []
-        }
-        let purchases = mapPurchases(config: config, offerings: revenueCatManager.storedOfferings)
-        return purchases
-    }
-    
 }
-
 
 
 class ConfigurationResultManager {

@@ -17,15 +17,20 @@ public extension CorePaywallConfiguration {
     }
     
     //add error to result
-    func purchases(completion: @escaping ([Purchase]) -> Void) {
-        CoreManager.internalShared.purchases(config: self) { purchases in
-            completion(purchases)
+    func purchases(completion: @escaping (CorePaywallPurchasesResult) -> Void) {
+        CoreManager.internalShared.purchases(config: self) { result in
+            completion(result)
         }
     }
 
-    func purchases() async -> [Purchase] {
+    func purchases() async -> CorePaywallPurchasesResult {
         let result = await CoreManager.internalShared.purchases(config: self)
         return result
     }
     
+}
+
+public enum CorePaywallPurchasesResult {
+    case success(purchases: [Purchase])
+    case error(error: String)
 }

@@ -65,43 +65,43 @@ public class RevenueCatManager: NSObject {
     }
     
     public func offering(withID id: String, completion: @escaping (_ offering: Offering?) -> Void) {
-        offerings { offerings in
-            guard let offerings else {
+        offerings { result in
+            switch result {
+            case .error(let error):
                 completion(nil)
-                return
+            case .success(let offerings):
+                let offering = offerings.offering(identifier: id)
+                completion(offering)
             }
-            
-            let offering = offerings.offering(identifier: id)
-            completion(offering)
         }
     }
     
-    public func offerings() async -> Offerings? {
+    public func offerings() async -> RevenueCatOfferingsResult {
         guard Purchases.isConfigured else {
-            return nil
+            return .error(error: "Integration error")
         }
         
         do {
-            let result = try await Purchases.shared.offerings()
-            return result
+            let offerings = try await Purchases.shared.offerings()
+            return .success(offerings: offerings)
         } catch {
-            return nil
+            return .error(error: error.localizedDescription)
         }
     }
     
-    public func offerings(completion: @escaping (_ offerings: Offerings?) -> Void) {
+    public func offerings(completion: @escaping (_ offerings: RevenueCatOfferingsResult) -> Void) {
         guard Purchases.isConfigured else {
-            completion(nil)
+            completion(.error(error: "Integration error"))
             return
         }
         
         Purchases.shared.getOfferings {[weak self] offerings, error in
             guard let offerings, error == nil else {
-                completion(nil)
+                completion(.error(error: error?.localizedDescription ?? "unknown error"))
                 return
             }
             self?.storedOfferings = offerings
-            completion(offerings)
+            completion(.success(offerings: offerings))
         }
     }
     
