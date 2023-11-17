@@ -121,9 +121,11 @@ public class CoreManager {
             if configuration.useDefaultATTRequest {
                 self?.configureATT()
             }
+            
+            self?.handleConfigurationEndCallback()
         }
         
-        handleConfigurationEndCallback()
+       
     }
     
     func configureATT() {
