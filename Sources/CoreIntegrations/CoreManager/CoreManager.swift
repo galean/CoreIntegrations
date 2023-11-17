@@ -120,6 +120,7 @@ public class CoreManager {
             
             if configuration.useDefaultATTRequest {
                 self?.configureATT()
+                self?.applicationDidBecomeActive()
             }
             
             self?.handleConfigurationEndCallback()
