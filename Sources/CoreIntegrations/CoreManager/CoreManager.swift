@@ -104,12 +104,11 @@ public class CoreManager {
         let semaphore = DispatchSemaphore(value: 0)
         
         queue.async { [weak self] in
-            semaphore.wait()
             self?.firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
                 InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
                 semaphore.signal()
             }
-            
+            semaphore.wait()
             let serverURLPath = self?.firebaseManager?.remoteConfigResult?["server_url_path"] ?? ""
             let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
                                                                  serverURLPath: serverURLPath,
