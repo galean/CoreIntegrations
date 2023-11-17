@@ -36,7 +36,7 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
     }
     
     var uuid: String {
-        var uuid = UIDevice.current.identifierForVendor?.uuidString ?? ""
+        let uuid = UIDevice.current.identifierForVendor?.uuidString ?? ""
         return uuid
     }
     

@@ -110,6 +110,7 @@ open class AttributionServerManager {
         let uuid = getCorrectUUID()
         let idfa = dataWorker.idfa
         let idfv = dataWorker.idfv
+        
         let storeCountry = dataWorker.storeCountry
         
         var saFields: AttributionInstallRequestModel.SAFields?
@@ -136,9 +137,9 @@ open class AttributionServerManager {
             status = ATTrackingManager.trackingAuthorizationStatus.rawValue
         }
         
-        let parameters = AttributionInstallRequestModel(userId: uuid,
+        let parameters = AttributionInstallRequestModel(userId: idfv ?? uuid,//uuid
                                                         idfa: idfa,
-                                                        idfv: idfv,
+                                                        idfv: uuid,//idfv
                                                         sdkVersion: sdkVersion,
                                                         osVersion: osVersion,
                                                         appVersion: appVersion,

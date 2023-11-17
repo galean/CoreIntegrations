@@ -73,29 +73,56 @@ public class CoreManager {
                                                     fbUserData: facebookManager?.userData ?? "",
                                                     fbAnonId: facebookManager?.anonUserID ?? "")
         let appsflyerToken = appsflyerManager?.appsflyerID
-        let atServerDataSource = configuration.attributionServerDataSource
-        let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
-                                                             serverURLPath: atServerDataSource.serverURLPath,
-                                                             installPath: atServerDataSource.installPath,
-                                                             purchasePath: atServerDataSource.purchasePath,
-                                                             appsflyerID: appsflyerToken,
-                                                             facebookData: facebookData)
-        AttributionServerManager.shared.configure(config: attributionConfiguration)
+        let installPath = "/install-application"
+        let purchasePath = "/subscribe"
         
-        if configuration.useDefaultATTRequest {
-            configureATT()
-        }
+//        let atServerDataSource = configuration.attributionServerDataSource
+//        let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
+//                                                             serverURLPath: atServerDataSource.serverURLPath,
+//                                                             installPath: atServerDataSource.installPath,
+//                                                             purchasePath: atServerDataSource.purchasePath,
+//                                                             appsflyerID: appsflyerToken,
+//                                                             facebookData: facebookData)
+//        AttributionServerManager.shared.configure(config: attributionConfiguration)
+//        
+//        
+//        
+//        if configuration.useDefaultATTRequest {
+//            configureATT()
+//        }
 
         revenueCatManager = RevenueCatManager(apiKey: configuration.appSettings.revenuecatApiKey)
         
         firebaseManager = FirebaseManager()
         firebaseManager?.configure()
         
-        firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
-            InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
+//        firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
+//            InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
+//        }
+        
+        let queue = DispatchQueue(label: "CoreIntegrationsQueue", attributes: .concurrent)
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        queue.async { [weak self] in
+            semaphore.wait()
+            self?.firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
+                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
+                semaphore.signal()
+            }
+            
+            let serverURLPath = self?.firebaseManager?.remoteConfigResult?["server_url_path"] ?? ""
+            let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
+                                                                 serverURLPath: serverURLPath,
+                                                                 installPath: installPath,
+                                                                 purchasePath: purchasePath,
+                                                                 appsflyerID: appsflyerToken,
+                                                                 facebookData: facebookData)
+            AttributionServerManager.shared.configure(config: attributionConfiguration)
+            
+            if configuration.useDefaultATTRequest {
+                self?.configureATT()
+            }
         }
-        
-        
         
         handleConfigurationEndCallback()
     }
