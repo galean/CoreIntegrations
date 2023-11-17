@@ -15,6 +15,8 @@ public class RevenueCatManager: NSObject {
         self.apiKey = apiKey
     }
     
+    public var storedOfferings: Offerings?
+    
     public func configure(uuid: String, appsflyerID: String?, fbAnonID: String?, completion: @escaping (Bool?) -> Void) {
         guard Purchases.isConfigured == false else {
             completion(nil)
@@ -63,37 +65,48 @@ public class RevenueCatManager: NSObject {
     }
     
     public func offering(withID id: String, completion: @escaping (_ offering: Offering?) -> Void) {
-        offerings { offerings in
-            guard let offerings else {
+        offerings { result in
+            switch result {
+            case .error(let error):
                 completion(nil)
-                return
+            case .success(let offerings):
+                let offering = offerings.offering(identifier: id)
+                completion(offering)
             }
-            
-            let offering = offerings.offering(identifier: id)
-            completion(offering)
         }
     }
     
-    public func offerings(completion: @escaping (_ offerings: Offerings?) -> Void) {
+    public func offerings() async -> RevenueCatOfferingsResult {
         guard Purchases.isConfigured else {
-            completion(nil)
+            return .error(error: "Integration error")
+        }
+        
+        do {
+            let offerings = try await Purchases.shared.offerings()
+            return .success(offerings: offerings)
+        } catch {
+            return .error(error: error.localizedDescription)
+        }
+    }
+    
+    public func offerings(completion: @escaping (_ offerings: RevenueCatOfferingsResult) -> Void) {
+        guard Purchases.isConfigured else {
+            completion(.error(error: "Integration error"))
             return
         }
         
-        
-        Purchases.shared.getOfferings { offerings, error in
+        Purchases.shared.getOfferings {[weak self] offerings, error in
             guard let offerings, error == nil else {
-                completion(nil)
+                completion(.error(error: error?.localizedDescription ?? "unknown error"))
                 return
             }
-            
-            completion(offerings)
+            self?.storedOfferings = offerings
+            completion(.success(offerings: offerings))
         }
     }
     
     public func purchase(_ package: Package) async -> RevenueCatPurchaseResult {
         guard Purchases.isConfigured else {
-//            completion()
             return .error(error: "Integration error")
         }
         

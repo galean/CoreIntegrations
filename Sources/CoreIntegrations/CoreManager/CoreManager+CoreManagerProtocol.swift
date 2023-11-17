@@ -1,6 +1,6 @@
 //
 //  CoreManager+CoreManagerProtocol.swift
-//  
+//
 //
 //  Created by Andrii Plotnikov on 02.10.2023.
 //
@@ -12,11 +12,6 @@ import RevenueCatIntegration
 import RevenueCat
 
 extension CoreManager: CoreManagerProtocol {
-//    public static var publicResult: CoreManagerResult {
-//        return CoreManagerResult(isIPAT: true, paywallName: "default",
-//                                 organicPaywallName: "default",
-//                                 fbgoogleredictedPaywallName: "default")
-//    }
     
     public func application(_ application: UIApplication,
                             didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]?,
@@ -49,13 +44,13 @@ extension CoreManager: CoreManagerProtocol {
         InternalConfigurationEvent.attConcentGiven.markAsCompleted()
     }
     
-    public func purchase(_ package: Package) async -> RevenueCatPurchaseResult {
+    public func purchase(_ purchase: Purchase) async -> RevenueCatPurchaseResult {
         guard let revenueCatManager else {
             assertionFailure()
             return .error(error: "Integration error")
         }
         
-        let result = await revenueCatManager.purchase(package)
+        let result = await revenueCatManager.purchase(purchase.package)
         switch result {
         case .success(let details):
             self.handlePurchaseSuccess(purchaseInfo: details)
@@ -66,14 +61,14 @@ extension CoreManager: CoreManagerProtocol {
         return result
     }
     
-    public func purchase(_ package: Package, completion: @escaping (_ result: RevenueCatPurchaseResult) -> Void) {
+    public func purchase(_ purchase: Purchase, completion: @escaping (RevenueCatIntegration.RevenueCatPurchaseResult) -> Void) {
         guard let revenueCatManager else {
             assertionFailure()
             completion(.error(error: "Integration error"))
             return
         }
         
-        revenueCatManager.purchase(package) { result in
+        revenueCatManager.purchase(purchase.package) { result in
             switch result {
             case .success(let details):
                 self.handlePurchaseSuccess(purchaseInfo: details)
@@ -132,33 +127,4 @@ extension CoreManager: CoreManagerProtocol {
         revenueCatManager.restorePurchases(completion: completion)
     }
     
-    public func package(withID packageID: String, inOfferingWithID offeringID: String, completion: @escaping (_ package: Package?) -> Void) {
-        guard let revenueCatManager else {
-            assertionFailure()
-            completion(nil)
-            return
-        }
-        
-        revenueCatManager.package(withID: packageID, inOfferingWithID: offeringID, completion: completion)
-    }
-    
-    public func offering(withID id: String, completion: @escaping (_ offering: Offering?) -> Void) {
-        guard let revenueCatManager else {
-            assertionFailure()
-            completion(nil)
-            return
-        }
-        
-        revenueCatManager.offering(withID: id, completion: completion)
-    }
-    
-    public func offerings(completion: @escaping (_ offerings: Offerings?) -> Void) {
-        guard let revenueCatManager else {
-            assertionFailure()
-            completion(nil)
-            return
-        }
-        
-        revenueCatManager.offerings(completion: completion)
-    }
 }
