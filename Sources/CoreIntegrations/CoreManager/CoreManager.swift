@@ -109,14 +109,18 @@ public class CoreManager {
                 semaphore.signal()
             }
             semaphore.wait()
-            let serverURLPath = self?.firebaseManager?.remoteConfigResult?["server_url_path"] ?? ""
-            let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
-                                                                 serverURLPath: serverURLPath,
-                                                                 installPath: installPath,
-                                                                 purchasePath: purchasePath,
-                                                                 appsflyerID: appsflyerToken,
-                                                                 facebookData: facebookData)
-            AttributionServerManager.shared.configure(config: attributionConfiguration)
+            
+            if let serverURLPath = self?.firebaseManager?.remoteConfigResult?["server_url_path"] {
+                
+                let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
+                                                                     serverURLPath: serverURLPath,
+                                                                     installPath: installPath,
+                                                                     purchasePath: purchasePath,
+                                                                     appsflyerID: appsflyerToken,
+                                                                     facebookData: facebookData)
+                
+                AttributionServerManager.shared.configure(config: attributionConfiguration)
+            }
             
             if configuration.useDefaultATTRequest {
                 self?.configureATT()
