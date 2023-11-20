@@ -40,7 +40,8 @@ public class FirebaseManager {
                 return
             }
             
-            let allKeys = appConfigurables.map { $0.key }
+            var allKeys = appConfigurables.map { $0.key }
+            allKeys.append("server_url_path")
             let configResult = allKeys.reduce(into: [String: String]()) { partialResult, key in
                 let configValue = remoteConfig.configValue(forKey: key).stringValue
                 if configValue != nil && configValue != "" {
