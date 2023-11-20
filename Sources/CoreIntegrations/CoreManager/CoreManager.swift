@@ -110,10 +110,12 @@ public class CoreManager {
             }
             semaphore.wait()
             
-            if let serverURLPath = self?.firebaseManager?.remoteConfigResult?["server_url_path"] {
+            if let installURLPath = self?.firebaseManager?.install_server_path,
+               let purchaseURLPath = self?.firebaseManager?.purchase_server_path {
                 
                 let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
-                                                                     serverURLPath: serverURLPath,
+                                                                     installServerURLPath: installURLPath,
+                                                                     purchaseServerURLPath: purchaseURLPath,
                                                                      installPath: installPath,
                                                                      purchasePath: purchasePath,
                                                                      appsflyerID: appsflyerToken,

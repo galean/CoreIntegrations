@@ -18,7 +18,8 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
         self.appsflyerID = config.appsflyerID
         authorizationToken = config.authToken
         
-        serverWorker = AttributionServerWorker(serverURLPath: config.serverURLPath,
+        serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
+                                               purchaseServerURLPath: config.purchaseServerURLPath,
                                                installPath: config.installPath,
                                                purchasePath: config.purchasePath)
     }

@@ -8,12 +8,14 @@
 import Foundation
 
 public class AttributionServerWorker {
-    let serverURLPath: String
+    let installServerURLPath: String
+    let purchaseServerURLPath: String
     let installPath: String
     let purchasePath: String
     
-    init(serverURLPath: String, installPath: String, purchasePath: String) {
-        self.serverURLPath = serverURLPath
+    init(installServerURLPath: String, purchaseServerURLPath: String, installPath: String, purchasePath: String) {
+        self.installServerURLPath = installServerURLPath
+        self.purchaseServerURLPath = purchaseServerURLPath
         self.installPath = installPath
         self.purchasePath = purchasePath
     }
@@ -21,13 +23,13 @@ public class AttributionServerWorker {
     fileprivate var isSyncingInstall = false
     
     fileprivate var installURL: URL? {
-        let urlPath = "\(serverURLPath)\(installPath)"
+        let urlPath = "\(installServerURLPath)\(installPath)"
         let urlOrNil = URL(string: urlPath)
         return urlOrNil
     }
     
     fileprivate var subscribeURL: URL? {
-        let urlPath = "\(serverURLPath)\(purchasePath)"
+        let urlPath = "\(purchaseServerURLPath)\(purchasePath)"
         let urlOrNil = URL(string: urlPath)
         return urlOrNil
     }
