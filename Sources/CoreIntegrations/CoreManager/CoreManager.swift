@@ -109,7 +109,7 @@ public class CoreManager {
                 self?.configureATT()
             }
             
-//            self?.applicationDidBecomeActive()
+            self?.applicationDidBecomeActive()
             
             self?.handleConfigurationEndCallback()
         }
