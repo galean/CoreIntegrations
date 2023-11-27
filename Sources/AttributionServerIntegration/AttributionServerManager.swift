@@ -138,21 +138,9 @@ open class AttributionServerManager {
             status = ATTrackingManager.trackingAuthorizationStatus.rawValue
         }
         
-//        let parameters = AttributionInstallRequestModel(userId: idfv ?? uuid,//uuid
-//                                                        idfa: idfa,
-//                                                        idfv: uuid,//idfv
-//                                                        sdkVersion: sdkVersion,
-//                                                        osVersion: osVersion,
-//                                                        appVersion: appVersion,
-//                                                        limitAdTracking: !isTrackingEnabled,
-//                                                        storeCountry: storeCountry,
-//                                                        appsflyerId: appsflyerID,
-//                                                        iosATT: status,
-//                                                        fb: fbFields, sa: saFields)
-        
-        let parameters = AttributionInstallRequestModel(userId: uuid,
+        let parameters = AttributionInstallRequestModel(userId: idfv ?? uuid,//uuid
                                                         idfa: idfa,
-                                                        idfv: idfv,
+                                                        idfv: uuid,//idfv
                                                         sdkVersion: sdkVersion,
                                                         osVersion: osVersion,
                                                         appVersion: appVersion,
@@ -161,6 +149,18 @@ open class AttributionServerManager {
                                                         appsflyerId: appsflyerID,
                                                         iosATT: status,
                                                         fb: fbFields, sa: saFields)
+        
+//        let parameters = AttributionInstallRequestModel(userId: uuid,
+//                                                        idfa: idfa,
+//                                                        idfv: idfv,
+//                                                        sdkVersion: sdkVersion,
+//                                                        osVersion: osVersion,
+//                                                        appVersion: appVersion,
+//                                                        limitAdTracking: !isTrackingEnabled,
+//                                                        storeCountry: storeCountry,
+//                                                        appsflyerId: appsflyerID,
+//                                                        iosATT: status,
+//                                                        fb: fbFields, sa: saFields)
         return parameters
     }
     
