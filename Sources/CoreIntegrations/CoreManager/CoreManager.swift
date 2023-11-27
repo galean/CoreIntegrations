@@ -76,29 +76,10 @@ public class CoreManager {
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
         
-//        let atServerDataSource = configuration.attributionServerDataSource
-//        let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
-//                                                             serverURLPath: atServerDataSource.serverURLPath,
-//                                                             installPath: atServerDataSource.installPath,
-//                                                             purchasePath: atServerDataSource.purchasePath,
-//                                                             appsflyerID: appsflyerToken,
-//                                                             facebookData: facebookData)
-//        AttributionServerManager.shared.configure(config: attributionConfiguration)
-//        
-//        
-//        
-//        if configuration.useDefaultATTRequest {
-//            configureATT()
-//        }
-
         revenueCatManager = RevenueCatManager(apiKey: configuration.appSettings.revenuecatApiKey)
         
         firebaseManager = FirebaseManager()
         firebaseManager?.configure()
-        
-//        firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
-//            InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
-//        }
         
         let queue = DispatchQueue(label: "CoreIntegrationsQueue", attributes: .concurrent)
         let semaphore = DispatchSemaphore(value: 0)
@@ -128,7 +109,7 @@ public class CoreManager {
                 self?.configureATT()
             }
             
-            self?.applicationDidBecomeActive()
+//            self?.applicationDidBecomeActive()
             
             self?.handleConfigurationEndCallback()
         }
