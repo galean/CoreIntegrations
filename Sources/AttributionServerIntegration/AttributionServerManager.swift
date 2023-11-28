@@ -127,12 +127,10 @@ open class AttributionServerManager {
         if #available(iOS 14.3, *) {
             status = ATTrackingManager.trackingAuthorizationStatus.rawValue
         }
-        
-        #warning("amplitude, appsflyer check that userId == idfv and idfv == uuid")
       
-        let parameters = AttributionInstallRequestModel(userId: idfv ?? uuid,//uuid
+        let parameters = AttributionInstallRequestModel(userId: uuid,
                                                         idfa: idfa,
-                                                        idfv: uuid,//idfv
+                                                        idfv: idfv,
                                                         sdkVersion: sdkVersion,
                                                         osVersion: osVersion,
                                                         appVersion: appVersion,
@@ -141,18 +139,6 @@ open class AttributionServerManager {
                                                         appsflyerId: appsflyerID,
                                                         iosATT: status,
                                                         fb: fbFields, sa: saFields)
-        
-//        let parameters = AttributionInstallRequestModel(userId: uuid,
-//                                                        idfa: idfa,
-//                                                        idfv: idfv,
-//                                                        sdkVersion: sdkVersion,
-//                                                        osVersion: osVersion,
-//                                                        appVersion: appVersion,
-//                                                        limitAdTracking: !isTrackingEnabled,
-//                                                        storeCountry: storeCountry,
-//                                                        appsflyerId: appsflyerID,
-//                                                        iosATT: status,
-//                                                        fb: fbFields, sa: saFields)
         return parameters
     }
     
