@@ -27,3 +27,17 @@ public struct AttributionConfigData {
         self.purchasePath = purchasePath
     }
 }
+
+public struct AttributionConfigURLs {
+    let installServerURLPath: String
+    let purchaseServerURLPath: String
+    let installPath: String
+    let purchasePath: String
+    
+    public init(installServerURLPath: String, purchaseServerURLPath: String, installPath: String, purchasePath: String) {
+        self.installServerURLPath = installServerURLPath
+        self.purchaseServerURLPath = purchaseServerURLPath
+        self.installPath = installPath
+        self.purchasePath = purchasePath
+    }
+}

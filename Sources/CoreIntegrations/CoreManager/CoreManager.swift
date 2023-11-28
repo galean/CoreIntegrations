@@ -81,41 +81,32 @@ public class CoreManager {
         firebaseManager = FirebaseManager()
         firebaseManager?.configure()
         
-        let queue = DispatchQueue(label: "CoreIntegrationsQueue", attributes: .concurrent)
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        queue.async { [weak self] in
-            self?.firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
-                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
-                semaphore.signal()
-            }
-            semaphore.wait()
-            
-            if let installURLPath = self?.firebaseManager?.install_server_path,
-               let purchaseURLPath = self?.firebaseManager?.purchase_server_path {
-                
-                let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
-                                                                     installServerURLPath: installURLPath,
-                                                                     purchaseServerURLPath: purchaseURLPath,
-                                                                     installPath: installPath,
-                                                                     purchasePath: purchasePath,
-                                                                     appsflyerID: appsflyerToken,
-                                                                     facebookData: facebookData)
-                
-                AttributionServerManager.shared.configure(config: attributionConfiguration)
-            }
-            
-            if configuration.useDefaultATTRequest {
-                self?.configureATT()
-                self?.requestATT()
-            }
-            
-//            self?.applicationDidBecomeActive()
-            
-            self?.handleConfigurationEndCallback()
+        self.firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
+            InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
         }
         
-       
+//        if let installURLPath = self.firebaseManager?.install_server_path,
+//           let purchaseURLPath = self.firebaseManager?.purchase_server_path {
+        let installURLPath = ""
+        let purchaseURLPath = ""
+        let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
+                                                                 installServerURLPath: installURLPath,
+                                                                 purchaseServerURLPath: purchaseURLPath,
+                                                                 installPath: installPath,
+                                                                 purchasePath: purchasePath,
+                                                                 appsflyerID: appsflyerToken,
+                                                                 facebookData: facebookData)
+            
+            AttributionServerManager.shared.configure(config: attributionConfiguration)
+//        }
+        
+        if configuration.useDefaultATTRequest {
+            self.configureATT()
+        }
+        
+        self.handleConfigurationEndCallback()
+        
+        self.handleAttributionInstall()
     }
     
     func configureATT() {
@@ -192,31 +183,55 @@ public class CoreManager {
             assertionFailure()
         }
         facebookManager?.configureATT(isAuthorized: status == .authorized)
-        AttributionServerManager.shared.syncInstall { result in
-            defer {
-                InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
-            }
-            guard result?.idfv == nil else {
-                return
-            }
-            
-            guard let result else {
-                self.appsflyerManager?.startAppsflyer()
-                return
-            }
-            self.appsflyerManager?.customerUserID = result.userUUID
-            self.appsflyerManager?.startAppsflyer()
-            
-            self.revenueCatManager?.configure(uuid: result.userUUID, appsflyerID: self.appsflyerManager?.appsflyerID,
-                                         fbAnonID: self.facebookManager?.anonUserID, completion: { isConfigured in
-
-                InternalConfigurationEvent.revenueCatConfigured.markAsCompleted()
-            })
-
-            self.facebookManager?.userID = result.userUUID
-            self.firebaseManager?.setUserID(result.userUUID)
-            self.analyticsManager?.setUserID(result.userUUID)
+    }
+    
+    func handleAttributionInstall() {
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
         }
+        
+        configurationManager.signForAttAndConfigLoaded {
+            
+            if let installURLPath = self.firebaseManager?.install_server_path,
+               let purchaseURLPath = self.firebaseManager?.purchase_server_path {
+                let installPath = "/install-application"
+                let purchasePath = "/subscribe"
+                let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
+                                                                     purchaseServerURLPath: purchaseURLPath,
+                                                                     installPath: installPath,
+                                                                     purchasePath: purchasePath)
+                
+                AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
+            }
+            
+            AttributionServerManager.shared.syncOnAppStart { result in
+                defer {
+                    InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
+                }
+                guard result?.idfv == nil else {
+                    return
+                }
+                
+                guard let result else {
+                    self.appsflyerManager?.startAppsflyer()
+                    return
+                }
+                self.appsflyerManager?.customerUserID = result.userUUID
+                self.appsflyerManager?.startAppsflyer()
+                
+                self.revenueCatManager?.configure(uuid: result.userUUID, appsflyerID: self.appsflyerManager?.appsflyerID,
+                                             fbAnonID: self.facebookManager?.anonUserID, completion: { isConfigured in
+
+                    InternalConfigurationEvent.revenueCatConfigured.markAsCompleted()
+                })
+
+                self.facebookManager?.userID = result.userUUID
+                self.firebaseManager?.setUserID(result.userUUID)
+                self.analyticsManager?.setUserID(result.userUUID)
+            }
+        }
+
     }
     
     func handlePurchaseSuccess(purchaseInfo: RevenueCatPurchaseInfo) {

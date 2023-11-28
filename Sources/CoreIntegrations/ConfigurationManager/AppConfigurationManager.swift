@@ -17,8 +17,10 @@ class AppConfigurationManager {
     private var timout: Int = 6
     private var currentSecond = 0
     private var waitingCallbacks = [(ConfigurationResult) -> Void]()
+    private var attributionCallback: (() -> Void)?
     private var isTimerFinished = false
     private var configurationFinishHandled = false
+    private var configurationAttFinishHandled = false
     
     private var configurationCompletelyFinished: Bool {
         return model.checkAllEventsFinished(completedEvents: completedEvents, isFirstStart: isFirstStart)
@@ -28,6 +30,10 @@ class AppConfigurationManager {
         return model.checkRequiredEventsFinished(completedEvents: completedEvents, isFirstStart: isFirstStart)
     }
     
+    private var configurationAttAndConfigFinished: Bool {
+        return model.checkAttAndConfigFinished(completedEvents: completedEvents, isFirstStart: isFirstStart)
+    }
+
     private var isConfigurationFinished: Bool {
         return isTimerFinished || configurationCompletelyFinished
     }
@@ -66,6 +72,10 @@ class AppConfigurationManager {
         waitingCallbacks.append(callback)
     }
     
+    public func signForAttAndConfigLoaded(_ callback: @escaping () -> Void) {
+        attributionCallback = callback
+    }
+    
     private func checkConfiguration() {
         guard isConfigurationFinished else {
             return
@@ -75,6 +85,11 @@ class AppConfigurationManager {
             return
         }
         configurationFinishHandled = true
+        
+        if configurationAttAndConfigFinished && !configurationAttFinishHandled {
+            attributionCallback?()
+            configurationAttFinishHandled = true
+        }
         
         let configurationResult: ConfigurationResult = configurationRequiredFinished ? .completed : .requiredFailed
         waitingCallbacks.forEach { callback in

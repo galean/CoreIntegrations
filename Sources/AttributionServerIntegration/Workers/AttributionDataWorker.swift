@@ -27,17 +27,14 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
     }
     
     var idfv: String? {
-        guard let idfv = UIDevice.current.identifierForVendor?.uuidString else {
-            return nil
-        }
-       
-        let range = idfv.index(idfv.startIndex, offsetBy: 14)
-        return idfv.replacingCharacters(in: range...range, with: "F")
+        var uuid = UIDevice.current.identifierForVendor?.uuidString ?? ""
+        return uuid
     }
     
     var uuid: String {
-        let uuid = UIDevice.current.identifierForVendor?.uuidString ?? ""
-        return uuid
+        let idfv = UIDevice.current.identifierForVendor?.uuidString ?? ""
+        let range = idfv.index(idfv.startIndex, offsetBy: 14)
+        return idfv.replacingCharacters(in: range...range, with: "F")
     }
     
     var sdkVersion: String {

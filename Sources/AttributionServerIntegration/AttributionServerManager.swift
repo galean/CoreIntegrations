@@ -24,6 +24,13 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
                                                purchasePath: config.purchasePath)
     }
     
+    public func configureURLs(config: AttributionConfigURLs) {
+        serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
+                                               purchaseServerURLPath: config.purchaseServerURLPath,
+                                               installPath: config.installPath,
+                                               purchasePath: config.purchasePath)
+    }
+    
     public func syncOnAppStart(_ completion: @escaping (AttributionManagerResult?) -> Void) {
         guard validateToken(authorizationToken) else {
             assertionFailure("No token")
@@ -31,35 +38,18 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
         }
         
         guard let userID = validateInstallAttributed() else {
-            guard let savedInstallData = udefWorker.getInstallData() else {
-                return
+            let installData: AttributionInstallRequestModel
+            if let savedInstallData = udefWorker.getInstallData() {
+                installData = savedInstallData
+            } else {
+                installData = collectInstallData()
             }
             
-            sendInstallData(savedInstallData, authToken: authorizationToken, completion: completion)
+            sendInstallData(installData, authToken: authorizationToken, completion: completion)
             return
         }
-   
+        
         checkAndSendSavedPurchase(userId: userID)
-    }
-    
-    public func syncInstall(_ completion: @escaping (AttributionManagerResult?) -> Void) {
-        guard validateToken(authorizationToken) else {
-            assertionFailure("No token")
-            return
-        }
-        
-        guard validateInstallAttributed() == nil else {
-            return
-        }
-        
-        let installData: AttributionInstallRequestModel
-        if let savedInstallData = udefWorker.getInstallData() {
-            installData = savedInstallData
-        } else {
-            installData = collectInstallData()
-        }
-        
-        sendInstallData(installData, authToken: authorizationToken, completion: completion)
     }
     
     public func syncPurchase(data: AttributionPurchaseModel) {
@@ -77,7 +67,7 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
 open class AttributionServerManager {
     public static var shared: AttributionServerManager = AttributionServerManager()
     public var uniqueUserID: String? {
-        return dataWorker.idfv
+        return dataWorker.uuid
     }
     
     var serverWorker: AttributionServerWorkerProtocol?
@@ -108,7 +98,7 @@ open class AttributionServerManager {
         let appVersion = dataWorker.appVersion
         let isTrackingEnabled = dataWorker.isAdTrackingEnabled
         let attributionDetails = dataWorker.attributionDetails
-        let uuid = getCorrectUUID()
+        let uuid = dataWorker.uuid
         let idfa = dataWorker.idfa
         let idfv = dataWorker.idfv
         
@@ -138,6 +128,8 @@ open class AttributionServerManager {
             status = ATTrackingManager.trackingAuthorizationStatus.rawValue
         }
         
+        #warning("amplitude, appsflyer check that userId == idfv and idfv == uuid")
+      
         let parameters = AttributionInstallRequestModel(userId: idfv ?? uuid,//uuid
                                                         idfa: idfa,
                                                         idfv: uuid,//idfv
