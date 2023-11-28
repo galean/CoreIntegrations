@@ -170,7 +170,7 @@ public class CoreManager {
             assertionFailure()
         }
         facebookManager?.configureATT(isAuthorized: status == .authorized)
-        AttributionServerManager.shared.syncInstall { result in
+        AttributionServerManager.shared.syncOnAppStart { result in
             defer {
                 InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
             }
