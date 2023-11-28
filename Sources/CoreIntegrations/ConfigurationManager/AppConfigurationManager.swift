@@ -54,6 +54,7 @@ class AppConfigurationManager {
             }
             
             self.isTimerFinished = true
+            self.checkATTConfiguration()
             self.checkConfiguration()
         }
     }
@@ -61,6 +62,7 @@ class AppConfigurationManager {
     public func handleCompleted(event: any ConfigurationEvent) {
         completedEvents.append(event)
         checkConfiguration()
+        checkATTConfiguration()
     }
     
     public func signForConfigurationEnd(_ callback: @escaping (ConfigurationResult) -> Void) {
@@ -73,7 +75,24 @@ class AppConfigurationManager {
     }
     
     public func signForAttAndConfigLoaded(_ callback: @escaping () -> Void) {
+        guard !configurationAttFinishHandled else {
+            callback()
+            return
+        }
         attributionCallback = callback
+    }
+    
+    private func checkATTConfiguration() {
+        guard configurationAttAndConfigFinished else {
+            return
+        }
+        
+        guard configurationAttFinishHandled == false else {
+            return
+        }
+        
+        configurationAttFinishHandled = true
+        attributionCallback?()
     }
     
     private func checkConfiguration() {
@@ -85,11 +104,6 @@ class AppConfigurationManager {
             return
         }
         configurationFinishHandled = true
-        
-        if configurationAttAndConfigFinished && !configurationAttFinishHandled {
-            attributionCallback?()
-            configurationAttFinishHandled = true
-        }
         
         let configurationResult: ConfigurationResult = configurationRequiredFinished ? .completed : .requiredFailed
         waitingCallbacks.forEach { callback in
