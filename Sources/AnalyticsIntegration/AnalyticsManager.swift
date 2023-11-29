@@ -20,7 +20,8 @@ public class AnalyticsManager {
     
     public func configure(appKey: String) {
         Amplitude.instance().initializeApiKey(appKey)
-        Amplitude.instance().trackingSessionEvents = true
+//        Amplitude.instance().trackingSessionEvents = true
+        Amplitude.instance().defaultTracking.sessions = true
         Amplitude.instance().minTimeBetweenSessionsMillis = 0
     }
     
@@ -29,9 +30,9 @@ public class AnalyticsManager {
     }
     
     public func setUserID(_ userID: String) {
-        guard userID != Amplitude.instance().userId else {
-            return
-        }
+//        guard userID != Amplitude.instance().userId else {
+//            return
+//        }
         Amplitude.instance().setUserId(userID, startNewSession: false)
     }
     
