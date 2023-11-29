@@ -175,29 +175,7 @@ public class CoreManager {
         }
         facebookManager?.configureATT(isAuthorized: status == .authorized)
         AttributionServerManager.shared.syncOnAppStart { result in
-            defer {
-                InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
-            }
-            guard result?.idfv == nil else {
-                return
-            }
-            
-            guard let result else {
-                self.appsflyerManager?.startAppsflyer()
-                return
-            }
-            self.appsflyerManager?.customerUserID = result.userUUID
-            self.appsflyerManager?.startAppsflyer()
-            
-            self.revenueCatManager?.configure(uuid: result.userUUID, appsflyerID: self.appsflyerManager?.appsflyerID,
-                                         fbAnonID: self.facebookManager?.anonUserID, completion: { isConfigured in
-
-                InternalConfigurationEvent.revenueCatConfigured.markAsCompleted()
-            })
-
-            self.facebookManager?.userID = result.userUUID
-            self.firebaseManager?.setUserID(result.userUUID)
-            self.analyticsManager?.setUserID(result.userUUID)
+            InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
         }
     }
     
