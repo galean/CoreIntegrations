@@ -119,7 +119,7 @@ public class CoreManager {
         let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
         let uuid = AttributionServerManager.shared.savedUserUUID
         let id = savedIDFV ?? uuid ?? AttributionServerManager.shared.uniqueUserID
-        if let id {
+        if let id, id != "" {
             appsflyerManager?.customerUserID = id
             appsflyerManager?.startAppsflyer()
             facebookManager?.userID = id
