@@ -34,8 +34,7 @@ public class AnalyticsManager {
 //        guard userID != Amplitude.instance().userId else {
 //            return
 //        }
-        var id = userID + "X"
-        Amplitude.instance().setUserId(id, startNewSession: false)
+        Amplitude.instance().setUserId(userID, startNewSession: false)
     }
     
     internal func sendCohort() {
