@@ -19,7 +19,7 @@ let package = Package(
         .package(url: "https://github.com/facebook/facebook-ios-sdk", from: "16.0.0"),
         .package(url: "https://github.com/AppsFlyerSDK/AppsFlyerFramework-Dynamic", from: "6.0.0"),
         .package(url: "https://github.com/amplitude/analytics-connector-ios.git", from: "1.0.0"),
-        .package(url: "https://github.com/amplitude/Amplitude-iOS", from: "8.0.0"),
+        .package(url: "https://github.com/amplitude/Amplitude-iOS", exact: "8.16.0"),
         .package(url: "https://github.com/RevenueCat/purchases-ios", from: "4.25.0")
     ],
     targets: [
