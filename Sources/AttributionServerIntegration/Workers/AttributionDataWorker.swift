@@ -38,8 +38,7 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
     }
     
     var sdkVersion: String {
-        let sdkv = Bundle(for: AttributionServerManager.self).infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
-        return sdkv
+        return "1.0.8"
     }
     
     var osVersion: String {
