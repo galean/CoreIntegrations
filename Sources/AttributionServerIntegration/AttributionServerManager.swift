@@ -167,7 +167,7 @@ open class AttributionServerManager {
         let currency = details.currencyCode
         let purchaseToken = dataWorker.receiptToken
         
-        let uuid = getCorrectUUID()
+        let uuid = dataWorker.uuid
 
         let introPrice = introductoryPrice ?? 0
         
