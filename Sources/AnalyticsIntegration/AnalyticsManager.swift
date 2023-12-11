@@ -20,8 +20,7 @@ public class AnalyticsManager {
     
     public func configure(appKey: String) {
         Amplitude.instance().initializeApiKey(appKey)
-        Amplitude.instance().trackingSessionEvents = true
-//        Amplitude.instance().defaultTracking.sessions = true
+        Amplitude.instance().defaultTracking.sessions = true
         Amplitude.instance().minTimeBetweenSessionsMillis = 0
     }
     
