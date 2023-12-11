@@ -54,7 +54,7 @@ class AppConfigurationManager {
             }
             
             self.isTimerFinished = true
-            self.checkATTConfiguration()
+//            self.checkATTConfiguration()
             self.checkConfiguration()
         }
     }
