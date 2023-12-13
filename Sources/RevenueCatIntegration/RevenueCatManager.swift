@@ -148,6 +148,15 @@ public class RevenueCatManager: NSObject {
             } else if let error {
                 completion(.error(error: error.description))
             } else if let purchaseInfo {
+                let jsonData = transaction?.sk2Transaction?.jsonRepresentation ?? Data()
+                print("sk2Transaction?.jsonRepresentation \(jsonData)")
+                if let jsonObject = try? JSONSerialization.jsonObject(with: jsonData, options: []),
+                   let data = try? JSONSerialization.data(withJSONObject: jsonObject,
+                                                          options: [.prettyPrinted]),
+                   let prettyJSON = NSString(data: data, encoding: String.Encoding.utf8.rawValue) {
+                    print("sk2Transaction?.prettyJSON \(prettyJSON)")
+                }
+                
                 let product = package.storeProduct
                 let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
                 let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
