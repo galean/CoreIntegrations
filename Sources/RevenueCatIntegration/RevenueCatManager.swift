@@ -22,7 +22,13 @@ public class RevenueCatManager: NSObject {
             completion(nil)
             return
         }
-        Purchases.configure(withAPIKey: self.apiKey, appUserID: uuid)
+        let config = Configuration.Builder(withAPIKey: self.apiKey)
+            .with(appUserID: uuid)
+            .with(usesStoreKit2IfAvailable: true)
+        
+        Purchases.configure(with: config)
+
+//        Purchases.configure(withAPIKey: self.apiKey, appUserID: uuid)
         Purchases.shared.delegate = nil
         Purchases.shared.attribution.collectDeviceIdentifiers()
         if let fbAnonID {
