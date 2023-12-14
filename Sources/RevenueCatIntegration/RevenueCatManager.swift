@@ -143,7 +143,7 @@ public class RevenueCatManager: NSObject {
                                                       price: product.priceFloat, introductoryPrice: product.introPrice,
                                                       currencyCode: product.currencyCode ?? "", transactionID: transaction?.transactionIdentifier ?? "",
                                                       transactionJSON: transactionJSON, jws: jws)
-                    
+                    print("_transactionJSON \(transactionJSON) , jws \(jws)")
                     return .success(info: info)
                 }
             }
