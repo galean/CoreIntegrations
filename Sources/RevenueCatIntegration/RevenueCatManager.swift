@@ -7,6 +7,7 @@
 
 import Foundation
 import RevenueCat
+import StoreKit
 
 public class RevenueCatManager: NSObject {
     private let apiKey: String
@@ -124,6 +125,24 @@ public class RevenueCatManager: NSObject {
                     return .userCancelled
                 } else {
                     let product = package.storeProduct
+                    
+                    let jsonData = transaction?.sk2Transaction?.jsonRepresentation ?? Data()
+                    
+//                    let tr = transaction?.jwsRepresentation
+                    
+                    print("sk2Transaction?.jsonRepresentation \(jsonData)")
+                    if let jsonObject = try? JSONSerialization.jsonObject(with: jsonData, options: []),
+                       let data = try? JSONSerialization.data(withJSONObject: jsonObject,
+                                                              options: [.prettyPrinted]),
+                       let prettyJSON = NSString(data: data, encoding: String.Encoding.utf8.rawValue) {
+                        print("sk2Transaction?.prettyJSON \(prettyJSON)")
+                    }
+                    
+                    Task {
+                        let jws = await self.getJws(product)
+                        print("jws__ \(jws)")
+                    }
+                    
                     let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
                     let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
                                             price: product.priceFloat, introductoryPrice: product.introPrice,
@@ -148,16 +167,9 @@ public class RevenueCatManager: NSObject {
             } else if let error {
                 completion(.error(error: error.description))
             } else if let purchaseInfo {
-                let jsonData = transaction?.sk2Transaction?.jsonRepresentation ?? Data()
-                print("sk2Transaction?.jsonRepresentation \(jsonData)")
-                if let jsonObject = try? JSONSerialization.jsonObject(with: jsonData, options: []),
-                   let data = try? JSONSerialization.data(withJSONObject: jsonObject,
-                                                          options: [.prettyPrinted]),
-                   let prettyJSON = NSString(data: data, encoding: String.Encoding.utf8.rawValue) {
-                    print("sk2Transaction?.prettyJSON \(prettyJSON)")
-                }
                 
                 let product = package.storeProduct
+
                 let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
                 let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
                                                   price: product.priceFloat, introductoryPrice: product.introPrice,
@@ -168,6 +180,18 @@ public class RevenueCatManager: NSObject {
                 completion(.error(error: "Something went wrong"))
             }
         }
+    }
+    
+    private func getJws(_ product: StoreProduct) async -> String? {
+        guard let latestTransaction = await product.sk2Product?.latestTransaction else {
+            return nil
+        }
+        guard case .verified(let transaction) = latestTransaction else {
+            // Ignore unverified transactions.
+            return nil
+        }
+        
+        return latestTransaction.jwsRepresentation
     }
     
     public func verifyPremium(completion: @escaping (_ result: RevenueCatVerifyPremiumResult) -> Void) {
