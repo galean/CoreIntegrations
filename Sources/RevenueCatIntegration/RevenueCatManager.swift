@@ -128,23 +128,21 @@ public class RevenueCatManager: NSObject {
                     let product = package.storeProduct
                     
                     let jsonData = transaction?.sk2Transaction?.jsonRepresentation ?? Data()
+                    var transactionJSON: NSString? = nil
+                    //                    let tr = transaction?.jwsRepresentation <- internal :(
                     
-//                    let tr = transaction?.jwsRepresentation <- internal :(
-                    
-                    print("sk2Transaction?.jsonRepresentation \(jsonData)")
                     if let jsonObject = try? JSONSerialization.jsonObject(with: jsonData, options: []),
                        let data = try? JSONSerialization.data(withJSONObject: jsonObject,
                                                               options: [.prettyPrinted]),
                        let prettyJSON = NSString(data: data, encoding: String.Encoding.utf8.rawValue) {
-                        print("sk2Transaction?.prettyJSON \(prettyJSON)")
+                        transactionJSON = prettyJSON
                     }
                     
                     let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
                     let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
-                                            price: product.priceFloat, introductoryPrice: product.introPrice,
-                                            currencyCode: product.currencyCode ?? "", transactionID: transaction?.transactionIdentifier ?? "")
-                    print("jws__ \(jws)")
-                    print("info__ \(info)")
+                                                      price: product.priceFloat, introductoryPrice: product.introPrice,
+                                                      currencyCode: product.currencyCode ?? "", transactionID: transaction?.transactionIdentifier ?? "",
+                                                      transactionJSON: transactionJSON, jws: jws)
                     
                     return .success(info: info)
                 }
