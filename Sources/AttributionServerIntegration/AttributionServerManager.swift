@@ -176,21 +176,23 @@ open class AttributionServerManager {
         let introductoryPrice = details.introductoryPrice
         let currency = details.currencyCode
         let purchaseToken = dataWorker.receiptToken
+        let jws = details.jws
         
         let uuid = dataWorker.uuid
 
         let introPrice = introductoryPrice ?? 0
         
         let anal = AttrubutionPurchaseRequestModel(productId: subIdentifier,
-                                          purchaseId: purchaseToken,
-                                          userId: uuid,
-                                          adid: userId,
-                                          paymentDetails: AttrubutionPurchaseRequestModel.PaymentDetails(price: price,
-                                                                                                introductoryPrice: introPrice,
-                                                                                                currency: currency))
-//        checkAndSendFacebookAnal(details: details)
+                                                   purchaseId: purchaseToken,
+                                                   userId: uuid,
+                                                   adid: userId,
+                                                   version: 2,
+                                                   signedTransaction: jws,
+                                                   paymentDetails: AttrubutionPurchaseRequestModel.PaymentDetails(price: price,
+                                                                                                                  introductoryPrice: introPrice,
+                                                                                                                  currency: currency))
+
         serverWorker?.sendPurchaseAnalytics(analytics: anal,
-                                           userId: userId,
                                            authToken: authorizationToken)
         { (response) in
             self.handleSendPurchaseResult(response, details: details)

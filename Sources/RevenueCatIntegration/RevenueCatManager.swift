@@ -127,23 +127,23 @@ public class RevenueCatManager: NSObject {
                 } else {
                     let product = package.storeProduct
                     
-                    let jsonData = transaction?.sk2Transaction?.jsonRepresentation ?? Data()
-                    var transactionJSON: NSString? = nil
+//                    let jsonData = transaction?.sk2Transaction?.jsonRepresentation ?? Data()
+//                    var transactionJSON: NSString? = nil
                     //                    let tr = transaction?.jwsRepresentation <- internal :(
                     
-                    if let jsonObject = try? JSONSerialization.jsonObject(with: jsonData, options: []),
-                       let data = try? JSONSerialization.data(withJSONObject: jsonObject,
-                                                              options: [.prettyPrinted]),
-                       let prettyJSON = NSString(data: data, encoding: String.Encoding.utf8.rawValue) {
-                        transactionJSON = prettyJSON
-                    }
+//                    if let jsonObject = try? JSONSerialization.jsonObject(with: jsonData, options: []),
+//                       let data = try? JSONSerialization.data(withJSONObject: jsonObject,
+//                                                              options: [.prettyPrinted]),
+//                       let prettyJSON = NSString(data: data, encoding: String.Encoding.utf8.rawValue) {
+//                        transactionJSON = prettyJSON
+//                    }
                     
                     let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
                     let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
                                                       price: product.priceFloat, introductoryPrice: product.introPrice,
                                                       currencyCode: product.currencyCode ?? "", transactionID: transaction?.transactionIdentifier ?? "",
-                                                      transactionJSON: transactionJSON, jws: jws)
-                    print("_transactionJSON \(transactionJSON) , jws \(jws)")
+                                                      jws: jws)
+//                    print("_transactionJSON \(transactionJSON) , jws \(jws)")
                     return .success(info: info)
                 }
             }

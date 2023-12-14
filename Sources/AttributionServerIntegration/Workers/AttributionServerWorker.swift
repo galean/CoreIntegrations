@@ -88,7 +88,7 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
             defer {
                 self.isSyncingInstall = false
             }
-            if let error = error {
+            if let _ = error {
                 self.handleServerError()
                 completion([:])
                 return
@@ -110,7 +110,7 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
         task.resume()
     }
     
-    func sendPurchaseAnalytics(analytics: AttrubutionPurchaseRequestModel, userId: String,
+    func sendPurchaseAnalytics(analytics: AttrubutionPurchaseRequestModel,
                                authToken: String,
                                completion: @escaping ((Bool) -> Void)) {
         let jsonDataOrNil = try? JSONEncoder().encode(analytics)
@@ -124,13 +124,13 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
         let request = createRequest(url: url, body: jsonData, authToken: authToken)
         
         let task = session.dataTask(with: request) { (data, response, error) in
-            if let error = error {
+            if let _ = error {
                 self.handleServerError()
                 completion(false)
                 return
             }
             
-            guard let responseData = data else{
+            guard let _ = data else{
                 completion(false)
                 return
             }
