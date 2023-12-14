@@ -119,6 +119,7 @@ public class RevenueCatManager: NSObject {
         
         do {
             let result = try await Purchases.shared.purchase(package: package)
+            let jws = await self.getJws(package.storeProduct)
             switch result {
             case (let transaction, let customerInfo, let userCancelled):
                 if userCancelled == true {
@@ -128,7 +129,7 @@ public class RevenueCatManager: NSObject {
                     
                     let jsonData = transaction?.sk2Transaction?.jsonRepresentation ?? Data()
                     
-//                    let tr = transaction?.jwsRepresentation
+//                    let tr = transaction?.jwsRepresentation <- internal :(
                     
                     print("sk2Transaction?.jsonRepresentation \(jsonData)")
                     if let jsonObject = try? JSONSerialization.jsonObject(with: jsonData, options: []),
@@ -138,15 +139,13 @@ public class RevenueCatManager: NSObject {
                         print("sk2Transaction?.prettyJSON \(prettyJSON)")
                     }
                     
-                    Task {
-                        let jws = await self.getJws(product)
-                        print("jws__ \(jws)")
-                    }
-                    
                     let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
                     let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
                                             price: product.priceFloat, introductoryPrice: product.introPrice,
                                             currencyCode: product.currencyCode ?? "", transactionID: transaction?.transactionIdentifier ?? "")
+                    print("jws__ \(jws)")
+                    print("info__ \(info)")
+                    
                     return .success(info: info)
                 }
             }
