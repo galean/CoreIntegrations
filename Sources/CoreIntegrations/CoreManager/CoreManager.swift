@@ -248,7 +248,8 @@ public class CoreManager {
             } else if isASA {
                 userSource = .asa
             } else if isRedirect {
-                userSource = .fbgoogle
+                #warning("any google/facebook separation here???")
+                userSource = .google
             } else {
                 userSource = .organic
             }
@@ -300,21 +301,30 @@ class ConfigurationResultManager {
     func calculateResult() -> CoreManagerResult {
         // get appsflyer info
         
-        let generalPaywallName = self.getGeneralPaywallName(generalPaywalConfig: InternalRemoteABTests.ab_paywall_general)
-        let fbGooglePaywallName = self.getFbGooglePaywallName(fbGooglePaywalConfig: InternalRemoteABTests.ab_paywall_fb_google)
+        let facebookPaywallName = self.getGeneralPaywallName(generalPaywalConfig: InternalRemoteABTests.ab_paywall_fb)
+        let googlePaywallName = self.getFbGooglePaywallName(fbGooglePaywalConfig: InternalRemoteABTests.ab_paywall_google)
+        let asaPaywallName = self.getGeneralPaywallName(generalPaywalConfig: InternalRemoteABTests.ab_paywall_asa)
+        let organicPaywallName = self.getFbGooglePaywallName(fbGooglePaywalConfig: InternalRemoteABTests.ab_paywall_organic)
         
         let activePaywallName: String
+
         switch userSource {
-        case .organic, .asa, .ipat:
-            activePaywallName = generalPaywallName
-        case .fbgoogle:
-            activePaywallName = fbGooglePaywallName
+        case .organic, .ipat:
+            activePaywallName = organicPaywallName
+        case .asa:
+            activePaywallName = asaPaywallName
+        case .facebook:
+            activePaywallName = facebookPaywallName
+        case .google:
+            activePaywallName = googlePaywallName
         }
         
         let coreManagerResult = CoreManagerResult(userSource: userSource,
                                                   activePaywallName: activePaywallName,
-                                                  organicPaywallName: generalPaywallName,
-                                                  fbgoogleredictPaywallName: fbGooglePaywallName)
+                                                  organicPaywallName: organicPaywallName,
+                                                  asaPaywallName: asaPaywallName,
+                                                  facebookPaywallName: facebookPaywallName,
+                                                  googlePaywallName: googlePaywallName)
         return coreManagerResult
     }
     

@@ -11,10 +11,7 @@ public struct CoreManagerResult {
     public var userSource: CoreUserSource
     public var activePaywallName: String
     public var organicPaywallName: String
-    public var fbgoogleredictPaywallName: String
+    public var asaPaywallName: String
+    public var facebookPaywallName: String
+    public var googlePaywallName: String
 }
-
-//public enum CoreManagerResult {
-//    case success(data: CoreManagerResultData)
-//    case error(defaultData: CoreManagerResultData)
-//}

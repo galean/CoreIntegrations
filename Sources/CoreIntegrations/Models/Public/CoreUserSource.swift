@@ -10,6 +10,7 @@ import Foundation
 public enum CoreUserSource: CaseIterable {
     case organic
     case asa
-    case fbgoogle
+    case facebook
+    case google
     case ipat
 }
