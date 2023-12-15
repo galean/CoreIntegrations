@@ -127,23 +127,11 @@ public class RevenueCatManager: NSObject {
                 } else {
                     let product = package.storeProduct
                     
-//                    let jsonData = transaction?.sk2Transaction?.jsonRepresentation ?? Data()
-//                    var transactionJSON: NSString? = nil
-                    //                    let tr = transaction?.jwsRepresentation <- internal :(
-                    
-//                    if let jsonObject = try? JSONSerialization.jsonObject(with: jsonData, options: []),
-//                       let data = try? JSONSerialization.data(withJSONObject: jsonObject,
-//                                                              options: [.prettyPrinted]),
-//                       let prettyJSON = NSString(data: data, encoding: String.Encoding.utf8.rawValue) {
-//                        transactionJSON = prettyJSON
-//                    }
-                    
                     let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
                     let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
                                                       price: product.priceFloat, introductoryPrice: product.introPrice,
-                                                      currencyCode: product.currencyCode ?? "", transactionID: transaction?.transactionIdentifier ?? "",
-                                                      jws: jws)
-//                    print("_transactionJSON \(transactionJSON) , jws \(jws)")
+                                                      currencyCode: product.currencyCode ?? "", transactionID: transaction?.transactionIdentifier ?? "", jws: jws)
+
                     return .success(info: info)
                 }
             }
@@ -164,15 +152,18 @@ public class RevenueCatManager: NSObject {
             } else if let error {
                 completion(.error(error: error.description))
             } else if let purchaseInfo {
-                
-                let product = package.storeProduct
-
-                let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
-                let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
-                                                  price: product.priceFloat, introductoryPrice: product.introPrice,
-                                                  currencyCode: product.currencyCode ?? "",
-                                                  transactionID: transaction?.transactionIdentifier ?? "")
-                completion(.success(info: info))
+                Task{
+                    let jws = await self.getJws(package.storeProduct)
+                    
+                    let product = package.storeProduct
+                    
+                    let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
+                    let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
+                                                      price: product.priceFloat, introductoryPrice: product.introPrice,
+                                                      currencyCode: product.currencyCode ?? "",
+                                                      transactionID: transaction?.transactionIdentifier ?? "", jws: jws)
+                    completion(.success(info: info))
+                }
             } else {
                 completion(.error(error: "Something went wrong"))
             }
