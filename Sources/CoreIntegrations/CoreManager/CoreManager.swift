@@ -202,13 +202,8 @@ public class CoreManager {
                 let installPath = "/install-application"
                 let purchasePath = "/subscribe"
                 
-                #warning("to be removed")
-                //https://sm-(production|development).roomplanner.site/subscribe
-                let test_install_url = "https://sm-development.roomplanner.site"
-                let test_subscribe_url = "https://sm-development.roomplanner.site"
-                
                 let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
-                                                                     purchaseServerURLPath: test_subscribe_url,
+                                                                     purchaseServerURLPath: purchaseURLPath,
                                                                      installPath: installPath,
                                                                      purchasePath: purchasePath)
                 
