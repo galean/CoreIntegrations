@@ -75,6 +75,8 @@ public class CoreManager {
         let appsflyerToken = appsflyerManager?.appsflyerID
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
+        let installURLPath = ""
+        let purchaseURLPath = ""
         
         revenueCatManager = RevenueCatManager(apiKey: configuration.appSettings.revenuecatApiKey)
         
@@ -85,10 +87,6 @@ public class CoreManager {
             InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
         }
         
-//        if let installURLPath = self.firebaseManager?.install_server_path,
-//           let purchaseURLPath = self.firebaseManager?.purchase_server_path {
-        let installURLPath = ""
-        let purchaseURLPath = ""
         let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
                                                                  installServerURLPath: installURLPath,
                                                                  purchaseServerURLPath: purchaseURLPath,
@@ -98,7 +96,6 @@ public class CoreManager {
                                                                  facebookData: facebookData)
             
             AttributionServerManager.shared.configure(config: attributionConfiguration)
-//        }
         
         if configuration.useDefaultATTRequest {
             self.configureATT()
@@ -204,8 +201,14 @@ public class CoreManager {
                let purchaseURLPath = self.firebaseManager?.purchase_server_path {
                 let installPath = "/install-application"
                 let purchasePath = "/subscribe"
+                
+                #warning("to be removed")
+                //https://sm-(production|development).roomplanner.site/subscribe
+                let test_install_url = "https://sm-development.roomplanner.site"
+                let test_subscribe_url = "https://sm-development.roomplanner.site"
+                
                 let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
-                                                                     purchaseServerURLPath: purchaseURLPath,
+                                                                     purchaseServerURLPath: test_subscribe_url,
                                                                      installPath: installPath,
                                                                      purchasePath: purchasePath)
                 
