@@ -73,31 +73,40 @@ public class CoreManager {
                                                     fbUserData: facebookManager?.userData ?? "",
                                                     fbAnonId: facebookManager?.anonUserID ?? "")
         let appsflyerToken = appsflyerManager?.appsflyerID
-        let atServerDataSource = configuration.attributionServerDataSource
-        let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
-                                                             serverURLPath: atServerDataSource.serverURLPath,
-                                                             installPath: atServerDataSource.installPath,
-                                                             purchasePath: atServerDataSource.purchasePath,
-                                                             appsflyerID: appsflyerToken,
-                                                             facebookData: facebookData)
-        AttributionServerManager.shared.configure(config: attributionConfiguration)
+        let installPath = "/install-application"
+        let purchasePath = "/subscribe"
         
-        if configuration.useDefaultATTRequest {
-            configureATT()
-        }
-
         revenueCatManager = RevenueCatManager(apiKey: configuration.appSettings.revenuecatApiKey)
         
         firebaseManager = FirebaseManager()
         firebaseManager?.configure()
         
-        firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
+        self.firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
             InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
         }
         
+//        if let installURLPath = self.firebaseManager?.install_server_path,
+//           let purchaseURLPath = self.firebaseManager?.purchase_server_path {
+        let installURLPath = ""
+        let purchaseURLPath = ""
+        let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
+                                                                 installServerURLPath: installURLPath,
+                                                                 purchaseServerURLPath: purchaseURLPath,
+                                                                 installPath: installPath,
+                                                                 purchasePath: purchasePath,
+                                                                 appsflyerID: appsflyerToken,
+                                                                 facebookData: facebookData)
+            
+            AttributionServerManager.shared.configure(config: attributionConfiguration)
+//        }
         
+        if configuration.useDefaultATTRequest {
+            self.configureATT()
+        }
         
-        handleConfigurationEndCallback()
+        self.handleConfigurationEndCallback()
+        
+        self.handleAttributionInstall()
     }
     
     func configureATT() {
@@ -109,12 +118,14 @@ public class CoreManager {
     @objc public func applicationDidBecomeActive() {
         let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
         let uuid = AttributionServerManager.shared.savedUserUUID
+        
         let id: String?
         if savedIDFV != nil {
             id = AttributionServerManager.shared.uniqueUserID
         } else {
             id = uuid ?? AttributionServerManager.shared.uniqueUserID
         }
+        
         if let id, id != "" {
             appsflyerManager?.customerUserID = id
             appsflyerManager?.startAppsflyer()
@@ -182,6 +193,7 @@ public class CoreManager {
         AttributionServerManager.shared.syncOnAppStart { result in
             InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
         }
+
     }
     
     func handlePurchaseSuccess(purchaseInfo: RevenueCatPurchaseInfo) {

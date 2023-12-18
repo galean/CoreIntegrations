@@ -95,7 +95,6 @@ extension CoreManager: CoreManagerProtocol {
             }
             completion(result)
         }
-        revenueCatManager.verifyPremium(completion: completion)
     }
     
     public func restorePremium(completion: @escaping (_ result: RevenueCatVerifyPremiumResult) -> Void) {
@@ -104,7 +103,15 @@ extension CoreManager: CoreManagerProtocol {
             completion(.error)
             return
         }
-        revenueCatManager.restorePremium(completion: completion)
+        revenueCatManager.restorePremium { result in
+            switch result {
+            case .premium(let subscriptionID):
+                self.sendSubscriptionTypeUserProperty(identifier: subscriptionID)
+            default:
+                break
+            }
+            completion(result)
+        }
     }
     
     public func verifyPurchases(completion: @escaping (_ result: RevenueCatRestoreResult) -> Void) {

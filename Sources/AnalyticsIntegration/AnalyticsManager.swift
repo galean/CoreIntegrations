@@ -29,9 +29,10 @@ public class AnalyticsManager {
     }
     
     public func setUserID(_ userID: String) {
-        guard userID != Amplitude.instance().userId else {
-            return
-        }
+        
+//        guard userID != Amplitude.instance().userId else {
+//            return
+//        }
         Amplitude.instance().setUserId(userID, startNewSession: false)
     }
     

@@ -17,7 +17,15 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
         self.appsflyerID = config.appsflyerID
         authorizationToken = config.authToken
         
-        serverWorker = AttributionServerWorker(serverURLPath: config.serverURLPath,
+        serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
+                                               purchaseServerURLPath: config.purchaseServerURLPath,
+                                               installPath: config.installPath,
+                                               purchasePath: config.purchasePath)
+    }
+    
+    public func configureURLs(config: AttributionConfigURLs) {
+        serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
+                                               purchaseServerURLPath: config.purchaseServerURLPath,
                                                installPath: config.installPath,
                                                purchasePath: config.purchasePath)
     }
@@ -92,6 +100,7 @@ open class AttributionServerManager {
         let uuid = dataWorker.uuid
         let idfa = dataWorker.idfa
         let idfv = dataWorker.idfv
+        
         let storeCountry = dataWorker.storeCountry
         
         var saFields: AttributionInstallRequestModel.SAFields?
@@ -117,7 +126,7 @@ open class AttributionServerManager {
         if #available(iOS 14.3, *) {
             status = ATTrackingManager.trackingAuthorizationStatus.rawValue
         }
-        
+      
         let parameters = AttributionInstallRequestModel(userId: uuid,
                                                         idfa: idfa,
                                                         idfv: idfv,
