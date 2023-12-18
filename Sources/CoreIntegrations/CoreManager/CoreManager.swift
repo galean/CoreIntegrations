@@ -73,9 +73,9 @@ public class CoreManager {
                                                     fbUserData: facebookManager?.userData ?? "",
                                                     fbAnonId: facebookManager?.anonUserID ?? "")
         let appsflyerToken = appsflyerManager?.appsflyerID
-        let installPath = "/install-application"
-        let purchasePath = "/subscribe"
+        let atServerDataSource = configuration.attributionServerDataSource
         
+       
         revenueCatManager = RevenueCatManager(apiKey: configuration.appSettings.revenuecatApiKey)
         
         firebaseManager = FirebaseManager()
@@ -85,28 +85,21 @@ public class CoreManager {
             InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
         }
         
-//        if let installURLPath = self.firebaseManager?.install_server_path,
-//           let purchaseURLPath = self.firebaseManager?.purchase_server_path {
-        let installURLPath = ""
-        let purchaseURLPath = ""
         let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
-                                                                 installServerURLPath: installURLPath,
-                                                                 purchaseServerURLPath: purchaseURLPath,
-                                                                 installPath: installPath,
-                                                                 purchasePath: purchasePath,
+                                                                 installServerURLPath: atServerDataSource.serverURLPath,
+                                                                 purchaseServerURLPath: atServerDataSource.serverURLPath,
+                                                                 installPath: atServerDataSource.installPath,
+                                                                 purchasePath: atServerDataSource.purchasePath,
                                                                  appsflyerID: appsflyerToken,
                                                                  facebookData: facebookData)
             
-            AttributionServerManager.shared.configure(config: attributionConfiguration)
-//        }
+        AttributionServerManager.shared.configure(config: attributionConfiguration)
         
         if configuration.useDefaultATTRequest {
             self.configureATT()
         }
         
         self.handleConfigurationEndCallback()
-        
-        self.handleAttributionInstall()
     }
     
     func configureATT() {
@@ -249,19 +242,32 @@ public class CoreManager {
             let deepLinkResult = self.appsflyerManager?.deeplinkResult ?? [:]
             let isASA = (asaResult?.asaAttribution["campaignName"] as? String != nil) ||
             (asaResult?.asaAttribution["campaign_name"] as? String != nil)
+            
             var isRedirect = false
-            if deepLinkResult["network"] != nil {
+            var networkSource: CoreUserSource = .unknown
+            
+            if let networkValue = deepLinkResult["network"] {
+                if networkValue == "fb_redirect" {
+                    networkSource = .facebook
+                } else if networkValue == "google_redirect" {
+                    networkSource = .google
+                } else if networkValue == "Full_Access" {
+                    networkSource = .full_access
+                } else {
+                    networkSource = .unknown
+                }
+                
                 isRedirect = true
             }
             
             var userSource: CoreUserSource
+            
             if isIPAT {
                 userSource = .ipat
             } else if isASA {
                 userSource = .asa
             } else if isRedirect {
-                #warning("any google/facebook separation here???")
-                userSource = .google
+                userSource = networkSource
             } else {
                 userSource = .organic
             }
@@ -318,10 +324,16 @@ class ConfigurationResultManager {
         let asaPaywallName = self.getGeneralPaywallName(generalPaywalConfig: InternalRemoteABTests.ab_paywall_asa)
         let organicPaywallName = self.getFbGooglePaywallName(fbGooglePaywalConfig: InternalRemoteABTests.ab_paywall_organic)
         
+        let dpValue: String? = deepLinkResult?["deep_link_value"]
+        ///if dpValue != "" && != "none"
+        ///check firebase config for dpValue?
+        ///if available -> set pawall to this value
+        ///if not set paywall by userSource
+        
         let activePaywallName: String
 
         switch userSource {
-        case .organic, .ipat:
+        case .organic, .ipat, .full_access, .unknown:
             activePaywallName = organicPaywallName
         case .asa:
             activePaywallName = asaPaywallName
