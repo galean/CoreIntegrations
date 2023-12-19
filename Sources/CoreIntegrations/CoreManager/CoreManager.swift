@@ -245,7 +245,8 @@ public class CoreManager {
             
             var isRedirect = false
             var networkSource: CoreUserSource = .unknown
-            
+            //Google_StoreRedirect
+            //test_Google_StoreRedirect
             if let networkValue = deepLinkResult["network"] {
                 if networkValue == "fb_redirect" {
                     networkSource = .facebook
@@ -324,23 +325,22 @@ class ConfigurationResultManager {
         let asaPaywallName = self.getGeneralPaywallName(generalPaywalConfig: InternalRemoteABTests.ab_paywall_asa)
         let organicPaywallName = self.getFbGooglePaywallName(fbGooglePaywalConfig: InternalRemoteABTests.ab_paywall_organic)
         
-        let dpValue: String? = deepLinkResult?["deep_link_value"]
-        ///if dpValue != "" && != "none"
-        ///check firebase config for dpValue?
-        ///if available -> set pawall to this value
-        ///if not set paywall by userSource
-        
         let activePaywallName: String
-
-        switch userSource {
-        case .organic, .ipat, .full_access, .unknown:
-            activePaywallName = organicPaywallName
-        case .asa:
-            activePaywallName = asaPaywallName
-        case .facebook:
-            activePaywallName = facebookPaywallName
-        case .google:
-            activePaywallName = googlePaywallName
+        
+        if let deepLinkValue: String = deepLinkResult?["deep_link_value"], deepLinkValue != "none", deepLinkValue != "",
+           let firebaseValue = CoreManager.internalShared.firebaseManager?.remoteConfigResult?[deepLinkValue] {
+                activePaywallName = firebaseValue
+        }else{
+            switch userSource {
+            case .organic, .ipat, .full_access, .unknown:
+                activePaywallName = organicPaywallName
+            case .asa:
+                activePaywallName = asaPaywallName
+            case .facebook:
+                activePaywallName = facebookPaywallName
+            case .google:
+                activePaywallName = googlePaywallName
+            }
         }
         
         let coreManagerResult = CoreManagerResult(userSource: userSource,
@@ -350,19 +350,6 @@ class ConfigurationResultManager {
                                                   facebookPaywallName: facebookPaywallName,
                                                   googlePaywallName: googlePaywallName)
         return coreManagerResult
-    }
-    
-    func getActivePaywallName(generalPaywalConfig: any CoreRemoteABTestable,
-                              fbGooglePaywalConfig: any CoreRemoteABTestable,
-                              deepLinkResult: [String: String]) -> String {
-        let paywallName: String
-        if deepLinkResult.isEmpty == false {
-            paywallName = getGeneralPaywallName(generalPaywalConfig: generalPaywalConfig)
-        } else {
-            paywallName = getFbGooglePaywallName(fbGooglePaywalConfig: fbGooglePaywalConfig)
-        }
-        
-        return paywallName
     }
     
     func getGeneralPaywallName(generalPaywalConfig: any CoreRemoteABTestable) -> String {
