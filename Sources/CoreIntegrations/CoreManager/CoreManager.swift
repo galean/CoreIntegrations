@@ -245,15 +245,18 @@ public class CoreManager {
             
             var isRedirect = false
             var networkSource: CoreUserSource = .unknown
-            //Google_StoreRedirect
-            //test_Google_StoreRedirect
+            
             if let networkValue = deepLinkResult["network"] {
-                if networkValue == "fb_redirect" {
+                if networkValue.contains("web2app_fb") {
                     networkSource = .facebook
-                } else if networkValue == "google_redirect" {
+                } else if networkValue.contains("Google_StoreRedirect") {
                     networkSource = .google
+                } else if networkValue.contains("tiktok") {
+                    networkSource = .tiktok
+                } else if networkValue.contains("Social_instagram") {
+                    networkSource = .instagram
                 } else if networkValue == "Full_Access" {
-                    networkSource = .full_access
+                    networkSource = .test_premium
                 } else {
                     networkSource = .unknown
                 }
@@ -320,10 +323,11 @@ class ConfigurationResultManager {
     func calculateResult() -> CoreManagerResult {
         // get appsflyer info
         
-        let facebookPaywallName = self.getGeneralPaywallName(generalPaywalConfig: InternalRemoteABTests.ab_paywall_fb)
-        let googlePaywallName = self.getFbGooglePaywallName(fbGooglePaywalConfig: InternalRemoteABTests.ab_paywall_google)
-        let asaPaywallName = self.getGeneralPaywallName(generalPaywalConfig: InternalRemoteABTests.ab_paywall_asa)
-        let organicPaywallName = self.getFbGooglePaywallName(fbGooglePaywalConfig: InternalRemoteABTests.ab_paywall_organic)
+        let facebookPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_fb)
+        let googlePaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_google)
+        let asaPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_asa)
+        let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_organic)
+        //tiktok & instagram paywalls should be added later
         
         let activePaywallName: String
         
@@ -332,7 +336,7 @@ class ConfigurationResultManager {
                 activePaywallName = firebaseValue
         }else{
             switch userSource {
-            case .organic, .ipat, .full_access, .unknown:
+            case .organic, .ipat, .test_premium, .tiktok, .instagram, .unknown:
                 activePaywallName = organicPaywallName
             case .asa:
                 activePaywallName = asaPaywallName
@@ -352,15 +356,6 @@ class ConfigurationResultManager {
         return coreManagerResult
     }
     
-    func getGeneralPaywallName(generalPaywalConfig: any CoreRemoteABTestable) -> String {
-        return getPaywallNameFromConfig(generalPaywalConfig)
-
-    }
-    
-    func getFbGooglePaywallName(fbGooglePaywalConfig: any CoreRemoteABTestable) -> String {
-        return getPaywallNameFromConfig(fbGooglePaywalConfig)
-    }
-    
     private func getPaywallNameFromConfig(_ config: any CoreRemoteABTestable) -> String {
         let paywallName: String
         let value = config.value
@@ -370,16 +365,5 @@ class ConfigurationResultManager {
             paywallName = value
         }
         return paywallName
-    }
-}
-
-typealias PaywallName = String
-enum PaywallDefaultType {
-    case organic
-    case web2app
-    case fb_google_redirect
-    
-    var defaultPaywallName: PaywallName {
-        return "default"
     }
 }

@@ -13,6 +13,8 @@ public enum CoreUserSource: CaseIterable {
     case facebook
     case google
     case ipat
-    case full_access
+    case test_premium
+    case tiktok
+    case instagram
     case unknown
 }
