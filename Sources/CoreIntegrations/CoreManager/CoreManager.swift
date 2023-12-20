@@ -253,7 +253,7 @@ public class CoreManager {
                     networkSource = .google
                 } else if networkValue.contains("tiktok") {
                     networkSource = .tiktok
-                } else if networkValue.contains("Social_instagram") {
+                } else if networkValue.contains("instagram") {
                     networkSource = .instagram
                 } else if networkValue == "Full_Access" {
                     networkSource = .test_premium
