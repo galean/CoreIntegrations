@@ -90,7 +90,7 @@ public class CoreManager {
         
         firebaseManager = FirebaseManager()
         firebaseManager?.configure()
-        
+
         firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
             InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
         }
@@ -305,10 +305,12 @@ class ConfigurationResultManager {
         
         let activePaywallName: String
         switch userSource {
-        case .organic, .asa, .ipat:
+        case .organic, .asa:
             activePaywallName = generalPaywallName
         case .fbgoogle:
             activePaywallName = fbGooglePaywallName
+        case .ipat:
+            activePaywallName = generalPaywallName + "_r"
         }
         
         let coreManagerResult = CoreManagerResult(userSource: userSource,
