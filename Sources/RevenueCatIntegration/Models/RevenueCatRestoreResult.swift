@@ -9,7 +9,6 @@ import Foundation
 import RevenueCat
 
 public enum RevenueCatRestoreResult {
-    case success(subscriptions: Set<String>, nonSubscriptions: Set<String>)
-    case success(entitlements: EntitlementInfos, nonSubscriptions: Set<String>)
+    case success(entitlements: EntitlementInfos?, subscriptions: Set<String>, nonSubscriptions: Set<String>)
     case error
 }
