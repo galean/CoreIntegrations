@@ -14,6 +14,7 @@ internal struct AttrubutionPurchaseRequestModel: Codable {
     let adid: String
     let version: Int
     let signedTransaction: String?
+    let originalTransactionID: String?
     let paymentDetails: PaymentDetails
     
     struct PaymentDetails: Codable {

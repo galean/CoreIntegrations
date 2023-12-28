@@ -17,8 +17,10 @@ extension AttributionPurchaseModel {
         let currencyCode = rcDetails.currencyCode
         let purchaseID = rcDetails.productID
         let jws = rcDetails.jws
+        let originalTransactionID = rcDetails.originalTransactionID
         
         self.init(price: price, introductoryPrice: introductoryPrice,
-             currencyCode: currencyCode, subscriptionIdentifier: purchaseID, jws: jws)
+             currencyCode: currencyCode, subscriptionIdentifier: purchaseID,
+                  jws: jws, originalTransactionID: originalTransactionID)
     }
 }
