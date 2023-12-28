@@ -127,6 +127,10 @@ public class RevenueCatManager: NSObject {
                 } else {
                     let product = package.storeProduct
                     
+                    //TODO: add originaltransactionID_sk2 to RevenueCatPurchaseInfo & server request
+                    let originaltransactionID_sk2 = transaction?.sk2Transaction?.originalID
+                    let originaltransactionID_sk1 = transaction?.sk1Transaction?.original?.transactionIdentifier
+                    
                     let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
                     let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
                                                       price: product.priceFloat, introductoryPrice: product.introPrice,
@@ -156,6 +160,10 @@ public class RevenueCatManager: NSObject {
                     let jws = await self.getJws(package.storeProduct)
                     
                     let product = package.storeProduct
+                    
+                    //TODO: add originaltransactionID_sk2 to RevenueCatPurchaseInfo & server request
+                    let originaltransactionID_sk2 = transaction?.sk2Transaction?.originalID
+                    let originaltransactionID_sk1 = transaction?.sk1Transaction?.original?.transactionIdentifier
                     
                     let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
                     let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
