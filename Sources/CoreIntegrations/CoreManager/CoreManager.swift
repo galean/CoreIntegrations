@@ -303,13 +303,20 @@ class ConfigurationResultManager {
         let generalPaywallName = self.getGeneralPaywallName(generalPaywalConfig: InternalRemoteABTests.ab_paywall_general)
         let fbGooglePaywallName = self.getFbGooglePaywallName(fbGooglePaywalConfig: InternalRemoteABTests.ab_paywall_fb_google)
         
-        let activePaywallName: String
+        var activePaywallName: String
         switch userSource {
         case .organic, .asa:
             activePaywallName = generalPaywallName
         case .fbgoogle:
             activePaywallName = fbGooglePaywallName
         case .ipat:
+            activePaywallName = generalPaywallName + "_r"
+        }
+        
+        //        let style_full = CoreManager.internalShared.firebaseManager?.remoteConfigResult?["subscription_screen_style_full"]
+
+        let style_full = InternalRemoteConfigs.subscription_screen_style_full.boolValue
+        if style_full {
             activePaywallName = generalPaywallName + "_r"
         }
         
