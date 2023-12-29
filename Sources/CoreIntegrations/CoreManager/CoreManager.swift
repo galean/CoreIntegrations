@@ -313,9 +313,8 @@ class ConfigurationResultManager {
             activePaywallName = generalPaywallName + "_r"
         }
         
-        //        let style_full = CoreManager.internalShared.firebaseManager?.remoteConfigResult?["subscription_screen_style_full"]
+        let style_full = CoreManager.internalShared.firebaseManager?.remoteConfigResult?["subscription_screen_style_full"] as? Bool ?? false
 
-        let style_full = InternalRemoteConfigs.subscription_screen_style_full.boolValue
         if style_full {
             activePaywallName = generalPaywallName + "_r"
         }

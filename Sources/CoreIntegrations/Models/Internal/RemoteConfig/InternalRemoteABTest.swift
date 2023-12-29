@@ -27,22 +27,3 @@ enum InternalRemoteABTests: String, CoreRemoteABTestable {
         }
     }
 }
-
-enum InternalRemoteConfigs: String, CoreRemoteConfigurable {
-    case subscription_screen_style_full
-    case subscription_screen_style_h
-    case rate_us_primary_shown
-    case rate_us_secondary_shown
- 
-    var key: String { return rawValue }
-
-    var defaultValue: String { return "none" }
-    
-    var activeForSources: [CoreUserSource] {
-        switch self {
-        case .subscription_screen_style_full, .subscription_screen_style_h,
-                .rate_us_primary_shown, .rate_us_secondary_shown:
-            return CoreUserSource.allCases
-        }
-    }
-}
