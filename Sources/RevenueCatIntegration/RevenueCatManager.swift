@@ -265,7 +265,8 @@ public class RevenueCatManager: NSObject {
             }
             let nonSubscriptionsSet = Set(nonSubscriptionIds)
 
-            completion(.success(subscriptions: customerInfo.activeSubscriptions,
+            completion(.success(entitlements: nil,
+                                subscriptions: customerInfo.activeSubscriptions,
                                 nonSubscriptions: nonSubscriptionsSet))
         }
     }
@@ -289,6 +290,7 @@ public class RevenueCatManager: NSObject {
             let nonSubscriptionsSet = Set(nonSubscriptionIds)
             
             completion(.success(entitlements: entitlements,
+                                subscriptions: [],
                                 nonSubscriptions: nonSubscriptionsSet))
         }
     }
