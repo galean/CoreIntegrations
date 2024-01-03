@@ -28,6 +28,7 @@ public class CoreManager {
     }
     
     var isConfigured: Bool = false
+    var isVersionChecked: Bool = false
     
     var configuration: CoreConfigurationProtocol?
     var appsflyerManager: AppfslyerManagerProtocol?
@@ -139,7 +140,9 @@ public class CoreManager {
     
     private func checkAppVersion() {
         if let fbVersion = firebaseManager?.remoteConfigResult?["minimal_supported_app_version"],
-           let result = ForceUpdateManager.isAppUpdateNeeded(fbVersion)  {
+           let result = ForceUpdateManager.isAppUpdateNeeded(fbVersion),
+           !isVersionChecked  {
+            isVersionChecked = true
             self.delegate?.appUpdateRequired(result: result)
         }
     }
