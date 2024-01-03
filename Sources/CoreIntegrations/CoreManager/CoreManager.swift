@@ -105,6 +105,9 @@ public class CoreManager {
         NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive),
                                                name: UIApplication.didBecomeActiveNotification,
                                                object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationDidEnterBackground),
+                                               name: UIApplication.didEnterBackgroundNotification,
+                                               object: nil)
     }
     
     @objc public func applicationDidBecomeActive() {
@@ -136,6 +139,10 @@ public class CoreManager {
         DispatchQueue.global().asyncAfter(deadline: .now() + 3) {
             self.checkAppVersion()
         }
+    }
+    
+    @objc public func applicationDidEnterBackground() {
+        isVersionChecked = false
     }
     
     private func checkAppVersion() {
