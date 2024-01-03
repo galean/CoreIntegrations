@@ -138,9 +138,9 @@ public class CoreManager {
     }
     
     private func checkAppVersion() {
-        let fbVersion = firebaseManager?.remoteConfigResult?["minimal_supported_app_version"] ?? ""
-        if let update = ForceUpdateManager.isAppUpdateNeeded(fbVersion) {
-            self.delegate?.appUpdateRequired(result: update)
+        if let fbVersion = firebaseManager?.remoteConfigResult?["minimal_supported_app_version"],
+           let result = ForceUpdateManager.isAppUpdateNeeded(fbVersion)  {
+            self.delegate?.appUpdateRequired(result: result)
         }
     }
     
