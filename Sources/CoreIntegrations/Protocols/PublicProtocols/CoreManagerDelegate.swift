@@ -9,4 +9,5 @@ import Foundation
 
 public protocol CoreManagerDelegate: AnyObject {
     func coreConfigurationFinished(result: CoreManagerResult)
+    func appUpdateRequired(result: ForceUpdateResult)
 }

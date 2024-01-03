@@ -131,6 +131,17 @@ public class CoreManager {
         if configuration?.useDefaultATTRequest == true {
             requestATT()
         }
+        
+        DispatchQueue.global().asyncAfter(deadline: .now() + 3) {
+            self.checkAppVersion()
+        }
+    }
+    
+    private func checkAppVersion() {
+        let fbVersion = firebaseManager?.remoteConfigResult?["minimal_supported_app_version"] ?? ""
+        if let update = ForceUpdateManager.isAppUpdateNeeded(fbVersion) {
+            self.delegate?.appUpdateRequired(result: update)
+        }
     }
     
     func requestATT() {
