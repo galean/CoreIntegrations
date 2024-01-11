@@ -7,48 +7,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "3811AE1E-51DB-447F-8089-977A1D31DB3F"
-            shouldBeEnabled = "Yes"
+            uuid = "DC496DA6-854D-4775-9CC3-AB5FF5523A87"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Sources/AttributionServerIntegration/Workers/AttributionUserDefaultsWorker.swift"
+            filePath = "Sources/CoreIntegrations/CoreManager/CoreManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "89"
-            endingLineNumber = "89"
-            landmarkName = "saveServerUserID(_:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "565FD1FD-07D4-4D56-939D-849B12970A8E"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Sources/AttributionServerIntegration/Workers/AttributionUserDefaultsWorker.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "68"
-            endingLineNumber = "68"
-            landmarkName = "getPurchaseData()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "DFA6FBBF-FF90-4B75-9619-4D096B11C05A"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Sources/AttributionServerIntegration/Workers/AttributionUserDefaultsWorker.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "39"
-            endingLineNumber = "39"
-            landmarkName = "saveInstallData(_:)"
+            startingLineNumber = "192"
+            endingLineNumber = "192"
+            landmarkName = "handleATTAnswered(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
