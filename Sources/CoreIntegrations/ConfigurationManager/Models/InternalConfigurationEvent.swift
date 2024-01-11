@@ -24,7 +24,12 @@ enum InternalConfigurationEvent: String, ConfigurationEvent {
     }
 
     var isRequiredToContunue: Bool {
-        return false
+        switch self {
+        case .remoteConfigLoaded, .revenueCatConfigured, .attributionServerHandled:
+            return false
+        case .attConcentGiven, .appsflyerWeb2AppHandled:
+            return true
+        }
     }
 
     var key: String {
