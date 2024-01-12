@@ -16,6 +16,8 @@ public protocol CoreSettingsProtocol: AnyObject {
     
     var amplitudeSecret: String { get }
     
+    //make internal launch count
+    //add public getter only launch count
     var launchCount: Int { get set }
 }
 
