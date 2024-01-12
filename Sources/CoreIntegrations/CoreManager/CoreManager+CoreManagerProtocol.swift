@@ -61,6 +61,23 @@ extension CoreManager: CoreManagerProtocol {
         return result
     }
     
+    public func purchase(_ purchase: Purchase, _ promoOffer: PromoOffer) async -> RevenueCatPurchaseResult {
+        guard let revenueCatManager else {
+            assertionFailure()
+            return .error(error: "Integration error")
+        }
+        
+        let result = await revenueCatManager.purchase(purchase.package, promoOffer.offer)
+        switch result {
+        case .success(let details):
+            self.handlePurchaseSuccess(purchaseInfo: details)
+        default:
+            break
+        }
+        
+        return result
+    }
+    
     public func purchase(_ purchase: Purchase, completion: @escaping (RevenueCatIntegration.RevenueCatPurchaseResult) -> Void) {
         guard let revenueCatManager else {
             assertionFailure()

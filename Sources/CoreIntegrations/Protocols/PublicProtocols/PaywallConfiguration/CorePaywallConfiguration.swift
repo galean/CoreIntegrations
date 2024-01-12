@@ -28,9 +28,19 @@ public extension CorePaywallConfiguration {
         return result
     }
     
+    func promoOffers(for purchase: Purchase) async -> CorePaywallPromoOffersResult {
+        let result = await CoreManager.internalShared.promoOffers(purchase: purchase)
+        return result
+    }
+    
 }
 
 public enum CorePaywallPurchasesResult {
     case success(purchases: [Purchase])
+    case error(error: String)
+}
+
+public enum CorePaywallPromoOffersResult {
+    case success(purchases: [PromoOffer])
     case error(error: String)
 }

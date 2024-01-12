@@ -112,6 +112,48 @@ public class RevenueCatManager: NSObject {
         }
     }
     
+    public func promoOffers(_ package: Package) async -> RevenueCatPromoOfferResult {
+        guard Purchases.isConfigured else {
+            return .error(error: "Integration error")
+        }
+        let promoOffers = await package.storeProduct.eligiblePromotionalOffers()
+
+        return .success(promo: promoOffers)
+    }
+    
+    public func purchase(_ package: Package, _ promoOffer: PromotionalOffer) async -> RevenueCatPurchaseResult {
+        guard Purchases.isConfigured else {
+            return .error(error: "Integration error")
+        }
+        
+        do {
+            let result = try await Purchases.shared.purchase(package: package, promotionalOffer: promoOffer)
+            let jws = await self.getJws(package.storeProduct)
+            switch result {
+            case (let transaction, let customerInfo, let userCancelled):
+                if userCancelled == true {
+                    return .userCancelled
+                } else {
+                    let product = package.storeProduct
+                    
+                    //TODO: add originaltransactionID_sk2 to RevenueCatPurchaseInfo & server request
+                    let originaltransactionID_sk2 = transaction?.sk2Transaction?.originalID
+//                    let originaltransactionID_sk1 = transaction?.sk1Transaction?.original?.transactionIdentifier
+                    
+                    let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
+                    let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
+                                                      price: product.priceFloat, introductoryPrice: product.introPrice,
+                                                      currencyCode: product.currencyCode ?? "", transactionID: transaction?.transactionIdentifier ?? "",
+                                                      jws: jws, originalTransactionID: "\(originaltransactionID_sk2 ?? 0)")
+
+                    return .success(info: info)
+                }
+            }
+        } catch {
+            return .error(error: "Integration error")
+        }
+    }
+    
     public func purchase(_ package: Package) async -> RevenueCatPurchaseResult {
         guard Purchases.isConfigured else {
             return .error(error: "Integration error")
@@ -152,6 +194,41 @@ public class RevenueCatManager: NSObject {
         }
         
         Purchases.shared.purchase(package: package) { transaction, purchaseInfo, error, userCancelled in
+            if userCancelled == true {
+                completion(.userCancelled)
+            } else if let error {
+                completion(.error(error: error.description))
+            } else if let purchaseInfo {
+                Task{
+                    let jws = await self.getJws(package.storeProduct)
+                    
+                    let product = package.storeProduct
+                    
+                    //TODO: add originaltransactionID_sk2 to RevenueCatPurchaseInfo & server request
+                    let originaltransactionID_sk2 = transaction?.sk2Transaction?.originalID
+//                    let originaltransactionID_sk1 = transaction?.sk1Transaction?.original?.transactionIdentifier
+                    
+                    let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
+                    let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
+                                                      price: product.priceFloat, introductoryPrice: product.introPrice,
+                                                      currencyCode: product.currencyCode ?? "",
+                                                      transactionID: transaction?.transactionIdentifier ?? "",
+                                                      jws: jws, originalTransactionID: "\(originaltransactionID_sk2 ?? 0)")
+                    completion(.success(info: info))
+                }
+            } else {
+                completion(.error(error: "Something went wrong"))
+            }
+        }
+    }
+    
+    public func purchase(_ package: Package, _ promoOffer: PromotionalOffer, completion: @escaping (RevenueCatPurchaseResult) -> Void) {
+        guard Purchases.isConfigured else {
+            completion(.error(error: "Integration error"))
+            return
+        }
+        
+        Purchases.shared.purchase(package: package, promotionalOffer: promoOffer) { transaction, purchaseInfo, error, userCancelled in
             if userCancelled == true {
                 completion(.userCancelled)
             } else if let error {

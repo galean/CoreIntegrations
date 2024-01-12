@@ -52,6 +52,28 @@ extension CoreManager {
         }
     }
     
+    public func promoOffers(purchase: Purchase) async -> CorePaywallPromoOffersResult {
+        guard let revenueCatManager else {
+            assertionFailure()
+            return .error(error: "Integration error")
+        }
+        
+        let result = await revenueCatManager.promoOffers(purchase.package)
+        
+        switch result {
+        case .success(promo: let promo):
+            let mapped = mapPromoOffers(offers: promo)
+            return .success(purchases: mapped)
+        case .error(error: let error):
+            return .error(error: error)
+        }
+    }
+    
+    private func mapPromoOffers(offers: [PromotionalOffer]) -> [PromoOffer] {
+        let mapped = offers.map({PromoOffer(offer: $0)})
+        return mapped
+    }
+    
     private func mapPurchases(config:any CorePaywallConfiguration, offerings: Offerings?) -> [Purchase] {
         guard let offerings = offerings, let offering = offerings[config.id] else {return []}
         var subscriptions:[Purchase] = []
