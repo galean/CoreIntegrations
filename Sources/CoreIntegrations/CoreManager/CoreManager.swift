@@ -28,6 +28,7 @@ public class CoreManager {
     }
     
     var isConfigured: Bool = false
+    var attAnswered: Bool = false
     
     var configuration: CoreConfigurationProtocol?
     var appsflyerManager: AppfslyerManagerProtocol?
@@ -137,11 +138,15 @@ public class CoreManager {
         let attStatus = ATTrackingManager.trackingAuthorizationStatus
         guard attStatus == .notDetermined else {
             self.sendATTProperty(answer: attStatus == .authorized)
+            
+            guard attAnswered == false else { return }
+            attAnswered = true
+            
             handleATTAnswered(attStatus)
             return
         }
         
-        var attAnswered = false
+//        var attAnswered = false
         
         /*
          This stupid thing is made to be sure, that we'll handle ATT anyways, 100%
@@ -151,21 +156,21 @@ public class CoreManager {
          then we would think he didn't answer and the result would be false, even if he would answer true
          in more than 3 seconds
          */
-        DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
-            guard attAnswered == false else { return }
-            attAnswered = true
+        DispatchQueue.global().asyncAfter(deadline: .now() + 5) { [weak self] in
+            guard self?.attAnswered == false else { return }
+            self?.attAnswered = true
             
-            self.sendAttEvent(answer: false)
+            self?.sendAttEvent(answer: false)
             let status = ATTrackingManager.trackingAuthorizationStatus
-            self.handleATTAnswered(status)
+            self?.handleATTAnswered(status)
         }
             
-        ATTrackingManager.requestTrackingAuthorization { status in
-            guard attAnswered == false else { return }
-            attAnswered = true
+        ATTrackingManager.requestTrackingAuthorization { [weak self] status in
+            guard self?.attAnswered == false else { return }
+            self?.attAnswered = true
             
-            self.sendAttEvent(answer: status == .authorized)
-            self.handleATTAnswered(status)
+            self?.sendAttEvent(answer: status == .authorized)
+            self?.handleATTAnswered(status)
         }
     }
     
