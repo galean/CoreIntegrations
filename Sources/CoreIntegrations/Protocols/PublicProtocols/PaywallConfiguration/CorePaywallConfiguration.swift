@@ -29,7 +29,7 @@ public extension CorePaywallConfiguration {
     }
     
     func promoOffers(for purchase: Purchase) async -> CorePaywallPromoOffersResult {
-        let result = await CoreManager.internalShared.promoOffers(purchase: purchase)
+        let result = await CoreManager.internalShared.promoOffers(for: purchase)
         return result
     }
     
