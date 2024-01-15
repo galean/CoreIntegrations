@@ -61,6 +61,25 @@ extension CoreManager: CoreManagerProtocol {
         return result
     }
     
+    public func purchase(_ purchase: Purchase, completion: @escaping (RevenueCatIntegration.RevenueCatPurchaseResult) -> Void) {
+        guard let revenueCatManager else {
+            assertionFailure()
+            completion(.error(error: "Integration error"))
+            return
+        }
+        
+        revenueCatManager.purchase(purchase.package) { result in
+            switch result {
+            case .success(let details):
+                self.handlePurchaseSuccess(purchaseInfo: details)
+                self.sendSubscriptionTypeUserProperty(identifier: details.productID)
+            default:
+                break
+            }
+            completion(result)
+        }
+    }
+    
     public func purchase(_ purchase: Purchase, _ promoOffer: PromoOffer) async -> RevenueCatPurchaseResult {
         guard let revenueCatManager else {
             assertionFailure()
@@ -78,14 +97,13 @@ extension CoreManager: CoreManagerProtocol {
         return result
     }
     
-    public func purchase(_ purchase: Purchase, completion: @escaping (RevenueCatIntegration.RevenueCatPurchaseResult) -> Void) {
+    public func purchase(_ purchase: Purchase, _ promoOffer: PromoOffer, completion: @escaping (RevenueCatIntegration.RevenueCatPurchaseResult) -> Void) {
         guard let revenueCatManager else {
             assertionFailure()
             completion(.error(error: "Integration error"))
             return
         }
-        
-        revenueCatManager.purchase(purchase.package) { result in
+        revenueCatManager.purchase(purchase.package, promoOffer.offer) { result in
             switch result {
             case .success(let details):
                 self.handlePurchaseSuccess(purchaseInfo: details)
