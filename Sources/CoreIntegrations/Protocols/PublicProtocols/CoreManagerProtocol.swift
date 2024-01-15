@@ -38,6 +38,8 @@ public protocol CoreManagerProtocol  {
     func handleATTPermission(_ status: ATTrackingManager.AuthorizationStatus)
     func purchase(_ purchase: Purchase) async -> RevenueCatPurchaseResult
     func purchase(_ purchase: Purchase, completion: @escaping (_ result: RevenueCatPurchaseResult) -> Void)
+    func purchase(_ purchase: Purchase, _ promoOffer: PromoOffer) async -> RevenueCatPurchaseResult
+    func purchase(_ purchase: Purchase, _ promoOffer: PromoOffer, completion: @escaping (RevenueCatIntegration.RevenueCatPurchaseResult) -> Void)
     func restorePurchases(completion: @escaping (_ result: RevenueCatRestoreResult) -> Void)
     func verifyPurchases(completion: @escaping (_ result: RevenueCatRestoreResult) -> Void)
     func verifyPremium(completion: @escaping (_ result: RevenueCatVerifyPremiumResult) -> Void)
