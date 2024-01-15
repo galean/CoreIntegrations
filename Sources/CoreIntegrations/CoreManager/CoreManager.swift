@@ -89,6 +89,7 @@ public class CoreManager {
 
         let subscriptionSecret = configuration.appSettings.subscriptionsSecret
         purchaseManager = PurchasesManager(subscriptionSecret: subscriptionSecret)
+        purchaseManager?.completeTransaction()
         
         firebaseManager = FirebaseManager()
         firebaseManager?.configure()
