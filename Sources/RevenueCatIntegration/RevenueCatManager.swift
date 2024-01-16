@@ -223,12 +223,13 @@ public class RevenueCatManager: NSObject {
                 return
             }
             
+            let entitlements = customerInfo.entitlements
             let nonSubscriptionIds = customerInfo.nonSubscriptions.map { transaction -> String in
                 return transaction.productIdentifier
             }
             let nonSubscriptionsSet = Set(nonSubscriptionIds)
 
-            completion(.success(entitlements: nil,
+            completion(.success(entitlements: entitlements,
                                 subscriptions: customerInfo.activeSubscriptions,
                                 nonSubscriptions: nonSubscriptionsSet))
         }
@@ -253,7 +254,7 @@ public class RevenueCatManager: NSObject {
             let nonSubscriptionsSet = Set(nonSubscriptionIds)
             
             completion(.success(entitlements: entitlements,
-                                subscriptions: [],
+                                subscriptions: customerInfo.activeSubscriptions,
                                 nonSubscriptions: nonSubscriptionsSet))
         }
     }
