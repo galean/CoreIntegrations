@@ -1,3 +1,3 @@
 # CoreIntegrations
 
-Framework version - 1.1.1
+Framework version - 1.1.2

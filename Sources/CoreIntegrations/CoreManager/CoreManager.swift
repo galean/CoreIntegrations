@@ -337,7 +337,7 @@ class ConfigurationResultManager {
         let activePaywallName: String
         
         if let deepLinkValue: String = deepLinkResult?["deep_link_value"], deepLinkValue != "none", deepLinkValue != "",
-           let firebaseValue = CoreManager.internalShared.firebaseManager?.remoteConfigResult?[deepLinkValue] {
+           let firebaseValue = CoreManager.internalShared.firebaseManager?.internalConfigResult?[deepLinkValue] {
                 activePaywallName = firebaseValue
         }else{
             switch userSource {
