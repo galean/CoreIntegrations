@@ -328,17 +328,17 @@ class ConfigurationResultManager {
     func calculateResult() -> CoreManagerResult {
         // get appsflyer info
         
-        let facebookPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_fb)
-        let googlePaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_google)
-        let asaPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_asa)
-        let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_organic)
+        let facebookPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_fb.value)
+        let googlePaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_google.value)
+        let asaPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_asa.value)
+        let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_organic.value)
         //tiktok & instagram paywalls should be added later
         
         let activePaywallName: String
         
         if let deepLinkValue: String = deepLinkResult?["deep_link_value"], deepLinkValue != "none", deepLinkValue != "",
            let firebaseValue = CoreManager.internalShared.firebaseManager?.internalConfigResult?[deepLinkValue] {
-                activePaywallName = firebaseValue
+                activePaywallName = getPaywallNameFromConfig(firebaseValue)
         }else{
             switch userSource {
             case .organic, .ipat, .test_premium, .tiktok, .instagram, .unknown:
@@ -361,9 +361,9 @@ class ConfigurationResultManager {
         return coreManagerResult
     }
     
-    private func getPaywallNameFromConfig(_ config: any CoreRemoteABTestable) -> String {
+    private func getPaywallNameFromConfig(_ config: String) -> String {
         let paywallName: String
-        let value = config.value
+        let value = config
         if value.hasPrefix("none_") {
             paywallName = String(value.dropFirst("none_".count))
         } else {
