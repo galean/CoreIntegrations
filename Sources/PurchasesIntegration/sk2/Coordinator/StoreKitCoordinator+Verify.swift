@@ -2,7 +2,7 @@ import Foundation
 import StoreKit
 
 extension StoreKitCoordinator {
-    func isPurchased(_ product: Product) async throws -> Bool {
+    public func isPurchased(_ product: Product) async throws -> Bool {
         debugPrint("\(StoreKitCoordinator.identifier) isPurchased \(DebuggingIdentifiers.actionOrEventInProgress) Checking if the product is purchased... \(DebuggingIdentifiers.actionOrEventInProgress)")
         // Determine whether the user purchases a given product.
         switch product.type {

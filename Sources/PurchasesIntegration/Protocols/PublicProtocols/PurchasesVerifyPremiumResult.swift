@@ -6,11 +6,11 @@
 //
 
 import Foundation
-import SwiftyStoreKit
+import StoreKit
 
 public enum PurchasesVerifyPremiumResult {
-    case premium(receiptItem: ReceiptItem)
+    case premium(receiptItem: Product)
     case notPremium
     case internetError
-    case error(receiptError: ReceiptError)
+    case error(receiptError: String)
 }

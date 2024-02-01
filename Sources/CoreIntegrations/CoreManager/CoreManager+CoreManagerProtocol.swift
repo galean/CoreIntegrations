@@ -11,11 +11,32 @@ import PurchasesIntegration
 import AppTrackingTransparency
 
 extension CoreManager: CoreManagerProtocol {
-//    public static var publicResult: CoreManagerResult {
-//        return CoreManagerResult(isIPAT: true, paywallName: "default",
-//                                 organicPaywallName: "default",
-//                                 fbgoogleredictedPaywallName: "default")
-//    }
+    
+    #warning("add correct response, not transaction: Transaction?, status:SKPurchaseStatus")
+    public func purchase(_ purchase: Purchase) async -> PurchasesIntegration.PurchasesPurchaseResult {
+        let result = await purchaseManager?.purchase(purchase.product) // -> case success(transaction: Transaction?, status:SKPurchaseStatus)
+        return .cancelled
+        #warning("add stuff below")
+        //                self.sendSubscriptionTypeUserProperty(identifier: details.productId)
+        //                self.sendPurchaseToAttributionServer(details)
+        //                self.sendPurchaseToFacebook(details)
+        //                self.sendPurchaseToAppsflyer(details)
+    }
+    
+    public func verifyPremium() async -> Bool {
+        guard let purchaseManager = purchaseManager else {return false}
+        let isPremium = await purchaseManager.verifyPremium()
+        return isPremium
+#warning("add stuff below")
+        //            case .premium(let receiptItem):
+        //                self.sendSubscriptionTypeUserProperty(identifier: receiptItem.productId)
+    }
+    
+    public func restore() async -> Bool {
+        guard let purchaseManager = purchaseManager else {return false}
+        let isRestored = await purchaseManager.restore()
+        return isRestored
+    }
     
     public func application(_ application: UIApplication,
                             didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]?,
@@ -48,39 +69,4 @@ extension CoreManager: CoreManagerProtocol {
         InternalConfigurationEvent.attConcentGiven.markAsCompleted()
     }
     
-    public func purchase(_ purchaseID: String, quantity: Int, atomically: Bool, completion: @escaping (PurchasesIntegration.PurchasesPurchaseResult) -> Void) {
-        purchaseManager?.purchase(purchaseID, quantity: quantity, atomically: atomically, completion: {
-            result in
-            switch result {
-            case .success(let details):
-                self.sendSubscriptionTypeUserProperty(identifier: details.productId)
-                self.sendPurchaseToAttributionServer(details)
-                self.sendPurchaseToFacebook(details)
-                self.sendPurchaseToAppsflyer(details)
-            default:
-                break
-            }
-            
-            completion(result)
-        })
-    }
-    
-    public func verifyPremium(premiumSubscriptionIds: Set<String>, premiumPurchaseIds: Set<String>, completion: @escaping (PurchasesIntegration.PurchasesVerifyPremiumResult) -> Void) {
-        purchaseManager?.verifyPremium(premiumSubscriptionIds: premiumSubscriptionIds,
-                                       premiumPurchaseIds: premiumPurchaseIds,
-                                       completion: { result in
-            switch result {
-            case .premium(let receiptItem):
-                self.sendSubscriptionTypeUserProperty(identifier: receiptItem.productId)
-            default:
-                break
-            }
-            completion(result)
-        })
-    }
-    
-    public func restore(subscriptionIds: Set<String>, purchaseIds: Set<String>, completion: @escaping (PurchasesIntegration.PurchasesVerifyResult) -> Void) {
-        purchaseManager?.restore(subscriptionIds: subscriptionIds, purchaseIds: purchaseIds,
-                                 completion: completion)
-    }
 }

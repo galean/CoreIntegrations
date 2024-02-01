@@ -2,7 +2,7 @@ import Foundation
 import StoreKit
 
 extension StoreKitCoordinator {
-    func updateCustomerProductStatus() async {
+    public func updateCustomerProductStatus() async {
         debugPrint("\(StoreKitCoordinator.identifier) updateCustomerProductStatus \(DebuggingIdentifiers.actionOrEventInProgress) Updating Customer Product Status... \(DebuggingIdentifiers.actionOrEventInProgress)")
         var purchasedNonConsumables: [Product] = []
         var purchasedSubscriptions: [Product] = []
@@ -78,6 +78,18 @@ extension StoreKitCoordinator {
         subscriptionGroupStatus = try? await subscriptions.first?.subscription?.status.first?.state
         debugPrint("\(StoreKitCoordinator.identifier) updateCustomerProductStatus \(DebuggingIdentifiers.actionOrEventSucceded) Updated Subscription Group Status.")
         // Notify System
-        NotificationCenter.default.post(name: SystemNotifications.onStoreKitUpdate, object: nil)
+        NotificationCenter.default.post(name: SK2Notifications.onStoreKitUpdate, object: nil)
     }
+    
+    //to be refactored!
+    public func verifyPremium() async -> Bool {
+        let state = try? await subscriptions.first?.subscription?.status.first?.state
+        return state == .subscribed
+    }
+}
+
+struct SK2Notifications {
+    static let onStoreKitUpdate: Notification.Name = Notification.Name("onStoreKitUpdate")
+    static let onStoreKitProductUpdate: Notification.Name = Notification.Name("onStoreKitProductUpdate")
+    static let onStoreKitProductRefundUpdate: Notification.Name = Notification.Name("onStoreKitProductRefundUpdate")
 }

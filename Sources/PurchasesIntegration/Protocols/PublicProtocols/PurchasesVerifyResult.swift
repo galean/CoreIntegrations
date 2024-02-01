@@ -6,11 +6,11 @@
 //
 
 import Foundation
-import SwiftyStoreKit
+import StoreKit
 
 public enum PurchasesVerifyResult {
-    case success(restoredItems: [ReceiptItem])
+    case success(restoredItems: [Product])
     case nothingToRestore
     case internetError
-    case error(receiptError: ReceiptError)
+    case error(receiptError: String)
 }

@@ -1,13 +1,24 @@
 import Foundation
 import StoreKit
 
-class StoreKitCoordinator: NSObject {
+public typealias Transaction = StoreKit.Transaction
+public typealias RenewalInfo = StoreKit.Product.SubscriptionInfo.RenewalInfo
+public typealias RenewalState = StoreKit.Product.SubscriptionInfo.RenewalState
+
+struct DebuggingIdentifiers {
+    static let actionOrEventSucceded: String = "✅"
+    static let actionOrEventInProgress: String = "⚈ ⚈ ⚈"
+    static let actionOrEventFailed: String = "❌"
+    static let notificationSent: String = "📤"
+    static let notificationRecieved: String = "📥"
+}
+
+
+public class StoreKitCoordinator: NSObject {
 
     // MARK: Variables
     static let identifier: String = "[StoreKitCoordinator]"
-    static let shared: StoreKitCoordinator = StoreKitCoordinator()
-    // A configuration that holds the Ids and the functionality to access them.
-    let configuration: OfferingConfiguration = OfferingConfiguration()
+    static public let shared: StoreKitCoordinator = StoreKitCoordinator()
     // A transaction listener to listen to transactions on init and through out the apps use.
     private var updateListenerTask: Task<Void, Error>?
 
@@ -24,9 +35,9 @@ class StoreKitCoordinator: NSObject {
     public var purchasedNonRenewables: [Product] = []
     // A variable to hold the Subscription Group Renewal State, if you have more than one subscription group, you will need more than one.
     public var subscriptionGroupStatus: RenewalState?
-
+    
     // MARK: Lifecycle
-    func initialize() {
+    public func initialize(identifiers: [String]) {
         debugPrint("\(StoreKitCoordinator.identifier) initialize \(DebuggingIdentifiers.actionOrEventInProgress) Initializing... \(DebuggingIdentifiers.actionOrEventInProgress)")
         // Start a transaction listener as close to app launch as possible so you don't miss any transactions.
         debugPrint("\(StoreKitCoordinator.identifier) initialize \(DebuggingIdentifiers.actionOrEventInProgress) Starting Transaction Listener... \(DebuggingIdentifiers.actionOrEventInProgress)")
@@ -36,7 +47,7 @@ class StoreKitCoordinator: NSObject {
             guard let self = self else { return }
             // During store initialization, request products from the App Store.
             debugPrint("\(StoreKitCoordinator.identifier) initialize \(DebuggingIdentifiers.actionOrEventInProgress) Requesting products... \(DebuggingIdentifiers.actionOrEventInProgress)")
-            await self.requestProducts()
+            let result = await self.requestProducts(identifiers)
 
             // Deliver products that the customer purchases.
             debugPrint("\(StoreKitCoordinator.identifier) initialize \(DebuggingIdentifiers.actionOrEventInProgress) Updating customer product status... \(DebuggingIdentifiers.actionOrEventInProgress)")
@@ -54,10 +65,3 @@ class StoreKitCoordinator: NSObject {
 
 }
 
-struct DebuggingIdentifiers {
-    static let actionOrEventSucceded: String = "✅"
-    static let actionOrEventInProgress: String = "⚈ ⚈ ⚈"
-    static let actionOrEventFailed: String = "❌"
-    static let notificationSent: String = "📤"
-    static let notificationRecieved: String = "📥"
-}

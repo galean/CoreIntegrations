@@ -7,7 +7,6 @@
 
 import Foundation
 import AttributionServerIntegration
-import SwiftyStoreKit
 
 extension AttributionPurchaseModel {
     init(swiftyDetails details: PurchaseDetails) {

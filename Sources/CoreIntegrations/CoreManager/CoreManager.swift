@@ -13,15 +13,34 @@ import PurchasesIntegration
 import AppTrackingTransparency
 import Foundation
 import StoreKit
-import SwiftyStoreKit
 import AnalyticsIntegration
 import FirebaseIntegration
+
+//temporary object from swifty kit
+public struct PurchaseDetails {
+    public let productId: String
+    public let quantity: Int
+    public let product: SKProduct
+    public let transaction: Transaction
+    public let originalTransaction: Transaction?
+    public let needsFinishTransaction: Bool
+    
+    public init(productId: String, quantity: Int, product: SKProduct, transaction: Transaction, originalTransaction: Transaction?, needsFinishTransaction: Bool) {
+        self.productId = productId
+        self.quantity = quantity
+        self.product = product
+        self.transaction = transaction
+        self.originalTransaction = originalTransaction
+        self.needsFinishTransaction = needsFinishTransaction
+    }
+}
 
 /*
     I think it would be good to split CoreManager into different manager parts - for default configuration, for additional configurations like analytics, test_distribution etc, and for purchases and purchases attribution part
  */
 public class CoreManager {
-    public static var shared: CoreManagerProtocol = CoreManager()
+    public static var shared: CoreManagerProtocol = internalShared
+    static var internalShared = CoreManager()
     
     public static var uniqueUserID: String? {
         return AttributionServerManager.shared.uniqueUserID
@@ -37,6 +56,7 @@ public class CoreManager {
     
     var firebaseManager: FirebaseManager?
     var analyticsManager: AnalyticsManager?
+    var skCoordinator = StoreKitCoordinator.shared
         
     var delegate: CoreManagerDelegate?
     
@@ -87,9 +107,14 @@ public class CoreManager {
             configureATT()
         }
 
+        
+        
         let subscriptionSecret = configuration.appSettings.subscriptionsSecret
         purchaseManager = PurchasesManager(subscriptionSecret: subscriptionSecret)
-        purchaseManager?.completeTransaction()
+
+        if let pay = configuration.paywallDataSource as? any CorePaywallConfiguration {
+            skCoordinator.initialize(identifiers: pay.purchases)
+        }
         
         firebaseManager = FirebaseManager()
         firebaseManager?.configure()
@@ -128,6 +153,10 @@ public class CoreManager {
         
         if configuration?.useDefaultATTRequest == true {
             requestATT()
+        }
+        
+        Task {
+            await skCoordinator.updateCustomerProductStatus()
         }
     }
     

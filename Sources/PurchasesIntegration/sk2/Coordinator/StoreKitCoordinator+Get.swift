@@ -3,15 +3,15 @@ import StoreKit
 
 extension StoreKitCoordinator {
 
-    func requestProducts() async {
+    public func requestProducts(_ identifiers: [String]) async -> SKProductsResult {
         debugPrint("\(StoreKitCoordinator.identifier) requestProducts \(DebuggingIdentifiers.actionOrEventInProgress) Requesting products... \(DebuggingIdentifiers.actionOrEventInProgress)")
-        guard let offering = configuration.offering else {
-            debugPrint("\(StoreKitCoordinator.identifier) requestProducts \(DebuggingIdentifiers.actionOrEventFailed) Failed as configuration offering does not exist.")
-            return
+        guard !identifiers.isEmpty else {
+            debugPrint("\(StoreKitCoordinator.identifier) requestProducts \(DebuggingIdentifiers.actionOrEventFailed) Failed: identifiers are empty.")
+            return .error(error: "empty identifiers")
         }
         do {
             // Request products from the App Store using the identifiers that the Products.plist file defines.
-            let storeProducts = try await Product.products(for: offering.values)
+            let storeProducts = try await Product.products(for: identifiers)
             debugPrint("\(StoreKitCoordinator.identifier) requestProducts \(DebuggingIdentifiers.actionOrEventSucceded) Completed gathering Products.")
 
             var newConsumables: [Product] = []
@@ -49,9 +49,10 @@ extension StoreKitCoordinator {
             nonRenewables = sortByPrice(newNonRenewables)
 
             debugPrint("\(StoreKitCoordinator.identifier) requestProducts \(DebuggingIdentifiers.actionOrEventSucceded) Completed updating available Products.")
-
+            return .success(products: storeProducts)
         } catch {
             debugPrint("\(StoreKitCoordinator.identifier) requestProducts \(DebuggingIdentifiers.actionOrEventFailed) Failed product request from the App Store server: \(error).")
+            return .error(error: error.localizedDescription)
         }
     }
 
@@ -60,18 +61,18 @@ extension StoreKitCoordinator {
     }
 
     // Get a subscription's level of service using the product ID.
-    func getSubscriptionTier(for productId: String) -> SubscriptionTier {
-        debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventInProgress) Gathering Subscription Tier... \(DebuggingIdentifiers.actionOrEventInProgress)")
-        switch productId {
-        case configuration.getSampleAutoRenewableSubscriptionId():
-            debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventSucceded) Subscription is a standard tier.")
-            return .standard
-        case configuration.getSampleTierTwoAutoRenewableSubscriptionId():
-            debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventSucceded) Subscription is a premium tier.")
-            return .premium
-        default:
-            debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventFailed) There is no subscription tier.")
-            return .none
-        }
-    }
+//    func getSubscriptionTier(for productId: String) -> SubscriptionTier {
+//        debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventInProgress) Gathering Subscription Tier... \(DebuggingIdentifiers.actionOrEventInProgress)")
+//        switch productId {
+//        case configuration.getSampleAutoRenewableSubscriptionId():
+//            debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventSucceded) Subscription is a standard tier.")
+//            return .standard
+//        case configuration.getSampleTierTwoAutoRenewableSubscriptionId():
+//            debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventSucceded) Subscription is a premium tier.")
+//            return .premium
+//        default:
+//            debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventFailed) There is no subscription tier.")
+//            return .none
+//        }
+//    }
 }
