@@ -7,6 +7,7 @@
 
 import Foundation
 import RevenueCat
+import StoreKit
 
 public class RevenueCatManager: NSObject {
     private let apiKey: String
@@ -22,7 +23,13 @@ public class RevenueCatManager: NSObject {
             completion(nil)
             return
         }
-        Purchases.configure(withAPIKey: self.apiKey, appUserID: uuid)
+        let config = Configuration.Builder(withAPIKey: self.apiKey)
+            .with(appUserID: uuid)
+            .with(usesStoreKit2IfAvailable: true)
+        
+        Purchases.configure(with: config)
+
+//        Purchases.configure(withAPIKey: self.apiKey, appUserID: uuid)
         Purchases.shared.delegate = nil
         Purchases.shared.attribution.collectDeviceIdentifiers()
         if let fbAnonID {
@@ -112,16 +119,24 @@ public class RevenueCatManager: NSObject {
         
         do {
             let result = try await Purchases.shared.purchase(package: package)
+            let jws = await self.getJws(package.storeProduct)
             switch result {
             case (let transaction, let customerInfo, let userCancelled):
                 if userCancelled == true {
                     return .userCancelled
                 } else {
                     let product = package.storeProduct
+                    
+                    //TODO: add originaltransactionID_sk2 to RevenueCatPurchaseInfo & server request
+                    let originaltransactionID_sk2 = transaction?.sk2Transaction?.originalID
+//                    let originaltransactionID_sk1 = transaction?.sk1Transaction?.original?.transactionIdentifier
+                    
                     let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
                     let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
-                                            price: product.priceFloat, introductoryPrice: product.introPrice,
-                                            currencyCode: product.currencyCode ?? "", transactionID: transaction?.transactionIdentifier ?? "")
+                                                      price: product.priceFloat, introductoryPrice: product.introPrice,
+                                                      currencyCode: product.currencyCode ?? "", transactionID: transaction?.transactionIdentifier ?? "",
+                                                      jws: jws, originalTransactionID: "\(originaltransactionID_sk2 ?? 0)")
+
                     return .success(info: info)
                 }
             }
@@ -142,17 +157,39 @@ public class RevenueCatManager: NSObject {
             } else if let error {
                 completion(.error(error: error.description))
             } else if let purchaseInfo {
-                let product = package.storeProduct
-                let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
-                let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
-                                                  price: product.priceFloat, introductoryPrice: product.introPrice,
-                                                  currencyCode: product.currencyCode ?? "",
-                                                  transactionID: transaction?.transactionIdentifier ?? "")
-                completion(.success(info: info))
+                Task{
+                    let jws = await self.getJws(package.storeProduct)
+                    
+                    let product = package.storeProduct
+                    
+                    //TODO: add originaltransactionID_sk2 to RevenueCatPurchaseInfo & server request
+                    let originaltransactionID_sk2 = transaction?.sk2Transaction?.originalID
+//                    let originaltransactionID_sk1 = transaction?.sk1Transaction?.original?.transactionIdentifier
+                    
+                    let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
+                    let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
+                                                      price: product.priceFloat, introductoryPrice: product.introPrice,
+                                                      currencyCode: product.currencyCode ?? "",
+                                                      transactionID: transaction?.transactionIdentifier ?? "",
+                                                      jws: jws, originalTransactionID: "\(originaltransactionID_sk2 ?? 0)")
+                    completion(.success(info: info))
+                }
             } else {
                 completion(.error(error: "Something went wrong"))
             }
         }
+    }
+    
+    private func getJws(_ product: StoreProduct) async -> String? {
+        guard let latestTransaction = await product.sk2Product?.latestTransaction else {
+            return nil
+        }
+        guard case .verified(let transaction) = latestTransaction else {
+            // Ignore unverified transactions.
+            return nil
+        }
+        
+        return latestTransaction.jwsRepresentation
     }
     
     public func verifyPremium(completion: @escaping (_ result: RevenueCatVerifyPremiumResult) -> Void) {

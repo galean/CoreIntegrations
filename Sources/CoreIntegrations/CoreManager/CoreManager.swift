@@ -74,7 +74,10 @@ public class CoreManager {
                                                     fbUserData: facebookManager?.userData ?? "",
                                                     fbAnonId: facebookManager?.anonUserID ?? "")
         let appsflyerToken = appsflyerManager?.appsflyerID
-        let atServerDataSource = configuration.attributionServerDataSource
+        let installPath = "/install-application"
+        let purchasePath = "/subscribe"
+        let installURLPath = ""
+        let purchaseURLPath = ""
         
        
         revenueCatManager = RevenueCatManager(apiKey: configuration.appSettings.revenuecatApiKey)
@@ -94,7 +97,7 @@ public class CoreManager {
                                                                  appsflyerID: appsflyerToken,
                                                                  facebookData: facebookData)
             
-        AttributionServerManager.shared.configure(config: attributionConfiguration)
+            AttributionServerManager.shared.configure(config: attributionConfiguration)
         
         if configuration.useDefaultATTRequest {
             self.configureATT()
@@ -169,7 +172,7 @@ public class CoreManager {
             self?.handleATTAnswered(status)
         }
             
-        ATTrackingManager.requestTrackingAuthorization { [weak self] status in
+        ATTrackingManager.requestTrackingAuthorization {[weak self] status in
             guard self?.attAnswered == false else { return }
             self?.attAnswered = true
             
@@ -188,8 +191,35 @@ public class CoreManager {
             assertionFailure()
         }
         facebookManager?.configureATT(isAuthorized: status == .authorized)
-        AttributionServerManager.shared.syncOnAppStart { result in
-            InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
+    }
+    
+    func handleAttributionInstall() {
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        
+        configurationManager.signForAttAndConfigLoaded {
+            
+            if let installURLPath = self.firebaseManager?.install_server_path,
+               let purchaseURLPath = self.firebaseManager?.purchase_server_path {
+                let installPath = "/install-application"
+                let purchasePath = "/subscribe"
+                
+//                #warning("should be removed after tests")
+//                let dev_purchase_path = "https://sm-development.roomplanner.site"
+                
+                let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
+                                                                     purchaseServerURLPath: purchaseURLPath,
+                                                                     installPath: installPath,
+                                                                     purchasePath: purchasePath)
+                
+                AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
+            }
+            
+            AttributionServerManager.shared.syncOnAppStart { result in
+                InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
+            }
         }
 
     }

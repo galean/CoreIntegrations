@@ -12,12 +12,17 @@ public struct AttributionPurchaseModel: Codable {
     let introductoryPrice: CGFloat?
     let currencyCode: String
     let subscriptionIdentifier: String
+    let jws: String?
+    let originalTransactionID: String?
     
     public init(price: CGFloat, introductoryPrice: CGFloat?,
-                currencyCode: String, subscriptionIdentifier: String) {
+                currencyCode: String, subscriptionIdentifier: String,
+                jws: String?, originalTransactionID: String?) {
         self.price = price
         self.introductoryPrice = introductoryPrice
         self.currencyCode = currencyCode
         self.subscriptionIdentifier = subscriptionIdentifier
+        self.jws = jws
+        self.originalTransactionID = originalTransactionID
     }
 }
