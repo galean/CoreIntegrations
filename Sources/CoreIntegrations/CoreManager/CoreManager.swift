@@ -90,14 +90,15 @@ public class CoreManager {
         }
         
         let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
-                                                                 installServerURLPath: atServerDataSource.serverURLPath,
-                                                                 purchaseServerURLPath: atServerDataSource.serverURLPath,
-                                                                 installPath: atServerDataSource.installPath,
-                                                                 purchasePath: atServerDataSource.purchasePath,
-                                                                 appsflyerID: appsflyerToken,
-                                                                 facebookData: facebookData)
-            
-            AttributionServerManager.shared.configure(config: attributionConfiguration)
+                                                             installServerURLPath: installURLPath,
+                                                             purchaseServerURLPath: purchaseURLPath,
+                                                             installPath: installPath,
+                                                             purchasePath: purchasePath,
+                                                             appsflyerID: appsflyerToken,
+                                                             facebookData: facebookData)
+        //refactor to accept only attributionToken here
+        //url setup's in handleAttributionInstall()
+        AttributionServerManager.shared.configure(config: attributionConfiguration)
         
         if configuration.useDefaultATTRequest {
             self.configureATT()
@@ -205,9 +206,6 @@ public class CoreManager {
                let purchaseURLPath = self.firebaseManager?.purchase_server_path {
                 let installPath = "/install-application"
                 let purchasePath = "/subscribe"
-                
-//                #warning("should be removed after tests")
-//                let dev_purchase_path = "https://sm-development.roomplanner.site"
                 
                 let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
                                                                      purchaseServerURLPath: purchaseURLPath,
