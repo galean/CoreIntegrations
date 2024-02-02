@@ -17,23 +17,23 @@ import AnalyticsIntegration
 import FirebaseIntegration
 
 //temporary object from swifty kit
-public struct PurchaseDetails {
-    public let productId: String
-    public let quantity: Int
-    public let product: SKProduct
-    public let transaction: Transaction
-    public let originalTransaction: Transaction?
-    public let needsFinishTransaction: Bool
-    
-    public init(productId: String, quantity: Int, product: SKProduct, transaction: Transaction, originalTransaction: Transaction?, needsFinishTransaction: Bool) {
-        self.productId = productId
-        self.quantity = quantity
-        self.product = product
-        self.transaction = transaction
-        self.originalTransaction = originalTransaction
-        self.needsFinishTransaction = needsFinishTransaction
-    }
-}
+//public struct PurchaseDetails {
+//    public let productId: String
+//    public let quantity: Int
+//    public let product: Product
+//    public let transaction: Transaction
+//    public let originalTransaction: Transaction?
+//    public let needsFinishTransaction: Bool
+//    
+//    public init(productId: String, quantity: Int, product: Product, transaction: Transaction, originalTransaction: Transaction?, needsFinishTransaction: Bool) {
+//        self.productId = productId
+//        self.quantity = quantity
+//        self.product = product
+//        self.transaction = transaction
+//        self.originalTransaction = originalTransaction
+//        self.needsFinishTransaction = needsFinishTransaction
+//    }
+//}
 
 /*
     I think it would be good to split CoreManager into different manager parts - for default configuration, for additional configurations like analytics, test_distribution etc, and for purchases and purchases attribution part
@@ -224,13 +224,13 @@ public class CoreManager {
         guard facebookManager != nil else {
             return
         }
-        
-        let isTrial = purchase.product.introductoryPrice != nil
-        let trialPrice = purchase.product.introductoryPrice?.price.doubleValue ?? 0
-        let price = purchase.product.price.doubleValue
-        let currencyCode = purchase.product.priceLocale.currencyCode ?? ""
+       
+        let isTrial = purchase.product.subscription?.introductoryOffer != nil
+        let trialPrice = CGFloat(NSDecimalNumber(decimal: purchase.product.subscription?.introductoryOffer?.price ?? 0).floatValue)//introductoryPrice?.price.doubleValue ?? 0
+        let price = CGFloat(NSDecimalNumber(decimal: purchase.product.price).floatValue)
+        let currencyCode = purchase.product.priceFormatStyle.currencyCode
         let analData = FacebookPurchaseData(isTrial: isTrial,
-                                            subcriptionID: purchase.product.productIdentifier,
+                                            subcriptionID: purchase.product.id,
                                             trialPrice: trialPrice, price: price,
                                             currencyCode: currencyCode)
         self.facebookManager?.sendPurchaseAnalytics(analData)
@@ -241,7 +241,7 @@ public class CoreManager {
             return
         }
         
-        let isTrial = purchase.product.introductoryPrice != nil
+        let isTrial = purchase.product.subscription?.introductoryOffer != nil
         if isTrial {
             self.appsflyerManager?.logTrialPurchase()
         }

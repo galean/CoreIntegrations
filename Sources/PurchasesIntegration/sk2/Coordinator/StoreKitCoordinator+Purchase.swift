@@ -22,16 +22,16 @@ extension StoreKitCoordinator {
             // Always finish a transaction - This removes transactions from the queue and it tells Apple that the customer has recieved their items or service.
             await transaction.finish()
             debugPrint("\(StoreKitCoordinator.identifier) purchase \(DebuggingIdentifiers.actionOrEventSucceded) Finished transaction.")
-            return .success(transaction: transaction, status: .success)
+            return .success(transaction: transaction)
         case .pending:
             debugPrint("\(StoreKitCoordinator.identifier) purchase \(DebuggingIdentifiers.actionOrEventFailed) Failed as the transaction is pending.")
-            return .success(transaction: nil, status: .pending)
+            return .pending
         case .userCancelled:
             debugPrint("\(StoreKitCoordinator.identifier) purchase \(DebuggingIdentifiers.actionOrEventFailed) Failed as the user cancelled the purchase.")
-            return .success(transaction: nil, status: .userCancelled)
+            return .userCancelled
         default:
             debugPrint("\(StoreKitCoordinator.identifier) purchase \(DebuggingIdentifiers.actionOrEventFailed) Failed with result \(result).")
-            return .success(transaction: nil, status: .unknown)
+            return .unknown
         }
     }
     

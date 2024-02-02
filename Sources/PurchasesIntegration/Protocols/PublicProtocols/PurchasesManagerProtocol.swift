@@ -20,9 +20,9 @@ public protocol PurchasesManagerProtocol {
     //                 purchaseIds: Set<String>,
     //                 completion: @escaping (_ result: PurchasesVerifyResult) -> Void)
     
-    func purchase(_ product: Product) async -> SKPurchaseResult?
+    func purchase(_ product: Product) async throws -> SKPurchaseResult
     
-    func verifyPremium() async -> Bool
+    func verifyPremium() async -> PurchasesVerifyPremiumResult
     
     func restore() async -> Bool
 }

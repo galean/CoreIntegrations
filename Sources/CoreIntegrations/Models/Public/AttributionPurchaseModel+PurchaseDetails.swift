@@ -7,18 +7,21 @@
 
 import Foundation
 import AttributionServerIntegration
+import PurchasesIntegration
 
 extension AttributionPurchaseModel {
     init(swiftyDetails details: PurchaseDetails) {
-        let price = CGFloat(truncating: details.product.price)
+        let price = CGFloat(NSDecimalNumber(decimal: details.product.price).floatValue)
         let introductoryPrice: CGFloat?
-        if let introPrice = details.product.introductoryPrice?.price {
-            introductoryPrice = CGFloat(truncating: introPrice)
+        
+        if let introPrice = details.product.subscription?.introductoryOffer?.price {
+            introductoryPrice = CGFloat(NSDecimalNumber(decimal: introPrice).floatValue)
         } else {
             introductoryPrice = nil
         }
-        let currencyCode = details.product.priceLocale.currencyCode ?? ""
-        let purchaseID = details.product.productIdentifier
+
+        let currencyCode = details.product.priceFormatStyle.currencyCode
+        let purchaseID = details.product.id
         
         
         self.init(price: price, introductoryPrice: introductoryPrice,

@@ -8,13 +8,9 @@
 import Foundation
 import StoreKit
 
-public enum SKPurchaseStatus {
-    case success
+public enum SKPurchaseResult {
+    case success(transaction: Transaction)
     case pending
     case userCancelled
     case unknown
-}
-
-public enum SKPurchaseResult {
-    case success(transaction: Transaction?, status:SKPurchaseStatus)
 }

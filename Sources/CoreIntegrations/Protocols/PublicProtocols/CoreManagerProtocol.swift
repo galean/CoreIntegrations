@@ -34,7 +34,7 @@ public protocol CoreManagerProtocol {
 
     func purchase(_ purchase: Purchase) async -> PurchasesPurchaseResult
     
-    func verifyPremium() async -> Bool
+    func verifyPremium() async -> PurchasesVerifyPremiumResult
     
     func restore() async -> Bool
 }

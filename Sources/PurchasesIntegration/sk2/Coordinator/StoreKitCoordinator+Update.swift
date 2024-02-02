@@ -76,15 +76,35 @@ extension StoreKitCoordinator {
         // group, so products in the subscriptions array all belong to the same group. The statuses that
         // `product.subscription.status` returns apply to the entire subscription group.
         subscriptionGroupStatus = try? await subscriptions.first?.subscription?.status.first?.state
+        
+        #warning("support for multiple subscription groups")
+//        var statuses:[RenewalState] = []
+//        await subscriptions.asyncForEach { product in
+//            if let status = try? await product.subscription?.status.first?.state {
+//                statuses.append(status)
+//            }
+//        }
+        
         debugPrint("\(StoreKitCoordinator.identifier) updateCustomerProductStatus \(DebuggingIdentifiers.actionOrEventSucceded) Updated Subscription Group Status.")
         // Notify System
         NotificationCenter.default.post(name: SK2Notifications.onStoreKitUpdate, object: nil)
     }
     
-    //to be refactored!
-    public func verifyPremium() async -> Bool {
-        let state = try? await subscriptions.first?.subscription?.status.first?.state
-        return state == .subscribed
+    public func verifyPremium() async -> PurchasesVerifyPremiumResult {
+//        maybe call await updateCustomerProductStatus() at first?, we also have listenForTransactions() so it should update automatically
+        var statuses:[VerifyPremiumStatus] = []
+        await subscriptions.asyncForEach { product in
+            if let state = try? await product.subscription?.status.first?.state {
+                let premiumStatus = VerifyPremiumStatus(product: product, state: state)
+                statuses.append(premiumStatus)
+            }
+        }
+        
+        if let premium = statuses.first(where: {$0.state == .subscribed}) {
+            return .premium(receiptItem: premium.product)
+        }else{
+            return .notPremium
+        }
     }
 }
 
@@ -92,4 +112,19 @@ struct SK2Notifications {
     static let onStoreKitUpdate: Notification.Name = Notification.Name("onStoreKitUpdate")
     static let onStoreKitProductUpdate: Notification.Name = Notification.Name("onStoreKitProductUpdate")
     static let onStoreKitProductRefundUpdate: Notification.Name = Notification.Name("onStoreKitProductRefundUpdate")
+}
+
+extension Sequence {
+    func asyncForEach(
+        _ operation: (Element) async throws -> Void
+    ) async rethrows {
+        for element in self {
+            try await operation(element)
+        }
+    }
+}
+
+struct VerifyPremiumStatus {
+    var product: Product
+    var state: RenewalState
 }

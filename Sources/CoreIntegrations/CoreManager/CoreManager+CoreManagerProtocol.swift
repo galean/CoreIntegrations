@@ -11,25 +11,35 @@ import PurchasesIntegration
 import AppTrackingTransparency
 
 extension CoreManager: CoreManagerProtocol {
-    
-    #warning("add correct response, not transaction: Transaction?, status:SKPurchaseStatus")
     public func purchase(_ purchase: Purchase) async -> PurchasesIntegration.PurchasesPurchaseResult {
-        let result = await purchaseManager?.purchase(purchase.product) // -> case success(transaction: Transaction?, status:SKPurchaseStatus)
-        return .cancelled
-        #warning("add stuff below")
-        //                self.sendSubscriptionTypeUserProperty(identifier: details.productId)
-        //                self.sendPurchaseToAttributionServer(details)
-        //                self.sendPurchaseToFacebook(details)
-        //                self.sendPurchaseToAppsflyer(details)
+        let result = try? await purchaseManager?.purchase(purchase.product)
+
+        switch result {
+        case .success(let transaction):
+            let details = PurchaseDetails(productId: "", quantity: 1, product: purchase.product, transaction: transaction, needsFinishTransaction: false)
+            self.sendSubscriptionTypeUserProperty(identifier: details.productId)
+            self.sendPurchaseToAttributionServer(details)
+            self.sendPurchaseToFacebook(details)
+            self.sendPurchaseToAppsflyer(details)
+            return .success(details: details)
+        case .pending:
+            return .pending
+        case .userCancelled:
+            return .userCancelled
+        case .unknown:
+            return .unknown
+        case .none:
+            return .unknown
+        }
     }
     
-    public func verifyPremium() async -> Bool {
-        guard let purchaseManager = purchaseManager else {return false}
-        let isPremium = await purchaseManager.verifyPremium()
-        return isPremium
-#warning("add stuff below")
-        //            case .premium(let receiptItem):
-        //                self.sendSubscriptionTypeUserProperty(identifier: receiptItem.productId)
+    public func verifyPremium() async -> PurchasesVerifyPremiumResult {
+        guard let purchaseManager = purchaseManager else {return .error(receiptError: "purchaseManager = nil")}
+        let result = await purchaseManager.verifyPremium()
+        if case .premium(let receiptItem) = result {
+            self.sendSubscriptionTypeUserProperty(identifier: receiptItem.id)
+        }
+        return result
     }
     
     public func restore() async -> Bool {

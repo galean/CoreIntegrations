@@ -47,7 +47,7 @@ public class StoreKitCoordinator: NSObject {
             guard let self = self else { return }
             // During store initialization, request products from the App Store.
             debugPrint("\(StoreKitCoordinator.identifier) initialize \(DebuggingIdentifiers.actionOrEventInProgress) Requesting products... \(DebuggingIdentifiers.actionOrEventInProgress)")
-            let result = await self.requestProducts(identifiers)
+            let _ = await self.requestProducts(identifiers)
 
             // Deliver products that the customer purchases.
             debugPrint("\(StoreKitCoordinator.identifier) initialize \(DebuggingIdentifiers.actionOrEventInProgress) Updating customer product status... \(DebuggingIdentifiers.actionOrEventInProgress)")

@@ -10,8 +10,7 @@ import StoreKit
 
 public enum PurchasesPurchaseResult {
     case success(details: PurchaseDetails)
-    case cancelled
-    case internetError
-    case deferredPurchase
-    case error(skerror: SKError)
+    case userCancelled
+    case pending
+    case unknown
 }
