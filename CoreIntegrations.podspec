@@ -20,7 +20,7 @@ Pod::Spec.new do |s|
 
   s.ios.deployment_target = '15.0'
 
-  s.source_files = 'CoreIntegrations/Sources'
+  s.source_files = 'Sources'
   #'Sources/**/*'
  
   # s.public_header_files = 'Pod/Classes/**/*.h'
