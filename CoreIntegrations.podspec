@@ -28,10 +28,13 @@ Pod::Spec.new do |s|
   # s.dependency 'AFNetworking', '~> 2.3'
 
   s.dependency 'FirebaseRemoteConfig'
+  s.dependency 'FirebaseAnalytics'
   s.dependency 'FBSDKCoreKit'
   s.dependency 'AppsFlyerFramework'
   s.dependency 'Amplitude', '~> 8.17.1'
   s.dependency 'AnalyticsConnector'
   s.dependency 'RevenueCat'
+  
+
 
 end
