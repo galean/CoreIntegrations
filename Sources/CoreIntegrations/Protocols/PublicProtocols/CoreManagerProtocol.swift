@@ -5,14 +5,16 @@
 //  Created by Andrii Plotnikov on 03.10.2023.
 //
 import UIKit
+#if !COCOAPODS
 import AppsflyerIntegration
 import AttributionServerIntegration
-import AppTrackingTransparency
 import AnalyticsIntegration
 import FirebaseIntegration
-import RevenueCat
 import RevenueCatIntegration
+#endif
 
+import AppTrackingTransparency
+import RevenueCat
 //public struct CoreManagerResult {
 //    var isIPAT: Bool
 //    var paywallName: String

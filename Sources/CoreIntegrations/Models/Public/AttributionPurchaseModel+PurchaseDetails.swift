@@ -6,9 +6,11 @@
 //
 
 import Foundation
-import AttributionServerIntegration
 import StoreKit
+#if !COCOAPODS
+import AttributionServerIntegration
 import RevenueCatIntegration
+#endif
 
 extension AttributionPurchaseModel {
     init(rcDetails: RevenueCatPurchaseInfo) {

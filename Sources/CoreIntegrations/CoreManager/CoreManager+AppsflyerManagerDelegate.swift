@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import AppsflyerIntegration
+#endif
 
 extension CoreManager: AppsflyerManagerDelegate {
     public func handledDeeplink(_ result: [String : String]) {

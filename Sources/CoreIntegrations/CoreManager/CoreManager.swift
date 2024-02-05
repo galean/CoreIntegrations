@@ -6,15 +6,17 @@
 //
 
 import UIKit
+#if !COCOAPODS
 import AppsflyerIntegration
 import FacebookIntegration
 import AttributionServerIntegration
-import AppTrackingTransparency
-import Foundation
-import StoreKit
 import AnalyticsIntegration
 import FirebaseIntegration
 import RevenueCatIntegration
+#endif
+import AppTrackingTransparency
+import Foundation
+import StoreKit
 import RevenueCat
 /*
     I think it would be good to split CoreManager into different manager parts - for default configuration, for additional configurations like analytics, test_distribution etc, and for purchases and purchases attribution part

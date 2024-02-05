@@ -8,8 +8,10 @@
 import Foundation
 import UIKit
 import AppTrackingTransparency
-import RevenueCatIntegration
 import RevenueCat
+#if !COCOAPODS
+import RevenueCatIntegration
+#endif
 
 extension CoreManager: CoreManagerProtocol {
     

@@ -6,9 +6,11 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import FirebaseIntegration
 import AnalyticsIntegration
 import AppsflyerIntegration
+#endif
 import StoreKit
 
 extension CoreManager {
