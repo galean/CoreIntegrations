@@ -63,7 +63,7 @@ extension CoreManager: CoreManagerProtocol {
         return result
     }
     
-    public func purchase(_ purchase: Purchase, completion: @escaping (RevenueCatIntegration.RevenueCatPurchaseResult) -> Void) {
+    public func purchase(_ purchase: Purchase, completion: @escaping (RevenueCatPurchaseResult) -> Void) {
         guard let revenueCatManager else {
             assertionFailure()
             completion(.error(error: "Integration error"))
