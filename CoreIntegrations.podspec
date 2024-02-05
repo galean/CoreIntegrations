@@ -19,6 +19,8 @@ Pod::Spec.new do |s|
   s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'feature/paywall_network_pods' }
 
   s.ios.deployment_target = '15.0'
+  
+  s.static_framework = true
 
   s.source_files = 'Sources/**/*.swift'
   #'Sources/**/*'
