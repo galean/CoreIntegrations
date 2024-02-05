@@ -20,17 +20,18 @@ Pod::Spec.new do |s|
 
   s.ios.deployment_target = '15.0'
 
-  s.source_files = 'CoreIntegrations/Sources' #'Sources/**/*'
+  s.source_files = 'CoreIntegrations/Sources'
+  #'Sources/**/*'
  
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
 
- # s.dependency 'FirebaseRemoteConfig'
- # s.dependency 'FBSDKCoreKit'
- # s.dependency 'AppsFlyerFramework'
- # s.dependency 'Amplitude', '~> 8.17.1'
- # s.dependency 'AnalyticsConnector'
- # s.dependency 'RevenueCat'
+  s.dependency 'FirebaseRemoteConfig'
+  s.dependency 'FBSDKCoreKit'
+  s.dependency 'AppsFlyerFramework'
+  s.dependency 'Amplitude', '~> 8.17.1'
+  s.dependency 'AnalyticsConnector'
+  s.dependency 'RevenueCat'
 
 end
