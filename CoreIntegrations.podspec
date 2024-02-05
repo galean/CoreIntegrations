@@ -35,5 +35,10 @@ Pod::Spec.new do |s|
   s.dependency 'Amplitude', '~> 8.17.1'
   s.dependency 'AnalyticsConnector'
   s.dependency 'RevenueCat'
+  s.dependency 'SwiftyStoreKit'
+        #s.dependency ''
+            #s.dependency ''
+                #s.dependency ''
+                    #s.dependency ''
   
 end
