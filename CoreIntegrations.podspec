@@ -32,7 +32,7 @@ Pod::Spec.new do |s|
   s.dependency 'FirebaseCore'
   s.dependency 'FBSDKCoreKit'
   s.dependency 'AppsFlyerFramework'
-  s.dependency 'Amplitude', '~> 8.17.1'
+  s.dependency 'Amplitude'
   s.dependency 'AnalyticsConnector'
   s.dependency 'RevenueCat'
   s.dependency 'SwiftyStoreKit'
