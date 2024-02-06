@@ -116,14 +116,14 @@ public class CoreManager {
     @objc public func applicationDidBecomeActive() {
         let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
         let uuid = AttributionServerManager.shared.savedUserUUID
-        
+
         let id: String?
         if savedIDFV != nil {
             id = AttributionServerManager.shared.uniqueUserID
         } else {
             id = uuid ?? AttributionServerManager.shared.uniqueUserID
         }
-        
+
         if let id, id != "" {
             appsflyerManager?.customerUserID = id
             appsflyerManager?.startAppsflyer()
@@ -172,7 +172,7 @@ public class CoreManager {
             self?.handleATTAnswered(status)
         }
             
-        ATTrackingManager.requestTrackingAuthorization {[weak self] status in
+        ATTrackingManager.requestTrackingAuthorization { [weak self] status in
             guard self?.attAnswered == false else { return }
             self?.attAnswered = true
             
@@ -205,9 +205,6 @@ public class CoreManager {
                let purchaseURLPath = self.firebaseManager?.purchase_server_path {
                 let installPath = "/install-application"
                 let purchasePath = "/subscribe"
-                
-//                #warning("should be removed after tests")
-//                let dev_purchase_path = "https://sm-development.roomplanner.site"
                 
                 let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
                                                                      purchaseServerURLPath: purchaseURLPath,
