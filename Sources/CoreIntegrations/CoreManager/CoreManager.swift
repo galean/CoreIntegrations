@@ -175,7 +175,7 @@ public class CoreManager {
             self?.handleATTAnswered(status)
         }
             
-        ATTrackingManager.requestTrackingAuthorization {[weak self] status in
+        ATTrackingManager.requestTrackingAuthorization { [weak self] status in
             guard self?.attAnswered == false else { return }
             self?.attAnswered = true
             
