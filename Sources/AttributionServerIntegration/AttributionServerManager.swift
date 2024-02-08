@@ -1,7 +1,6 @@
 import Foundation
 import AdSupport
 import AdServices
-//import iAd
 import AppTrackingTransparency
 
 extension AttributionServerManager: AttributionServerManagerProtocol {
@@ -178,6 +177,7 @@ open class AttributionServerManager {
         let purchaseToken = dataWorker.receiptToken
         let jws = details.jws
         let originalTransactionID = details.originalTransactionID
+        let decodedTransaction = details.decodedTransaction
         
         let uuid = dataWorker.uuid
 
@@ -189,6 +189,7 @@ open class AttributionServerManager {
                                                    adid: userId,
                                                    version: 2,
                                                    signedTransaction: jws,
+                                                   decodedtransaction: decodedTransaction,
                                                    originalTransactionID:originalTransactionID,
                                                    paymentDetails: AttrubutionPurchaseRequestModel.PaymentDetails(price: price,
                                                                                                                   introductoryPrice: introPrice,

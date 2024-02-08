@@ -138,6 +138,7 @@ extension CoreManager: CoreManagerProtocol {
             completion(.error)
             return
         }
+
         revenueCatManager.restorePremium { result in
             switch result {
             case .premium(let subscriptionID):
