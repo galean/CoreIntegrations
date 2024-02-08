@@ -56,6 +56,10 @@ public struct Purchase: Hashable {
         CGFloat(NSDecimalNumber(decimal: product.price).floatValue)
     }
     
+    public var isLifetime: Bool {
+        return product.id.contains("lifetime")
+    }
+    
     public var period: PurchasePeriod {
         let count = product.subscription?.subscriptionPeriod.value ?? 0
         switch product.subscription?.subscriptionPeriod.unit {
