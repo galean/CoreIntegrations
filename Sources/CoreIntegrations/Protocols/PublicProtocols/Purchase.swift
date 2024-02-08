@@ -97,4 +97,8 @@ public struct Purchase: Hashable {
     public var trialCount: Int {
         return product.subscription?.introductoryOffer?.period.value ?? 0
     }
+    
+    public var currencyCode:String {
+        return product.priceFormatStyle.currencyCode
+    }
 }
