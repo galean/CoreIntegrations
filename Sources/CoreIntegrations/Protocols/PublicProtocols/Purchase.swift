@@ -16,6 +16,10 @@ public enum PurchaseType: String {
          unknown
 }
 
+public enum PurchasePeriod: String {
+    case daily, weekly, monthly, quarterly, annual
+}
+
 public struct Purchase: Hashable {
     public let product: Product
     
@@ -50,6 +54,25 @@ public struct Purchase: Hashable {
     
     public var priceFloat: CGFloat {
         CGFloat(NSDecimalNumber(decimal: product.price).floatValue)
+    }
+    
+    public var period: PurchasePeriod {
+        let count = product.subscription?.subscriptionPeriod.value ?? 0
+        switch product.subscription?.subscriptionPeriod.unit {
+        case .day:
+            return .daily
+        case .week:
+            return .weekly
+        case .month:
+            if count == 3 {
+                return .quarterly
+            }
+            return .monthly
+        case .year:
+            return .annual
+        default:
+            return .weekly
+        }
     }
     
     public var periodString: String {
