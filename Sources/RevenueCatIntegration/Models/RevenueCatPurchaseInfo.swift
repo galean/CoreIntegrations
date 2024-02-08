@@ -16,8 +16,9 @@ public struct RevenueCatPurchaseInfo {
     public let transactionID: String
     public let jws: String?
     public let originalTransactionID: String?
+    public let decodedTransaction: Data?
     
-    public init(isSubscription: Bool, productID: String, price: CGFloat, introductoryPrice: CGFloat?, currencyCode: String, transactionID: String, jws: String? = nil, originalTransactionID: String? = nil) {
+    public init(isSubscription: Bool, productID: String, price: CGFloat, introductoryPrice: CGFloat?, currencyCode: String, transactionID: String, jws: String? = nil, originalTransactionID: String? = nil, decodedTransaction: Data? = nil) {
         self.isSubscription = isSubscription
         self.productID = productID
         self.price = price
@@ -26,5 +27,6 @@ public struct RevenueCatPurchaseInfo {
         self.transactionID = transactionID
         self.jws = jws
         self.originalTransactionID = originalTransactionID
+        self.decodedTransaction = decodedTransaction
     }
 }
