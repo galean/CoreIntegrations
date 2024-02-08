@@ -48,10 +48,10 @@ extension CoreManager: CoreManagerProtocol {
         
         switch result {
         case .restore(consumables: let consumables, nonConsumables: let nonConsumables, subscriptions: let subscriptions, nonRenewables: let nonRenewables):
-            let map_consumables = consumables.map({Purchase(product: $0)})
-            let map_nonConsumables = nonConsumables.map({Purchase(product: $0)})
-            let map_subscriptions = subscriptions.map({Purchase(product: $0)})
-            let map_nonRenewables = nonRenewables.map({Purchase(product: $0)})
+            let map_consumables = consumables.map({PurchasesIntegration.Purchase(product: $0)})
+            let map_nonConsumables = nonConsumables.map({PurchasesIntegration.Purchase(product: $0)})
+            let map_subscriptions = subscriptions.map({PurchasesIntegration.Purchase(product: $0)})
+            let map_nonRenewables = nonRenewables.map({PurchasesIntegration.Purchase(product: $0)})
             return .restore(consumables: map_consumables, nonConsumables: map_nonConsumables, subscriptions: map_subscriptions, nonRenewables: map_nonRenewables)
         case .error(let error):
             return .error(error)
