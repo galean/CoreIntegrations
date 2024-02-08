@@ -7,16 +7,13 @@
 
 import Foundation
 
-//public enum PurchasesKeys: String, CaseIterable {
-//    public var id: String { return rawValue }
-//    case none
-//}
-
 public protocol CorePaywallConfiguration: CaseIterable {
     associatedtype PurchaseIdentifier: RawRepresentable, CaseIterable where PurchaseIdentifier.RawValue == String
     
     var id: String { get }
     var purchaseIdentifiers: [PurchaseIdentifier] { get }
+    
+    var allIdentifiers: [String] { get }
 }
 
 public extension CorePaywallConfiguration {
@@ -28,33 +25,18 @@ public extension CorePaywallConfiguration {
         let result = await CoreManager.internalShared.purchases(config: self)
         return result
     }
+    
+    var allIdentifiers: [String] {
+        let ids: [String] = purchaseIdentifiers.map { $0.rawValue }
+        return ids
+    }
 }
 
 #warning("PaywallConfig should look like this:")
-//enum PaywallConfig: String, CaseIterable, CorePaywallConfiguration {
-//    public var id: String { return rawValue }
-//
-//    case ct_3box_5
-//    case ct_2box_1
-//
-//    var purchases:[SubscriptionKeys] {
-//        switch self {
-//        case .ct_3box_5:
-//            return [.sub_weekly_19_99]
-//        case .ct_2box_1:
-//            return [.sub_yearly_99_99]
-//        }
-//    }
-//}
-//
-//enum PurchasesKeys: String, CaseIterable {
-//    case sub_weekly_19_99 = "weekly.19.99"
-//    case sub_yearly_99_99 = "yearly.99.99"
-//}
-
-
+/*
 enum PWconfig: String, CaseIterable, CorePaywallConfiguration {
     typealias PurchaseIdentifiers = PurchasesKeys
+    
     public var id: String { return rawValue }
     
     case ct3box
@@ -75,3 +57,4 @@ enum PurchasesKeys: String, CaseIterable {
     case test1 = "1"
     case test2 = "2"
 }
+*/

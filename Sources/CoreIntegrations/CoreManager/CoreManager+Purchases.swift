@@ -11,7 +11,7 @@ import PurchasesIntegration
 
 extension CoreManager {
     public func purchases(config:any CorePaywallConfiguration) async -> CorePaywallPurchasesResult {
-        let result = await skCoordinator.requestProducts(config.purchaseIdentifiers)
+        let result = await skCoordinator.requestProducts(config.allIdentifiers)
         switch result {
         case .success(let products):
             let purchases = mapProducts(config: config, products: products)
@@ -22,7 +22,7 @@ extension CoreManager {
     }
  
     private func mapProducts(config:any CorePaywallConfiguration, products: [Product]) -> [Purchase] {
-        let filtered = products.filter({config.purchaseIdentifiers.contains($0.id)})
+        let filtered = products.filter({config.allIdentifiers.contains($0.id)})
         
         var purchases:[Purchase] = []
         filtered.forEach { product in

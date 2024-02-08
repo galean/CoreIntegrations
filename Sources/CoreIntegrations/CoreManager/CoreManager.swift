@@ -94,7 +94,7 @@ public class CoreManager {
         purchaseManager = PurchasesManager(subscriptionSecret: subscriptionSecret)
 
         if let paywallDataSource = configuration.paywallDataSource as? any CorePaywallConfiguration {
-            skCoordinator.initialize(identifiers: paywallDataSource.purchaseIdentifiers)
+            skCoordinator.initialize(identifiers: paywallDataSource.allIdentifiers)
         }
         
         firebaseManager = FirebaseManager()
