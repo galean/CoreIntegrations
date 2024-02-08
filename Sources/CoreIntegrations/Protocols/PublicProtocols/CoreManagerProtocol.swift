@@ -36,5 +36,5 @@ public protocol CoreManagerProtocol {
     
     func verifyPremium() async -> PurchasesVerifyPremiumResult
     
-    func restore() async -> Bool
+    func restore() async -> PurchasesRestoreResult
 }

@@ -37,7 +37,13 @@ extension StoreKitCoordinator {
     
     //This call displays a system prompt that asks users to authenticate with their App Store credentials.
     //Call this function only in response to an explicit user action, such as tapping a button.
-    public func restore() async -> Bool {
-        return ((try? await AppStore.sync()) != nil)
+    
+    public func restore() async -> SKRestoreResult {
+        try? await AppStore.sync()
+        
+        return .restore(consumables: self.purchasedConsumables,
+                        nonConsumables: self.purchasedNonConsumables,
+                        subscriptions: self.purchasedSubscriptions,
+                        nonRenewables: self.purchasedNonRenewables)
     }
 }

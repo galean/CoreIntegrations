@@ -10,8 +10,8 @@ import StoreKit
 
 public protocol StoreKitCoordinatorProtocol {
     func initialize(identifiers: [String])
-    func verifyPremium() async
-    func purchase(_ product: Product) async throws -> Transaction?
-    func restore() async -> Bool
+    func verifyPremium() async -> PurchasesVerifyPremiumResult
+    func purchase(_ product: Product) async throws -> SKPurchaseResult
+    func restore() async -> SKRestoreResult
     func isPurchased(_ product: Product) async throws -> Bool
 }

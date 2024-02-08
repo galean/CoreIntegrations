@@ -16,25 +16,6 @@ import StoreKit
 import AnalyticsIntegration
 import FirebaseIntegration
 
-//temporary object from swifty kit
-//public struct PurchaseDetails {
-//    public let productId: String
-//    public let quantity: Int
-//    public let product: Product
-//    public let transaction: Transaction
-//    public let originalTransaction: Transaction?
-//    public let needsFinishTransaction: Bool
-//    
-//    public init(productId: String, quantity: Int, product: Product, transaction: Transaction, originalTransaction: Transaction?, needsFinishTransaction: Bool) {
-//        self.productId = productId
-//        self.quantity = quantity
-//        self.product = product
-//        self.transaction = transaction
-//        self.originalTransaction = originalTransaction
-//        self.needsFinishTransaction = needsFinishTransaction
-//    }
-//}
-
 /*
     I think it would be good to split CoreManager into different manager parts - for default configuration, for additional configurations like analytics, test_distribution etc, and for purchases and purchases attribution part
  */

@@ -17,9 +17,9 @@ public enum PurchaseType: String {
 }
 
 public struct Purchase: Hashable {
-    let product: Product
+    public let product: Product
     
-    init(product: Product) {
+    public init(product: Product) {
         self.product = product
     }
     

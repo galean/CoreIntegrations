@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PurchasesIntegration
 
 public enum CorePaywallPurchasesResult {
     case success(purchases: [Purchase])

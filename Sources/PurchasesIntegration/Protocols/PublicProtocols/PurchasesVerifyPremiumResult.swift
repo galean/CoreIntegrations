@@ -9,8 +9,8 @@ import Foundation
 import StoreKit
 
 public enum PurchasesVerifyPremiumResult {
-    case premium(receiptItem: Product)
+    case premium(purchase: Purchase)
     case notPremium
     case internetError
-    case error(receiptError: String)
+    case error(_ receiptError: String)
 }

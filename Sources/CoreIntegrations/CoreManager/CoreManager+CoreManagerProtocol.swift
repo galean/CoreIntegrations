@@ -11,12 +11,12 @@ import PurchasesIntegration
 import AppTrackingTransparency
 
 extension CoreManager: CoreManagerProtocol {
-    public func purchase(_ purchase: Purchase) async -> PurchasesIntegration.PurchasesPurchaseResult {
+    public func purchase(_ purchase: Purchase) async -> PurchasesPurchaseResult {
         let result = try? await purchaseManager?.purchase(purchase.product)
 
         switch result {
         case .success(let transaction):
-            let details = PurchaseDetails(productId: "", quantity: 1, product: purchase.product, transaction: transaction, needsFinishTransaction: false)
+            let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: transaction)
             self.sendSubscriptionTypeUserProperty(identifier: details.productId)
             self.sendPurchaseToAttributionServer(details)
             self.sendPurchaseToFacebook(details)
@@ -32,20 +32,30 @@ extension CoreManager: CoreManagerProtocol {
             return .unknown
         }
     }
-    
+
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
-        guard let purchaseManager = purchaseManager else {return .error(receiptError: "purchaseManager = nil")}
+        guard let purchaseManager = purchaseManager else {return .error("purchaseManager = nil")}
         let result = await purchaseManager.verifyPremium()
-        if case .premium(let receiptItem) = result {
-            self.sendSubscriptionTypeUserProperty(identifier: receiptItem.id)
+        if case .premium(let purchase) = result {
+            self.sendSubscriptionTypeUserProperty(identifier: purchase.identifier)
         }
         return result
     }
     
-    public func restore() async -> Bool {
-        guard let purchaseManager = purchaseManager else {return false}
-        let isRestored = await purchaseManager.restore()
-        return isRestored
+    public func restore() async -> PurchasesRestoreResult {
+        guard let purchaseManager = purchaseManager else {return .error("purchaseManager = nil")}
+        let result = await purchaseManager.restore()
+        
+        switch result {
+        case .restore(consumables: let consumables, nonConsumables: let nonConsumables, subscriptions: let subscriptions, nonRenewables: let nonRenewables):
+            let map_consumables = consumables.map({Purchase(product: $0)})
+            let map_nonConsumables = nonConsumables.map({Purchase(product: $0)})
+            let map_subscriptions = subscriptions.map({Purchase(product: $0)})
+            let map_nonRenewables = nonRenewables.map({Purchase(product: $0)})
+            return .restore(consumables: map_consumables, nonConsumables: map_nonConsumables, subscriptions: map_subscriptions, nonRenewables: map_nonRenewables)
+        case .error(let error):
+            return .error(error)
+        }
     }
     
     public func application(_ application: UIApplication,

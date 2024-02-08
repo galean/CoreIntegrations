@@ -4,6 +4,7 @@ import StoreKit
 extension StoreKitCoordinator {
     public func updateCustomerProductStatus() async {
         debugPrint("\(StoreKitCoordinator.identifier) updateCustomerProductStatus \(DebuggingIdentifiers.actionOrEventInProgress) Updating Customer Product Status... \(DebuggingIdentifiers.actionOrEventInProgress)")
+        var purchasedConsumables: [Product] = []
         var purchasedNonConsumables: [Product] = []
         var purchasedSubscriptions: [Product] = []
         var purchasedNonRenewableSubscriptions: [Product] = []
@@ -17,6 +18,13 @@ extension StoreKitCoordinator {
 
                 // Check the `productType` of the transaction and get the corresponding product from the store.
                 switch transaction.productType {
+                case .consumable:
+                    if let consumable = consumables.first(where: { $0.id == transaction.productID }) {
+                        purchasedConsumables.append(consumable)
+                        debugPrint("\(StoreKitCoordinator.identifier) updateCustomerProductStatus \(DebuggingIdentifiers.actionOrEventSucceded) Non-Consumable added to purchased Non-Consumables.")
+                    } else {
+                        debugPrint("\(StoreKitCoordinator.identifier) updateCustomerProductStatus \(DebuggingIdentifiers.actionOrEventFailed) Non-Consumable Product Id not within the offering : \(transaction.productID).")
+                    }
                 case .nonConsumable:
                     if let nonConsumable = nonConsumables.first(where: { $0.id == transaction.productID }) {
                         purchasedNonConsumables.append(nonConsumable)
@@ -61,6 +69,8 @@ extension StoreKitCoordinator {
         }
         debugPrint("\(StoreKitCoordinator.identifier) updateCustomerProductStatus \(DebuggingIdentifiers.actionOrEventInProgress) Updating Purchased Arrays... \(DebuggingIdentifiers.actionOrEventInProgress)")
 
+        self.purchasedConsumables = purchasedConsumables
+        
         // Update the store information with the purchased products.
         self.purchasedNonConsumables = purchasedNonConsumables
         self.purchasedNonRenewables = purchasedNonRenewableSubscriptions
@@ -101,7 +111,7 @@ extension StoreKitCoordinator {
         }
         
         if let premium = statuses.first(where: {$0.state == .subscribed}) {
-            return .premium(receiptItem: premium.product)
+            return .premium(purchase: Purchase(product: premium.product))
         }else{
             return .notPremium
         }

@@ -1,20 +1,15 @@
 import StoreKit
 import Foundation
 
-//temporary object from swifty kit
 public struct PurchaseDetails {
     public let productId: String
-    public let quantity: Int
     public let product: Product
     public let transaction: Transaction
-    public let needsFinishTransaction: Bool
     
-    public init(productId: String, quantity: Int, product: Product, transaction: Transaction, needsFinishTransaction: Bool) {
+    public init(productId: String, product: Product, transaction: Transaction) {
         self.productId = productId
-        self.quantity = quantity
         self.product = product
         self.transaction = transaction
-        self.needsFinishTransaction = needsFinishTransaction
     }
 }
 
@@ -37,7 +32,7 @@ extension PurchasesManager: PurchasesManagerProtocol {
         return await StoreKitCoordinator.shared.verifyPremium()
     }
     
-    public func restore() async -> Bool {
+    public func restore() async -> SKRestoreResult {
         return await StoreKitCoordinator.shared.restore()
     }
     
