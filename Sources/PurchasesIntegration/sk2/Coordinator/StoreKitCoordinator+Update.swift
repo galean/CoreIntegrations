@@ -101,10 +101,14 @@ extension StoreKitCoordinator {
     }
     
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
-//        maybe call await updateCustomerProductStatus() at first?, we also have listenForTransactions() so it should update automatically
         var statuses:[VerifyPremiumStatus] = []
         await subscriptions.asyncForEach { product in
-            if let state = try? await product.subscription?.status.first?.state {
+//            if let state = try? await product.subscription?.status.first?.state {
+//                let premiumStatus = VerifyPremiumStatus(product: product, state: state)
+//                statuses.append(premiumStatus)
+//            }
+            
+            if let state = await getSubscriptionStatus(product: product) {
                 let premiumStatus = VerifyPremiumStatus(product: product, state: state)
                 statuses.append(premiumStatus)
             }
@@ -116,6 +120,43 @@ extension StoreKitCoordinator {
             return .notPremium
         }
     }
+    
+    func getSubscriptionStatus(product: Product) async -> RenewalState? {
+        guard let subscription = product.subscription else {
+            // Not a subscription
+            return nil
+        }
+        do {
+            let statuses = try await subscription.status
+            
+            for status in statuses {
+                let info = try checkVerified(status.renewalInfo)
+                switch status.state {
+                case .subscribed:
+                    if info.willAutoRenew {
+                        debugPrint("getSubscriptionStatus user subscription is active.")
+                    } else {
+                        debugPrint("getSubscriptionStatus user subscription is expiring.")
+                    }
+                case .inBillingRetryPeriod:
+                    debugPrint("getSubscriptionStatus user subscription is in billing retry period.")
+                case .inGracePeriod:
+                    debugPrint("getSubscriptionStatus user subscription is in grace period.")
+                case .expired:
+                    debugPrint("getSubscriptionStatus user subscription is expired.")
+                case .revoked:
+                    debugPrint("getSubscriptionStatus user subscription was revoked.")
+                default:
+                    fatalError("getSubscriptionStatus WARNING STATE NOT CONSIDERED.")
+                }
+                return status.state
+            }
+        } catch {
+            return nil
+        }
+        return nil
+    }
+    
 }
 
 struct SK2Notifications {
