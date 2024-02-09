@@ -40,7 +40,7 @@ extension StoreKitCoordinator {
     
     public func restore() async -> SKRestoreResult {
         try? await AppStore.sync()
-        await updateCustomerProductStatus()
+        //await updateCustomerProductStatus()
         
         return .restore(consumables: self.purchasedConsumables,
                         nonConsumables: self.purchasedNonConsumables,

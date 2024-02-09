@@ -60,19 +60,4 @@ extension StoreKitCoordinator {
         products.sorted(by: { return $0.price < $1.price })
     }
 
-    // Get a subscription's level of service using the product ID.
-//    func getSubscriptionTier(for productId: String) -> SubscriptionTier {
-//        debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventInProgress) Gathering Subscription Tier... \(DebuggingIdentifiers.actionOrEventInProgress)")
-//        switch productId {
-//        case configuration.getSampleAutoRenewableSubscriptionId():
-//            debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventSucceded) Subscription is a standard tier.")
-//            return .standard
-//        case configuration.getSampleTierTwoAutoRenewableSubscriptionId():
-//            debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventSucceded) Subscription is a premium tier.")
-//            return .premium
-//        default:
-//            debugPrint("\(StoreKitCoordinator.identifier) getSubscriptionTier \(DebuggingIdentifiers.actionOrEventFailed) There is no subscription tier.")
-//            return .none
-//        }
-//    }
 }
