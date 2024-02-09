@@ -64,6 +64,9 @@ public struct Purchase: Hashable {
         let count = product.subscription?.subscriptionPeriod.value ?? 0
         switch product.subscription?.subscriptionPeriod.unit {
         case .day:
+            if count == 7 {
+                return .weekly
+            }
             return .daily
         case .week:
             return .weekly
