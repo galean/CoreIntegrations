@@ -129,6 +129,11 @@ extension StoreKitCoordinator {
         do {
             let statuses = try await subscription.status
             
+            print("Product \(product.id)")
+            print("StatusesCount \(statuses.count)")
+            print("FirstStatus \(statuses.first?.renewalInfo)")
+            print("LastStatus \(statuses.last?.renewalInfo)")
+            
             for status in statuses {
                 let info = try checkVerified(status.renewalInfo)
                 switch status.state {
@@ -161,8 +166,8 @@ extension StoreKitCoordinator {
 
 struct SK2Notifications {
     static let onStoreKitUpdate: Notification.Name = Notification.Name("onStoreKitUpdate")
-    static let onStoreKitProductUpdate: Notification.Name = Notification.Name("onStoreKitProductUpdate")
-    static let onStoreKitProductRefundUpdate: Notification.Name = Notification.Name("onStoreKitProductRefundUpdate")
+//    static let onStoreKitProductUpdate: Notification.Name = Notification.Name("onStoreKitProductUpdate")
+//    static let onStoreKitProductRefundUpdate: Notification.Name = Notification.Name("onStoreKitProductRefundUpdate")
 }
 
 extension Sequence {
