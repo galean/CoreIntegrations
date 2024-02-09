@@ -189,7 +189,7 @@ open class AttributionServerManager {
                                                    adid: userId,
                                                    version: 2,
                                                    signedTransaction: jws,
-                                                   decodedtransaction: decodedTransaction,
+                                                   decodedTransaction: decodedTransaction,
                                                    originalTransactionID:originalTransactionID,
                                                    paymentDetails: AttrubutionPurchaseRequestModel.PaymentDetails(price: price,
                                                                                                                   introductoryPrice: introPrice,
