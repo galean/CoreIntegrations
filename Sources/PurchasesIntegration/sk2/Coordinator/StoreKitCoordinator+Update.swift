@@ -131,8 +131,8 @@ extension StoreKitCoordinator {
             
             print("Product \(product.id)")
             print("StatusesCount \(statuses.count)")
-            print("FirstStatus \(statuses.first?.renewalInfo)")
-            print("LastStatus \(statuses.last?.renewalInfo)")
+            print("FirstStatus \(statuses.first?.state)")
+            print("LastStatus \(statuses.last?.state)")
             
             for status in statuses {
                 let info = try checkVerified(status.renewalInfo)
