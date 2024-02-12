@@ -41,7 +41,7 @@ extension CorePaywallConfiguration {
 }
 
 #warning("PaywallConfig should look like this:")
-
+/*
 enum PWconfig: String, CaseIterable, CorePaywallConfiguration {
     typealias PurchaseIdentifiers = PurchasesKeys
     
@@ -65,3 +65,4 @@ enum PurchasesKeys: String, CaseIterable {
     case test1
     case test2
 }
+*/

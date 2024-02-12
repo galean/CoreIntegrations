@@ -24,6 +24,7 @@ public class StoreKitCoordinator: NSObject {
 
     // MARK: Offering Arrays
     // Arrays are initially empty and are filled in when we gather the products
+    var allAvailableProducts: [Product] = []
     public var consumables: [Product] = []
     public var nonConsumables: [Product] = []
     public var subscriptions: [Product] = []
@@ -47,7 +48,7 @@ public class StoreKitCoordinator: NSObject {
             guard let self = self else { return }
             // During store initialization, request products from the App Store.
             debugPrint("\(StoreKitCoordinator.identifier) initialize \(DebuggingIdentifiers.actionOrEventInProgress) Requesting products... \(DebuggingIdentifiers.actionOrEventInProgress)")
-            let _ = await self.requestProducts(identifiers)
+            let _ = await self.requestAllProducts(identifiers)
 
             // Deliver products that the customer purchases.
             debugPrint("\(StoreKitCoordinator.identifier) initialize \(DebuggingIdentifiers.actionOrEventInProgress) Updating customer product status... \(DebuggingIdentifiers.actionOrEventInProgress)")
