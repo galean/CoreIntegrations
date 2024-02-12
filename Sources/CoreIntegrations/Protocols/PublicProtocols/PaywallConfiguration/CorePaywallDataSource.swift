@@ -18,3 +18,9 @@ public extension CorePaywallDataSource {
         return PaywallInitialConfiguration.allCases as! [Self.PaywallInitialConfiguration]
     }
 }
+
+extension CorePaywallDataSource {
+    var allPurchaseIDs: [String] {
+        return PaywallInitialConfiguration.allPurchasesIDs
+    }
+}

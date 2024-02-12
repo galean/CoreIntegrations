@@ -21,9 +21,9 @@ extension StoreKitCoordinator {
                 case .consumable:
                     if let consumable = consumables.first(where: { $0.id == transaction.productID }) {
                         purchasedConsumables.append(consumable)
-                        debugPrint("\(StoreKitCoordinator.identifier) updateCustomerProductStatus \(DebuggingIdentifiers.actionOrEventSucceded) Non-Consumable added to purchased Non-Consumables.")
+                        debugPrint("\(StoreKitCoordinator.identifier) updateCustomerProductStatus \(DebuggingIdentifiers.actionOrEventSucceded) Consumable added to purchased Non-Consumables.")
                     } else {
-                        debugPrint("\(StoreKitCoordinator.identifier) updateCustomerProductStatus \(DebuggingIdentifiers.actionOrEventFailed) Non-Consumable Product Id not within the offering : \(transaction.productID).")
+                        debugPrint("\(StoreKitCoordinator.identifier) updateCustomerProductStatus \(DebuggingIdentifiers.actionOrEventFailed) Consumable Product Id not within the offering : \(transaction.productID).")
                     }
                 case .nonConsumable:
                     if let nonConsumable = nonConsumables.first(where: { $0.id == transaction.productID }) {

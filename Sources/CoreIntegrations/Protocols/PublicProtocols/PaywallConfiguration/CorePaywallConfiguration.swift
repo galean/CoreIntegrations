@@ -11,9 +11,7 @@ public protocol CorePaywallConfiguration: CaseIterable {
     associatedtype PurchaseIdentifier: RawRepresentable, CaseIterable where PurchaseIdentifier.RawValue == String
     
     var id: String { get }
-    var purchaseIdentifiers: [PurchaseIdentifier] { get }
-    
-    var allIdentifiers: [String] { get }
+    var activeForPaywall: [PurchaseIdentifier] { get }
 }
 
 public extension CorePaywallConfiguration {
@@ -26,14 +24,24 @@ public extension CorePaywallConfiguration {
         return result
     }
     
-    var allIdentifiers: [String] {
-        let ids: [String] = purchaseIdentifiers.map { $0.rawValue }
-        return ids
+}
+
+extension CorePaywallConfiguration {
+    static var allPurchasesIDs: [String] {
+        return allPurchases.map({$0.rawValue})
+    }
+    
+    static var allPurchases: [PurchaseIdentifier] {
+        return PurchaseIdentifier.allCases as! [Self.PurchaseIdentifier]
+    }
+    
+    var activeForPaywallIDs: [String] {
+        return activeForPaywall.map({$0.rawValue})
     }
 }
 
 #warning("PaywallConfig should look like this:")
-/*
+
 enum PWconfig: String, CaseIterable, CorePaywallConfiguration {
     typealias PurchaseIdentifiers = PurchasesKeys
     
@@ -42,7 +50,7 @@ enum PWconfig: String, CaseIterable, CorePaywallConfiguration {
     case ct3box
     case ct4box
     
-    var purchaseIdentifiers: [PurchaseIdentifiers] {
+    var activeForPaywall: [PurchaseIdentifiers] {
         switch self {
         case .ct3box:
             return [.test1]
@@ -51,10 +59,9 @@ enum PWconfig: String, CaseIterable, CorePaywallConfiguration {
         }
     }
 }
-//
+
+
 enum PurchasesKeys: String, CaseIterable {
-    public var id: String { return rawValue }
-    case test1 = "1"
-    case test2 = "2"
+    case test1
+    case test2
 }
-*/
