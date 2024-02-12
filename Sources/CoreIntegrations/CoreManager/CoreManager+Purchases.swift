@@ -14,18 +14,16 @@ extension CoreManager {
         let result = await skCoordinator.requestProducts(config.activeForPaywallIDs)
         switch result {
         case .success(let products):
-            let purchases = mapProducts(config: config, products: products)
+            let purchases = mapProducts(products)
             return .success(purchases: purchases)
         case .error(let error):
             return .error(error: error)
         }
     }
  
-    private func mapProducts(config:any CorePaywallConfiguration, products: [Product]) -> [Purchase] {
-        let filtered = products.filter({config.activeForPaywallIDs.contains($0.id)})
-        
+    private func mapProducts(_ products: [Product]) -> [Purchase] {
         var purchases:[Purchase] = []
-        filtered.forEach { product in
+        products.forEach { product in
             let purchase = Purchase(product: product)
             purchases.append(purchase)
         }
