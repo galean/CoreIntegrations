@@ -17,7 +17,7 @@ struct DebuggingIdentifiers {
 public class StoreKitCoordinator: NSObject {
 
     // MARK: Variables
-    static let identifier: String = "[StoreKitCoordinator]"
+    static let identifier: String = "🏦"
     static public let shared: StoreKitCoordinator = StoreKitCoordinator()
     // A transaction listener to listen to transactions on init and through out the apps use.
     private var updateListenerTask: Task<Void, Error>?

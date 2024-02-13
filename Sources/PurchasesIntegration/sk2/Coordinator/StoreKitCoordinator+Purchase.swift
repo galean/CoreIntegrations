@@ -5,7 +5,7 @@ extension StoreKitCoordinator {
     public func purchase(_ product: Product) async throws -> SKPurchaseResult {
         debugPrint("\(StoreKitCoordinator.identifier) purchase \(DebuggingIdentifiers.actionOrEventInProgress) Purchasing product \(product.displayName)... \(DebuggingIdentifiers.actionOrEventInProgress)")
         // Begin purchasing the `Product` the user selects.
-        let result = try await product.purchase()
+        let result = try await product.purchase()//product.purchase(options: [.appAccountToken(UUID())]), promoOffer?
 
         switch result {
         case .success(let verification):
