@@ -10,7 +10,7 @@ import AttributionServerIntegration
 import PurchasesIntegration
 
 extension AttributionPurchaseModel {
-    init(swiftyDetails details: PurchaseDetails) {
+    init(_ details: PurchaseDetails) {
         let price = CGFloat(NSDecimalNumber(decimal: details.product.price).floatValue)
         let introductoryPrice: CGFloat?
         

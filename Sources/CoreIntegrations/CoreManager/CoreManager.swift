@@ -155,9 +155,7 @@ public class CoreManager {
             handleATTAnswered(attStatus)
             return
         }
-        
-//        var attAnswered = false
-        
+                
         /*
          This stupid thing is made to be sure, that we'll handle ATT anyways, 100%
          And it looks like that apple has a bug, at least in sandbox, when ATT == .notDetermined
@@ -228,7 +226,7 @@ public class CoreManager {
     }
     
     func sendPurchaseToAttributionServer(_ details: PurchaseDetails) {
-        let tlmamDetals = AttributionPurchaseModel(swiftyDetails: details)
+        let tlmamDetals = AttributionPurchaseModel(details)
         AttributionServerManager.shared.syncPurchase(data: tlmamDetals)
     }
     
@@ -314,10 +312,8 @@ public class CoreManager {
                           remoteResult: [String: String]) {
         allConfigs.forEach { config in
             let remoteValue = remoteResult[config.key]
-            let defaultValue = config.defaultValue
             
             guard let remoteValue else {
-//                config.updateValue(defaultValue)
                 return
             }
             
@@ -326,15 +322,9 @@ public class CoreManager {
                 value = remoteValue
                 config.updateValue(value)
             }
-//            else {
-//                value = defaultValue
-//            }
-            
         }
     }
 }
-
-
 
 class ConfigurationResultManager {
     var userSource: CoreUserSource = .organic
@@ -343,7 +333,6 @@ class ConfigurationResultManager {
     
     func calculateResult() -> CoreManagerResult {
         // get appsflyer info
-        let deepLinkResult = deepLinkResult ?? [:]
         
         let generalPaywallName = self.getGeneralPaywallName(generalPaywalConfig: InternalRemoteABTests.ab_paywall_general)
         let fbGooglePaywallName = self.getFbGooglePaywallName(fbGooglePaywalConfig: InternalRemoteABTests.ab_paywall_fb_google)
