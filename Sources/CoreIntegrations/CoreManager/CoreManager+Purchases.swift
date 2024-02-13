@@ -11,13 +11,14 @@ import PurchasesIntegration
 
 extension CoreManager {
     public func purchases(config:any CorePaywallConfiguration) async -> CorePaywallPurchasesResult {
-        let result = await skCoordinator.requestProducts(config.activeForPaywallIDs)
+        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
+        let result = await purchaseManager.requestProducts(config.activeForPaywallIDs)
         switch result {
         case .success(let products):
             let purchases = mapProducts(products)
             return .success(purchases: purchases)
         case .error(let error):
-            return .error(error: error)
+            return .error(error)
         }
     }
  

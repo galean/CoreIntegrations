@@ -10,5 +10,5 @@ import PurchasesIntegration
 
 public enum CorePaywallPurchasesResult {
     case success(purchases: [Purchase])
-    case error(error: String)
+    case error(_ error: String)
 }

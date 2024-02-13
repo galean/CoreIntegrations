@@ -13,4 +13,5 @@ public enum PurchasesPurchaseResult {
     case userCancelled
     case pending
     case unknown
+    case error(_ error: String)
 }

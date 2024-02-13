@@ -33,11 +33,11 @@ public class CoreManager {
     var configuration: CoreConfigurationProtocol?
     var appsflyerManager: AppfslyerManagerProtocol?
     var facebookManager: FacebookManagerProtocol?
+//    let purchaseManager = PurchasesManager.shared
     var purchaseManager: PurchasesManagerProtocol?
     
     var firebaseManager: FirebaseManager?
     var analyticsManager: AnalyticsManager?
-    var skCoordinator = StoreKitCoordinator.shared
         
     var delegate: CoreManagerDelegate?
     
@@ -70,16 +70,15 @@ public class CoreManager {
         
         facebookManager = FacebookManager()
         
+        purchaseManager = PurchasesManager.shared
+        
         let attributionToken = configuration.appSettings.attributionServerSecret
         let facebookData = AttributionFacebookModel(fbUserId: facebookManager?.userID ?? "",
                                                     fbUserData: facebookManager?.userData ?? "",
                                                     fbAnonId: facebookManager?.anonUserID ?? "")
         let appsflyerToken = appsflyerManager?.appsflyerID
-        
-        let subscriptionSecret = configuration.appSettings.subscriptionsSecret
-        purchaseManager = PurchasesManager(subscriptionSecret: subscriptionSecret)
-     
-        skCoordinator.initialize(identifiers: configuration.paywallDataSource.allPurchaseIDs)
+       
+        purchaseManager?.initialize(identifiers: configuration.paywallDataSource.allPurchaseIDs)
         
         firebaseManager = FirebaseManager()
         firebaseManager?.configure()
@@ -140,7 +139,7 @@ public class CoreManager {
         }
         
         Task {
-            await skCoordinator.updateCustomerProductStatus()
+            await purchaseManager?.updateProductStatus()
         }
     }
     

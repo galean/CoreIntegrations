@@ -12,7 +12,8 @@ import AppTrackingTransparency
 
 extension CoreManager: CoreManagerProtocol {
     public func purchase(_ purchase: Purchase) async -> PurchasesPurchaseResult {
-        let result = try? await purchaseManager?.purchase(purchase.product)
+        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
+        let result = try? await purchaseManager.purchase(purchase.product)
 
         switch result {
         case .success(let purchaseInfo):
@@ -34,7 +35,7 @@ extension CoreManager: CoreManagerProtocol {
     }
 
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
-        guard let purchaseManager = purchaseManager else {return .error("purchaseManager = nil")}
+        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
         let result = await purchaseManager.verifyPremium()
         if case .premium(let purchase) = result {
             self.sendSubscriptionTypeUserProperty(identifier: purchase.identifier)
@@ -43,7 +44,7 @@ extension CoreManager: CoreManagerProtocol {
     }
     
     public func restore() async -> PurchasesRestoreResult {
-        guard let purchaseManager = purchaseManager else {return .error("purchaseManager = nil")}
+        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
         let result = await purchaseManager.restore()
         
         switch result {
