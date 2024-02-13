@@ -13,7 +13,6 @@ public protocol CoreConfigurationProtocol {//}: CoreIntegrationDelegate {
     var remoteConfigDataSource: any CoreRemoteDataSource { get }
     var amplitudeDataSource: any CoreAnalyticsDataSource { get }
     var initialConfigurationDataSource: (any ConfigurationEventsDataSource)? { get }
-    var attributionServerDataSource: any AttributionServerDataSource { get }
     var paywallDataSource: any CorePaywallDataSource { get }
     var useDefaultATTRequest: Bool { get }
 }

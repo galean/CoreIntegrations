@@ -11,9 +11,14 @@ import FirebaseRemoteConfig
 
 public class FirebaseManager {
     public private(set) var remoteConfigResult: [String: String]? = nil
+    public private(set) var install_server_path: String? = nil
+    public private(set) var purchase_server_path: String? = nil
+    
+    private let kInstallURL = "install_server_path"
+    private let kPurchaseURL = "purchase_server_path"
     
     public init() {
-       
+        
     }
     
     public func configure() {
@@ -47,6 +52,9 @@ public class FirebaseManager {
                     partialResult[key] = configValue
                 }
             }
+            
+            self.install_server_path = remoteConfig.configValue(forKey: self.kInstallURL).stringValue
+            self.purchase_server_path = remoteConfig.configValue(forKey: self.kPurchaseURL).stringValue
             
             self.remoteConfigResult = configResult
             completion()

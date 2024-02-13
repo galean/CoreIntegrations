@@ -22,7 +22,9 @@ extension StoreKitCoordinator {
             // Always finish a transaction - This removes transactions from the queue and it tells Apple that the customer has recieved their items or service.
             await transaction.finish()
             debugPrint("\(StoreKitCoordinator.identifier) purchase \(DebuggingIdentifiers.actionOrEventSucceded) Finished transaction.")
-            return .success(transaction: transaction)
+            
+            let purchaseInfo = SKPurchaseInfo(transaction: transaction, jsonRepresentation: transaction.jsonRepresentation, jwsRepresentation: verification.jwsRepresentation, originalID: "\(transaction.originalID)")
+            return .success(transaction: purchaseInfo)
         case .pending:
             debugPrint("\(StoreKitCoordinator.identifier) purchase \(DebuggingIdentifiers.actionOrEventFailed) Failed as the transaction is pending.")
             return .pending
@@ -37,7 +39,6 @@ extension StoreKitCoordinator {
     
     //This call displays a system prompt that asks users to authenticate with their App Store credentials.
     //Call this function only in response to an explicit user action, such as tapping a button.
-    
     public func restore() async -> SKRestoreResult {
         try? await AppStore.sync()
         //await updateCustomerProductStatus()
@@ -47,4 +48,21 @@ extension StoreKitCoordinator {
                         subscriptions: self.purchasedSubscriptions,
                         nonRenewables: self.purchasedNonRenewables)
     }
+    
+    public func verifyPremium() async -> PurchasesVerifyPremiumResult {
+        var statuses:[VerifyPremiumStatus] = []
+        await subscriptions.asyncForEach { product in
+            if let state = await getSubscriptionStatus(product: product) {
+                let premiumStatus = VerifyPremiumStatus(product: product, state: state)
+                statuses.append(premiumStatus)
+            }
+        }
+        
+        if let premium = statuses.first(where: {$0.state == .subscribed}) {
+            return .premium(purchase: Purchase(product: premium.product))
+        }else{
+            return .notPremium
+        }
+    }
+    
 }

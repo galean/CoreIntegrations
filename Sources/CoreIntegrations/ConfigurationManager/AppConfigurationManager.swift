@@ -17,8 +17,10 @@ class AppConfigurationManager {
     private var timout: Int = 6
     private var currentSecond = 0
     private var waitingCallbacks = [(ConfigurationResult) -> Void]()
+    private var attributionCallback: (() -> Void)?
     private var isTimerFinished = false
     private var configurationFinishHandled = false
+    private var configurationAttFinishHandled = false
     
     private var configurationCompletelyFinished: Bool {
         return model.checkAllEventsFinished(completedEvents: completedEvents, isFirstStart: isFirstStart)
@@ -26,6 +28,10 @@ class AppConfigurationManager {
     
     private var configurationRequiredFinished: Bool {
         return model.checkRequiredEventsFinished(completedEvents: completedEvents, isFirstStart: isFirstStart)
+    }
+    
+    private var configurationAttAndConfigFinished: Bool {
+        return model.checkAttAndConfigFinished(completedEvents: completedEvents, isFirstStart: isFirstStart)
     }
     
     private var isConfigurationFinished: Bool {
@@ -55,6 +61,7 @@ class AppConfigurationManager {
     public func handleCompleted(event: any ConfigurationEvent) {
         completedEvents.append(event)
         checkConfiguration()
+        checkATTConfiguration()
     }
     
     public func signForConfigurationEnd(_ callback: @escaping (ConfigurationResult) -> Void) {
@@ -64,6 +71,27 @@ class AppConfigurationManager {
             return
         }
         waitingCallbacks.append(callback)
+    }
+    
+    public func signForAttAndConfigLoaded(_ callback: @escaping () -> Void) {
+        guard !configurationAttFinishHandled else {
+            callback()
+            return
+        }
+        attributionCallback = callback
+    }
+    
+    private func checkATTConfiguration() {
+        guard configurationAttAndConfigFinished else {
+            return
+        }
+        
+        guard configurationAttFinishHandled == false else {
+            return
+        }
+        
+        configurationAttFinishHandled = true
+        attributionCallback?()
     }
     
     private func checkConfiguration() {

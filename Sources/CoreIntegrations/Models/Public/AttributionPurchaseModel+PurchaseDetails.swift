@@ -23,8 +23,12 @@ extension AttributionPurchaseModel {
         let currencyCode = details.product.priceFormatStyle.currencyCode
         let purchaseID = details.product.id
         
+        let jws = details.jws
+        let originalTransactionID = details.originalTransactionID
+        let decodedTransaction = details.decodedTransaction
         
         self.init(price: price, introductoryPrice: introductoryPrice,
-             currencyCode: currencyCode, subscriptionIdentifier: purchaseID)
+                  currencyCode: currencyCode, subscriptionIdentifier: purchaseID,
+                  jws: jws, originalTransactionID: originalTransactionID, decodedTransaction: decodedTransaction)
     }
 }

@@ -57,4 +57,21 @@ extension CoreConfigurationModel {
         }
         return allCompleted
     }
+    
+    func checkAttAndConfigFinished(completedEvents: [any ConfigurationEvent], isFirstStart: Bool) -> Bool {
+        var allCompleted = true
+        let verifingEvents = [InternalConfigurationEvent.attConcentGiven, InternalConfigurationEvent.remoteConfigLoaded]
+        
+        verifingEvents.forEach { event in
+            let eventCompleted = completedEvents.contains { completedEvent in
+                completedEvent.key == event.key
+            }
+            if eventCompleted == false {
+                allCompleted = false
+            }
+        }
+        
+        return allCompleted
+    }
+    
 }

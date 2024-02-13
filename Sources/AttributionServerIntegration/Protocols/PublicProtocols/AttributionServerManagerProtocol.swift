@@ -14,6 +14,7 @@ public protocol AttributionServerManagerProtocol {
     var installResultData: AttributionManagerResult? { get }
 
     func configure(config: AttributionConfigData)
+    func configureURLs(config: AttributionConfigURLs)
     func syncOnAppStart(_ completion: @escaping (AttributionManagerResult?) -> Void)
     func syncPurchase(data: AttributionPurchaseModel)
 }

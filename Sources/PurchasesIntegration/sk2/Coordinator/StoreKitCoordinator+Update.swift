@@ -100,26 +100,7 @@ extension StoreKitCoordinator {
         NotificationCenter.default.post(name: SK2Notifications.onStoreKitUpdate, object: nil)
     }
     
-    public func verifyPremium() async -> PurchasesVerifyPremiumResult {
-        var statuses:[VerifyPremiumStatus] = []
-        await subscriptions.asyncForEach { product in
-//            if let state = try? await product.subscription?.status.first?.state {
-//                let premiumStatus = VerifyPremiumStatus(product: product, state: state)
-//                statuses.append(premiumStatus)
-//            }
-            
-            if let state = await getSubscriptionStatus(product: product) {
-                let premiumStatus = VerifyPremiumStatus(product: product, state: state)
-                statuses.append(premiumStatus)
-            }
-        }
-        
-        if let premium = statuses.first(where: {$0.state == .subscribed}) {
-            return .premium(purchase: Purchase(product: premium.product))
-        }else{
-            return .notPremium
-        }
-    }
+    
     
     func getSubscriptionStatus(product: Product) async -> RenewalState? {
         guard let subscription = product.subscription else {
@@ -166,8 +147,6 @@ extension StoreKitCoordinator {
 
 struct SK2Notifications {
     static let onStoreKitUpdate: Notification.Name = Notification.Name("onStoreKitUpdate")
-//    static let onStoreKitProductUpdate: Notification.Name = Notification.Name("onStoreKitProductUpdate")
-//    static let onStoreKitProductRefundUpdate: Notification.Name = Notification.Name("onStoreKitProductRefundUpdate")
 }
 
 extension Sequence {

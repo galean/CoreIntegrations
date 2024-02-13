@@ -15,8 +15,8 @@ extension CoreManager: CoreManagerProtocol {
         let result = try? await purchaseManager?.purchase(purchase.product)
 
         switch result {
-        case .success(let transaction):
-            let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: transaction)
+        case .success(let purchaseInfo):
+            let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: purchaseInfo.transaction, jws: purchaseInfo.jwsRepresentation, originalTransactionID: purchaseInfo.originalID, decodedTransaction: purchaseInfo.jsonRepresentation)
             self.sendSubscriptionTypeUserProperty(identifier: details.productId)
             self.sendPurchaseToAttributionServer(details)
             self.sendPurchaseToFacebook(details)

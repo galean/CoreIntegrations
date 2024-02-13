@@ -17,7 +17,15 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
         self.appsflyerID = config.appsflyerID
         authorizationToken = config.authToken
         
-        serverWorker = AttributionServerWorker(serverURLPath: config.serverURLPath,
+        serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
+                                                       purchaseServerURLPath: config.purchaseServerURLPath,
+                                                       installPath: config.installPath,
+                                                       purchasePath: config.purchasePath)
+    }
+    
+    public func configureURLs(config: AttributionConfigURLs) {
+        serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
+                                               purchaseServerURLPath: config.purchaseServerURLPath,
                                                installPath: config.installPath,
                                                purchasePath: config.purchasePath)
     }
@@ -166,19 +174,25 @@ open class AttributionServerManager {
         let introductoryPrice = details.introductoryPrice
         let currency = details.currencyCode
         let purchaseToken = dataWorker.receiptToken
-        
+        let jws = details.jws
+        let originalTransactionID = details.originalTransactionID
+        let decodedTransaction = details.decodedTransaction
         let uuid = dataWorker.uuid
-
+        
         let introPrice = introductoryPrice ?? 0
         
         let anal = AttrubutionPurchaseRequestModel(productId: subIdentifier,
-                                          purchaseId: purchaseToken,
-                                          userId: uuid,
-                                          adid: userId,
-                                          paymentDetails: AttrubutionPurchaseRequestModel.PaymentDetails(price: price,
-                                                                                                introductoryPrice: introPrice,
-                                                                                                currency: currency))
-//        checkAndSendFacebookAnal(details: details)
+                                                           purchaseId: purchaseToken,
+                                                           userId: uuid,
+                                                           adid: userId,
+                                                           version: 2,
+                                                           signedTransaction: jws,
+                                                           decodedTransaction: decodedTransaction,
+                                                           originalTransactionID:originalTransactionID,
+                                                           paymentDetails: AttrubutionPurchaseRequestModel.PaymentDetails(price: price,
+                                                                                                                          introductoryPrice: introPrice,
+                                                                                                                          currency: currency))
+        
         serverWorker?.sendPurchaseAnalytics(analytics: anal,
                                            userId: userId,
                                            authToken: authorizationToken)
