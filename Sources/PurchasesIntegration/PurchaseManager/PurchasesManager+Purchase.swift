@@ -15,7 +15,7 @@ extension PurchasesManager {
 //         for future
 //        product.purchase(options: [.promotionalOffer(offerID: <#T##String#>, keyID: <#T##String#>, nonce: <#T##UUID#>, signature: <#T##Data#>, timestamp: <#T##Int#>)])
         
-        let userId = UUID(uuidString: AttributionServerManager.shared.uniqueUserID ?? "")
+        let userId = UUID(uuidString: self.userId)
         var options:Set<Product.PurchaseOption> = []
         if let userId = userId {
             options = [.appAccountToken(userId)]

@@ -128,6 +128,7 @@ public class CoreManager {
         if let id, id != "" {
             appsflyerManager?.customerUserID = id
             appsflyerManager?.startAppsflyer()
+            purchaseManager?.setUserID(id)
             self.facebookManager?.userID = id
             self.firebaseManager?.setUserID(id)
             self.analyticsManager?.setUserID(id)
