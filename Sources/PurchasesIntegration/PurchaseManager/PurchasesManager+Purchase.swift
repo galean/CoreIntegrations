@@ -7,14 +7,20 @@
 
 import Foundation
 import StoreKit
+import AttributionServerIntegration
 
 extension PurchasesManager {
     public func purchase(_ product: Product) async throws -> SKPurchaseResult {
         debugPrint("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
 //         for future
 //        product.purchase(options: [.promotionalOffer(offerID: <#T##String#>, keyID: <#T##String#>, nonce: <#T##UUID#>, signature: <#T##Data#>, timestamp: <#T##Int#>)])
-//        product.purchase(options: [.appAccountToken(UUID())]), promoOffer?
-        let result = try await product.purchase()
+        
+        let userId = UUID(uuidString: AttributionServerManager.shared.uniqueUserID ?? "")
+        var options:Set<Product.PurchaseOption> = []
+        if let userId = userId {
+            options = [.appAccountToken(userId)]
+        }
+        let result = try await product.purchase(options: options)
 
         switch result {
         case .success(let verification):

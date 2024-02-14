@@ -33,7 +33,6 @@ public class CoreManager {
     var configuration: CoreConfigurationProtocol?
     var appsflyerManager: AppfslyerManagerProtocol?
     var facebookManager: FacebookManagerProtocol?
-//    let purchaseManager = PurchasesManager.shared
     var purchaseManager: PurchasesManagerProtocol?
     
     var firebaseManager: FirebaseManager?
@@ -191,9 +190,6 @@ public class CoreManager {
             assertionFailure()
         }
         facebookManager?.configureATT(isAuthorized: status == .authorized)
-//        AttributionServerManager.shared.syncOnAppStart { result in
-//            InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
-//        }
     }
     
     func handleAttributionInstall() {
