@@ -33,6 +33,29 @@ extension CoreManager: CoreManagerProtocol {
             return .unknown
         }
     }
+    
+    public func purchase(_ purchase: Purchase, promoOffer: PromoOffer) async -> PurchasesPurchaseResult {
+        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
+        let result = try? await purchaseManager.purchase(purchase.product, promoOffer: promoOffer)
+
+        switch result {
+        case .success(let purchaseInfo):
+            let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: purchaseInfo.transaction, jws: purchaseInfo.jwsRepresentation, originalTransactionID: purchaseInfo.originalID, decodedTransaction: purchaseInfo.jsonRepresentation)
+            self.sendSubscriptionTypeUserProperty(identifier: details.productId)
+            self.sendPurchaseToAttributionServer(details)
+            self.sendPurchaseToFacebook(details)
+            self.sendPurchaseToAppsflyer(details)
+            return .success(details: details)
+        case .pending:
+            return .pending
+        case .userCancelled:
+            return .userCancelled
+        case .unknown:
+            return .unknown
+        case .none:
+            return .unknown
+        }
+    }
 
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}

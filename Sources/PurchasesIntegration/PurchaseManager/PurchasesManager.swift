@@ -59,15 +59,4 @@ public class PurchasesManager: NSObject, PurchasesManagerProtocol {
     
 }
 
-public protocol PurchasesManagerProtocol {
-    static var shared: PurchasesManagerProtocol { get }
 
-    func initialize(identifiers: [String])
-    func setUserID(_ id: String)
-    func requestProducts(_ identifiers: [String]) async -> SKProductsResult
-    func requestAllProducts(_ identifiers: [String]) async -> SKProductsResult
-    func updateProductStatus() async
-    func purchase(_ product: Product) async throws -> SKPurchaseResult
-    func restore() async -> SKRestoreResult 
-    func verifyPremium() async -> PurchasesVerifyPremiumResult
-}
