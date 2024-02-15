@@ -8,8 +8,10 @@
 import Foundation
 
 public protocol CoreRemoteABTestable: CaseIterable, CoreFirebaseConfigurable {
-    static var ab_paywall_general: Self { get }
-    static var ab_paywall_fb_google: Self { get }
+    static var ab_paywall_fb: Self { get }
+    static var ab_paywall_google: Self { get }
+    static var ab_paywall_asa: Self { get }
+    static var ab_paywall_organic: Self { get }
 }
 
 public extension CoreRemoteABTestable {
