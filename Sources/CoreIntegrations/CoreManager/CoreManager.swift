@@ -102,25 +102,6 @@ public class CoreManager {
         //url setup's in handleAttributionInstall()
         AttributionServerManager.shared.configure(config: attributionConfiguration)
         
-        revenueCatManager = RevenueCatManager(apiKey: configuration.appSettings.revenuecatApiKey)
-        
-        firebaseManager = FirebaseManager()
-        firebaseManager?.configure()
-        
-        self.firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
-            InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
-        }
-        
-        let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
-                                                                 installServerURLPath: installURLPath,
-                                                                 purchaseServerURLPath: purchaseURLPath,
-                                                                 installPath: installPath,
-                                                                 purchasePath: purchasePath,
-                                                                 appsflyerID: appsflyerToken,
-                                                                 facebookData: facebookData)
-            
-            AttributionServerManager.shared.configure(config: attributionConfiguration)
-        
         if configuration.useDefaultATTRequest {
             self.configureATT()
         }
