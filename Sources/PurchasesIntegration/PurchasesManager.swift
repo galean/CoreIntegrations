@@ -38,8 +38,6 @@ extension PurchasesManager: PurchasesManagerProtocol {
                 default:
                     completion(.error(skerror: error))
                 }
-            case .deferred:
-                completion(.deferredPurchase)
             }
         }
     }
