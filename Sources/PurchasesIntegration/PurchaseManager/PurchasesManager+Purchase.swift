@@ -7,7 +7,6 @@
 
 import Foundation
 import StoreKit
-import AttributionServerIntegration
 
 extension PurchasesManager {
     public func purchase(_ product: Product) async throws -> SKPurchaseResult {
