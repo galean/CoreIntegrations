@@ -20,4 +20,5 @@ public protocol PurchasesManagerProtocol {
     func purchase(_ product: Product, promoOffer:PromoOffer) async throws -> SKPurchaseResult
     func restore() async -> SKRestoreResult
     func verifyPremium() async -> PurchasesVerifyPremiumResult
+    func verifyAll() async -> SKVerifyResult
 }

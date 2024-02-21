@@ -127,7 +127,7 @@ extension PurchasesManager {
         }
     }
     
-    public func verifyAll() async -> PurchasesVerifyResult {
+    public func verifyAll() async -> SKVerifyResult {
         await updateProductStatus()
         
         return .success(consumables: self.purchasedConsumables,

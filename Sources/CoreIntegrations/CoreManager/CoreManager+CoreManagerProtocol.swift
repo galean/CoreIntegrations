@@ -66,6 +66,20 @@ extension CoreManager: CoreManagerProtocol {
         return result
     }
     
+    public func verifyAll() async -> PurchaseVerifyAllResult {
+        guard let purchaseManager = purchaseManager else {return .success(consumables: [], nonConsumables: [], subscriptions: [], nonRenewables: [])}
+        let result = await purchaseManager.verifyAll()
+        
+        switch result {
+        case .success(consumables: let consumables, nonConsumables: let nonConsumables, subscriptions: let subscriptions, nonRenewables: let nonRenewables):
+            let map_consumables = consumables.map({PurchasesIntegration.Purchase(product: $0)})
+            let map_nonConsumables = nonConsumables.map({PurchasesIntegration.Purchase(product: $0)})
+            let map_subscriptions = subscriptions.map({PurchasesIntegration.Purchase(product: $0)})
+            let map_nonRenewables = nonRenewables.map({PurchasesIntegration.Purchase(product: $0)})
+            return .success(consumables: map_consumables, nonConsumables: map_nonConsumables, subscriptions: map_subscriptions, nonRenewables: map_nonRenewables)
+        }
+    }
+    
     public func restore() async -> PurchasesRestoreResult {
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
         let result = await purchaseManager.restore()

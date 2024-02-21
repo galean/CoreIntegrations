@@ -2,12 +2,12 @@
 //  File.swift
 //  
 //
-//  Created by Andrii Plotnikov on 16.09.2023.
+//  Created by Anatolii Kanarskyi on 21/2/24.
 //
 
 import Foundation
 import StoreKit
 
-public enum PurchasesVerifyResult {
+public enum SKVerifyResult {
     case success(consumables: [Product], nonConsumables : [Product], subscriptions: [Product], nonRenewables: [Product])
 }
