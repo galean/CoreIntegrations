@@ -27,10 +27,12 @@ public class PurchasesManager: NSObject, PurchasesManagerProtocol {
     public var purchasedSubscriptions: [Product] = []
     public var purchasedNonRenewables: [Product] = []
     
+    var proIdentifiers: [String] = []
     // MARK: Lifecycle
-    public func initialize(identifiers: [String]) {
+    public func initialize(allIdentifiers: [String], proIdentifiers: [String]) {
         debugPrint("🏦 initialize ⚈ ⚈ ⚈ Initializing... ⚈ ⚈ ⚈")
         debugPrint("🏦 initialize ⚈ ⚈ ⚈ Starting Transaction Listener... ⚈ ⚈ ⚈")
+        self.proIdentifiers = proIdentifiers
         
         updateListenerTask = listenForTransactions()
 
@@ -38,7 +40,7 @@ public class PurchasesManager: NSObject, PurchasesManagerProtocol {
             guard let self = self else { return }
             debugPrint("🏦 initialize ⚈ ⚈ ⚈ Requesting products... ⚈ ⚈ ⚈")
             
-            let _ = await self.requestAllProducts(identifiers)
+            let _ = await self.requestAllProducts(allIdentifiers)
 
             debugPrint("🏦 initialize ⚈ ⚈ ⚈ Updating customer product status... ⚈ ⚈ ⚈")
             

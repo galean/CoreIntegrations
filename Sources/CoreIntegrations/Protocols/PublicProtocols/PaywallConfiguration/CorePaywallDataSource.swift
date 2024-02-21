@@ -24,4 +24,7 @@ extension CorePaywallDataSource {
     var allPurchaseIDs: [String] {
         return PaywallInitialConfiguration.allPurchasesIDs
     }
+    var allProPurchaseIDs: [String] {
+        return PaywallInitialConfiguration.allProPurchasesIDs
+    }
 }

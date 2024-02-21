@@ -76,8 +76,8 @@ public class CoreManager {
                                                     fbUserData: facebookManager?.userData ?? "",
                                                     fbAnonId: facebookManager?.anonUserID ?? "")
         let appsflyerToken = appsflyerManager?.appsflyerID
-       
-        purchaseManager?.initialize(identifiers: configuration.paywallDataSource.allPurchaseIDs)
+        
+        purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
         
         firebaseManager = FirebaseManager()
         firebaseManager?.configure()

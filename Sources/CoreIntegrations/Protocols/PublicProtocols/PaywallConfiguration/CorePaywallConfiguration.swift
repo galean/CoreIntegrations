@@ -30,9 +30,16 @@ extension CorePaywallConfiguration {
     static var allPurchasesIDs: [String] {
         return allPurchases.map({$0.id})
     }
+    static var allProPurchasesIDs: [String] {
+        return allProPurchases.map({$0.id})
+    }
     
     static var allPurchases: [PurchaseIdentifier] {
         return PurchaseIdentifier.allCases as! [Self.PurchaseIdentifier]
+    }
+    
+    static var allProPurchases: [PurchaseIdentifier] {
+        return PurchaseIdentifier.allCases.filter({$0.purchaseGroup == .Pro})
     }
     
     var activeForPaywallIDs: [String] {

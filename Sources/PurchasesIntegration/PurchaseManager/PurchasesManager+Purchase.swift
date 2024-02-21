@@ -105,8 +105,17 @@ extension PurchasesManager {
         }
         
         await subscriptions.asyncForEach { product in
-            if let state = await getSubscriptionStatus(product: product) {
-                let premiumStatus = VerifyPremiumStatus(product: product, state: state)
+            if proIdentifiers.contains(where: {$0 == product.id}) {
+                if let state = await getSubscriptionStatus(product: product) {
+                    let premiumStatus = VerifyPremiumStatus(product: product, state: state)
+                    statuses.append(premiumStatus)
+                }
+            }
+        }
+        
+        nonConsumables.forEach { product in
+            if proIdentifiers.contains(where: {$0 == product.id}) {
+                let premiumStatus = VerifyPremiumStatus(product: product, state: .subscribed)
                 statuses.append(premiumStatus)
             }
         }
@@ -119,6 +128,8 @@ extension PurchasesManager {
     }
     
     public func verifyAll() async -> PurchasesVerifyResult {
+        await updateProductStatus()
+        
         return .success(consumables: self.purchasedConsumables,
                         nonConsumables: self.purchasedNonConsumables,
                         subscriptions: self.purchasedSubscriptions,
