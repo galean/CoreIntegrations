@@ -41,7 +41,10 @@ extension CoreManager: CoreManagerProtocol {
         switch result {
         case .success(let purchaseInfo):
             let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: purchaseInfo.transaction, jws: purchaseInfo.jwsRepresentation, originalTransactionID: purchaseInfo.originalID, decodedTransaction: purchaseInfo.jsonRepresentation)
+            
+            // check if premium group
             self.sendSubscriptionTypeUserProperty(identifier: details.productId)
+            
             self.sendPurchaseToAttributionServer(details)
             self.sendPurchaseToFacebook(details)
             self.sendPurchaseToAppsflyer(details)
