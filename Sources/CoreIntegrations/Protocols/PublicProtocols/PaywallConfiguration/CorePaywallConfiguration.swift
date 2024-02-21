@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol CorePaywallConfiguration: CaseIterable {
-    associatedtype PurchaseIdentifier: RawRepresentable, CaseIterable where PurchaseIdentifier.RawValue == String
+    associatedtype PurchaseIdentifier: CorePurchaseIdentifier//RawRepresentable, CaseIterable where PurchaseIdentifier.RawValue == String
     
     var id: String { get }
     var purchases: [PurchaseIdentifier] { get }
@@ -28,7 +28,7 @@ public extension CorePaywallConfiguration {
 
 extension CorePaywallConfiguration {
     static var allPurchasesIDs: [String] {
-        return allPurchases.map({$0.rawValue})
+        return allPurchases.map({$0.id})
     }
     
     static var allPurchases: [PurchaseIdentifier] {
@@ -36,13 +36,29 @@ extension CorePaywallConfiguration {
     }
     
     var activeForPaywallIDs: [String] {
-        return purchases.map({$0.rawValue})
+        return purchases.map({$0.id})
     }
 }
 
 public protocol CorePurchaseGroup: CaseIterable {
   static var Pro: Self { get }
 }
+
+public protocol CorePurchaseIdentifier: CaseIterable {
+    var id: String { get }
+    var purchaseGroup: AppPurchaseGroup { get }
+}
+
+struct CorePurchaseGroupInfo {
+    let purchaseGroup: any CorePurchaseGroup
+    let isActive: Bool
+    let activatedIdentifier: any CorePurchaseIdentifier
+}
+
+public enum AppPurchaseGroup: CorePurchaseGroup {
+  case Pro
+}
+
 
 #warning("PaywallConfig should look like this:")
 /*
@@ -66,28 +82,27 @@ enum AppPaywallIdentifier: String, CaseIterable, CorePaywallConfiguration {
     
 }
 
-public enum AppPurchaseIdentifier: String, CaseIterable {
-  public var id: String { return rawValue }
-
-  case annual_34_99 = "annual.34.99"
-  case weekly_9_99 = "week.9.99"
-  case lifetime_34_99 = "lifetime.99.99"
-
-  var purchaseGroup: AppPurchaseGroup {
-    switch self {
-    case .annual_34_99, .weekly_9_99, .lifetime_34_99:
-      return .Pro
+public enum AppPurchaseIdentifier: String, CorePurchaseIdentifier {
+    public var id: String { return rawValue }
+    
+    case annual_34_99 = "annual.34.99"
+    case weekly_9_99 = "week.9.99"
+    case lifetime_34_99 = "lifetime.99.99"
+    
+    public var purchaseGroup: AppPurchaseGroup {
+        switch self {
+        case .annual_34_99, .weekly_9_99, .lifetime_34_99:
+            return .Pro
+        }
     }
-  }
     
 }
 
-public enum AppPurchaseGroup: CorePurchaseGroup {
-  case Pro
-}
+
 
 struct PaywallDataSource: CorePaywallDataSource {
     typealias PurchaseGroup = AppPurchaseGroup
     typealias PaywallInitialConfiguration = AppPaywallIdentifier
 }
+
 */
