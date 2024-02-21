@@ -58,7 +58,7 @@ extension CoreManager: CoreManagerProtocol {
     }
 
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
-        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
+        guard let purchaseManager = purchaseManager else {return .notPremium}
         let result = await purchaseManager.verifyPremium()
         if case .premium(let purchase) = result {
             self.sendSubscriptionTypeUserProperty(identifier: purchase.identifier)
@@ -71,7 +71,7 @@ extension CoreManager: CoreManagerProtocol {
         let result = await purchaseManager.restore()
         
         switch result {
-        case .restore(consumables: let consumables, nonConsumables: let nonConsumables, subscriptions: let subscriptions, nonRenewables: let nonRenewables):
+        case .success(consumables: let consumables, nonConsumables: let nonConsumables, subscriptions: let subscriptions, nonRenewables: let nonRenewables):
             let map_consumables = consumables.map({PurchasesIntegration.Purchase(product: $0)})
             let map_nonConsumables = nonConsumables.map({PurchasesIntegration.Purchase(product: $0)})
             let map_subscriptions = subscriptions.map({PurchasesIntegration.Purchase(product: $0)})

@@ -9,8 +9,5 @@ import Foundation
 import StoreKit
 
 public enum PurchasesVerifyResult {
-    case success(restoredItems: [Product])
-    case nothingToRestore
-    case internetError
-    case error(receiptError: String)
+    case success(consumables: [Product], nonConsumables : [Product], subscriptions: [Product], nonRenewables: [Product])
 }

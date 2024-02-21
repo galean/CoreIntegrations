@@ -11,7 +11,7 @@ public protocol CorePaywallConfiguration: CaseIterable {
     associatedtype PurchaseIdentifier: RawRepresentable, CaseIterable where PurchaseIdentifier.RawValue == String
     
     var id: String { get }
-    var activeForPaywall: [PurchaseIdentifier] { get }
+    var purchases: [PurchaseIdentifier] { get }
 }
 
 public extension CorePaywallConfiguration {
@@ -36,33 +36,58 @@ extension CorePaywallConfiguration {
     }
     
     var activeForPaywallIDs: [String] {
-        return activeForPaywall.map({$0.rawValue})
+        return purchases.map({$0.rawValue})
     }
+}
+
+public protocol CorePurchaseGroup: CaseIterable {
+  static var Pro: Self { get }
 }
 
 #warning("PaywallConfig should look like this:")
 /*
-enum PWconfig: String, CaseIterable, CorePaywallConfiguration {
-    typealias PurchaseIdentifiers = PurchasesKeys
+enum AppPaywallIdentifier: String, CaseIterable, CorePaywallConfiguration {
+    public typealias CorePurchaseIdentifier = AppPurchaseIdentifier
     
     public var id: String { return rawValue }
     
-    case ct3box
-    case ct4box
+    case ct_vap_1 = "3_box"
+    case ct_vap_2 = "clear_trial_vap"
+    case ct_vap_3 = "ct_vap_3"
     
-    var activeForPaywall: [PurchaseIdentifiers] {
+    var purchases: [CorePurchaseIdentifier] {
         switch self {
-        case .ct3box:
-            return [.test1]
-        case .ct4box:
-            return [.test2]
+        case .ct_vap_1:
+            return [.annual_34_99]
+        case .ct_vap_2, .ct_vap_3:
+            return [.weekly_9_99, .lifetime_34_99]
         }
     }
+    
 }
 
+public enum AppPurchaseIdentifier: String, CaseIterable {
+  public var id: String { return rawValue }
 
-enum PurchasesKeys: String, CaseIterable {
-    case test1
-    case test2
+  case annual_34_99 = "annual.34.99"
+  case weekly_9_99 = "week.9.99"
+  case lifetime_34_99 = "lifetime.99.99"
+
+  var purchaseGroup: AppPurchaseGroup {
+    switch self {
+    case .annual_34_99, .weekly_9_99, .lifetime_34_99:
+      return .Pro
+    }
+  }
+    
+}
+
+public enum AppPurchaseGroup: CorePurchaseGroup {
+  case Pro
+}
+
+struct PaywallDataSource: CorePaywallDataSource {
+    typealias PurchaseGroup = AppPurchaseGroup
+    typealias PaywallInitialConfiguration = AppPaywallIdentifier
 }
 */

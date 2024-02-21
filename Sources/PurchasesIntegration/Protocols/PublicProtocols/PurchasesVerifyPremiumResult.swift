@@ -11,6 +11,4 @@ import StoreKit
 public enum PurchasesVerifyPremiumResult {
     case premium(purchase: Purchase)
     case notPremium
-    case internetError
-    case error(_ receiptError: String)
 }

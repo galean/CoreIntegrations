@@ -85,9 +85,13 @@ extension PurchasesManager {
     //This call displays a system prompt that asks users to authenticate with their App Store credentials.
     //Call this function only in response to an explicit user action, such as tapping a button.
     public func restore() async -> SKRestoreResult {
-        try? await AppStore.sync()
-        
-        return .restore(consumables: self.purchasedConsumables,
+        do {
+            try await AppStore.sync()
+        }
+        catch {
+            return .error(error.localizedDescription)
+        }
+        return .success(consumables: self.purchasedConsumables,
                         nonConsumables: self.purchasedNonConsumables,
                         subscriptions: self.purchasedSubscriptions,
                         nonRenewables: self.purchasedNonRenewables)
@@ -95,6 +99,11 @@ extension PurchasesManager {
     
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
         var statuses:[VerifyPremiumStatus] = []
+        
+        if subscriptions.isEmpty {
+            await updateProductStatus()
+        }
+        
         await subscriptions.asyncForEach { product in
             if let state = await getSubscriptionStatus(product: product) {
                 let premiumStatus = VerifyPremiumStatus(product: product, state: state)
@@ -107,5 +116,12 @@ extension PurchasesManager {
         }else{
             return .notPremium
         }
+    }
+    
+    public func verifyAll() async -> PurchasesVerifyResult {
+        return .success(consumables: self.purchasedConsumables,
+                        nonConsumables: self.purchasedNonConsumables,
+                        subscriptions: self.purchasedSubscriptions,
+                        nonRenewables: self.purchasedNonRenewables)
     }
 }

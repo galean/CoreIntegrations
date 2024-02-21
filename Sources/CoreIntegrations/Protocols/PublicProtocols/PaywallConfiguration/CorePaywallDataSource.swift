@@ -9,6 +9,7 @@ import Foundation
 
 public protocol CorePaywallDataSource {
     associatedtype PaywallInitialConfiguration: CorePaywallConfiguration
+    associatedtype PurchaseGroup: CorePurchaseGroup
     
     var allConfigs: [PaywallInitialConfiguration] { get }
 }
