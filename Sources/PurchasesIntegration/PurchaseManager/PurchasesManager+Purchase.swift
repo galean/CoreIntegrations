@@ -106,6 +106,14 @@ extension PurchasesManager {
             await updateProductStatus()
         }
         
+        nonConsumables.forEach { product in
+            if proIdentifiers.contains(where: {$0 == product.id}) {
+                debugPrint("🏦 verifyPremium ✅ non-consumable \(product.id) status 'purchased' verified")
+                let premiumStatus = VerifyPremiumStatus(product: product, state: .subscribed)
+                statuses.append(premiumStatus)
+            }
+        }
+        
         await subscriptions.asyncForEach { product in
             if proIdentifiers.contains(where: {$0 == product.id}) {
                 debugPrint("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying product status ⚈ ⚈ ⚈")
@@ -117,20 +125,12 @@ extension PurchasesManager {
             }
         }
         
-        nonConsumables.forEach { product in
-            if proIdentifiers.contains(where: {$0 == product.id}) {
-                debugPrint("🏦 verifyPremium ✅ non-consumable \(product.id) status 'purchased' verified")
-                let premiumStatus = VerifyPremiumStatus(product: product, state: .subscribed)
-                statuses.append(premiumStatus)
-            }
-        }
-        
         statuses.forEach { status in
-            debugPrint("🏦 verifyPremium ✅ purchased product \(status.product) status \(status.state), \(status.state.rawValue)")
+            debugPrint("🏦 verifyPremium ✅ purchased product \(status.product.id) status \(status.state), \(status.state.rawValue)")
         }
         
         if let premium = statuses.last(where: {$0.state == .subscribed}) {
-            debugPrint("🏦 verifyPremium ✅ return active premium product \(premium.product) status \(premium.state), \(premium.state.rawValue)")
+            debugPrint("🏦 verifyPremium ✅ return active premium product \(premium.product.id) status \(premium.state), \(premium.state.rawValue)")
             return .premium(purchase: Purchase(product: premium.product))
         }else{
             return .notPremium
