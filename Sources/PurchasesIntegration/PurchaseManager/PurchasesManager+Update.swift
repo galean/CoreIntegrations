@@ -32,7 +32,7 @@ extension PurchasesManager {
                 case .nonConsumable:
                     if let nonConsumable = nonConsumables.first(where: { $0.id == transaction.productID }) {
                         purchasedNonConsumables.append(nonConsumable)
-                        debugPrint("🏦 updateCustomerProductStatus ✅ Non-Consumable added to purchased Non-Consumables.")
+                        debugPrint("🏦 updateCustomerProductStatus ✅ Non-Consumable added to purchased Non-Consumables \(transaction.productID).")
                     } else {
                         debugPrint("🏦 updateCustomerProductStatus ❌ Non-Consumable Product Id not within the offering : \(transaction.productID).")
                     }
@@ -54,7 +54,8 @@ extension PurchasesManager {
                 case .autoRenewable:
                     if let subscription = subscriptions.first(where: { $0.id == transaction.productID }) {
                         purchasedSubscriptions.append(subscription)
-                        debugPrint("🏦 updateCustomerProductStatus ✅ Auto-Renewable Subscription added to purchased auto-renewable subscriptions.")
+                        debugPrint("🏦 updateCustomerProductStatus ✅ Transaction purchaseDate \(transaction.purchaseDate), Transaction expirationDate \(transaction.expirationDate)")
+                        debugPrint("🏦 updateCustomerProductStatus ✅ Auto-Renewable Subscription added to purchased auto-renewable subscriptions \(transaction.productID).")
                     } else {
                         debugPrint("🏦 updateCustomerProductStatus ❌ Auto-Renewable Subscripton Product Id not within the offering : \(transaction.productID).")
                     }
