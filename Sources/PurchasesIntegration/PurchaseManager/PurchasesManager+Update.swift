@@ -65,6 +65,12 @@ extension PurchasesManager {
                         debugPrint("🏦 updateCustomerProductStatus ✅ Transaction purchaseDate \(transaction.purchaseDate), Transaction expirationDate \(transaction.expirationDate)")
                         
                     } else {
+                        if subscriptions.isEmpty {
+                            debugPrint("🏦 updateCustomerProductStatus ❌ Auto-Renewable Subscriptons array is empty.")
+                        }
+                        subscriptions.forEach { product in
+                            debugPrint("🏦 updateCustomerProductStatus ❌ Auto-Renewable Subscripton Array product: \(product.id).")
+                        }
                         debugPrint("🏦 updateCustomerProductStatus ❌ Auto-Renewable Subscripton Product Id not within the offering : \(transaction.productID).")
                     }
                 default:
