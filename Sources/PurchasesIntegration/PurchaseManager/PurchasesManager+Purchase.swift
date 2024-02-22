@@ -98,15 +98,19 @@ extension PurchasesManager {
     }
     
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
+        debugPrint("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
         var statuses:[VerifyPremiumStatus] = []
         
         if subscriptions.isEmpty {
+            debugPrint("🏦 verifyPremium ❌ subscriptions.isEmpty - updateProductStatus called")
             await updateProductStatus()
         }
         
         await subscriptions.asyncForEach { product in
             if proIdentifiers.contains(where: {$0 == product.id}) {
+                debugPrint("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying product status ⚈ ⚈ ⚈")
                 if let state = await getSubscriptionStatus(product: product) {
+                    debugPrint("🏦 verifyPremium ✅ subscription \(product.id) status \(state.rawValue) verified")
                     let premiumStatus = VerifyPremiumStatus(product: product, state: state)
                     statuses.append(premiumStatus)
                 }
@@ -115,12 +119,18 @@ extension PurchasesManager {
         
         nonConsumables.forEach { product in
             if proIdentifiers.contains(where: {$0 == product.id}) {
+                debugPrint("🏦 verifyPremium ✅ non-consumable \(product.id) status 'purchased' verified")
                 let premiumStatus = VerifyPremiumStatus(product: product, state: .subscribed)
                 statuses.append(premiumStatus)
             }
         }
         
-        if let premium = statuses.first(where: {$0.state == .subscribed}) {
+        statuses.forEach { status in
+            debugPrint("🏦 verifyPremium ✅ purchased product \(status.product) status \(status.state), \(status.state.rawValue)")
+        }
+        
+        if let premium = statuses.last(where: {$0.state == .subscribed}) {
+            debugPrint("🏦 verifyPremium ✅ return active premium product \(premium.product) status \(premium.state), \(premium.state.rawValue)")
             return .premium(purchase: Purchase(product: premium.product))
         }else{
             return .notPremium
@@ -128,7 +138,10 @@ extension PurchasesManager {
     }
     
     public func verifyAll() async -> SKVerifyResult {
+        debugPrint("🏦 verifyAll ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
         await updateProductStatus()
+        
+        debugPrint("🏦 verifyAll ✅ completed! consumables: \(self.purchasedConsumables)\n nonConsumables: \(self.purchasedNonConsumables)\n subscriptions: \(self.purchasedSubscriptions)\n nonRenewables \(self.purchasedNonRenewables)")
         
         return .success(consumables: self.purchasedConsumables,
                         nonConsumables: self.purchasedNonConsumables,
