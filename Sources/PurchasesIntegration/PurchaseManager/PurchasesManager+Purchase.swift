@@ -99,12 +99,9 @@ extension PurchasesManager {
     
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
         debugPrint("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
-        var statuses:[VerifyPremiumStatus] = []
+        await updateProductStatus()
         
-        if subscriptions.isEmpty {
-            debugPrint("🏦 verifyPremium ❌ subscriptions.isEmpty - updateProductStatus called")
-            await updateProductStatus()
-        }
+        var statuses:[VerifyPremiumStatus] = []
         
         purchasedConsumables.forEach { product in
             if proIdentifiers.contains(where: {$0 == product.id}) {
@@ -120,18 +117,6 @@ extension PurchasesManager {
                 statuses.append(premiumStatus)
             }
         }
-        
-//        await subscriptions.asyncForEach { product in
-//            if proIdentifiers.contains(where: {$0 == product.id}) {
-//                debugPrint("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying product status ⚈ ⚈ ⚈")
-//                if let state = await getSubscriptionStatus(product: product) {
-//                    debugPrint("🏦 verifyPremium ✅ subscription \(product.id) status \(state.rawValue) verified")
-//                    let premiumStatus = VerifyPremiumStatus(product: product, state: state)
-//                    statuses.append(premiumStatus)
-//                }
-//            }
-//        }
-        
         
         if let premium = statuses.last(where: {$0.state == .subscribed}) {
             debugPrint("🏦 verifyPremium ✅ return active premium product \(premium.product.id) status \(premium.state), \(premium.state.rawValue)")
