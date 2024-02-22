@@ -99,6 +99,8 @@ extension PurchasesManager {
     
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
         debugPrint("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
+//        let _ =  await requestAllProducts(self.allIdentifiers)
+        
         await updateProductStatus()
         
         var statuses:[VerifyPremiumStatus] = []
