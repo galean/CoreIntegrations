@@ -106,7 +106,7 @@ extension PurchasesManager {
             await updateProductStatus()
         }
         
-        nonConsumables.forEach { product in
+        purchasedConsumables.forEach { product in
             if proIdentifiers.contains(where: {$0 == product.id}) {
                 debugPrint("🏦 verifyPremium ✅ non-consumable \(product.id) status 'purchased' verified")
                 let premiumStatus = VerifyPremiumStatus(product: product, state: .subscribed)
@@ -114,20 +114,24 @@ extension PurchasesManager {
             }
         }
         
-        await subscriptions.asyncForEach { product in
+        purchasedSubscriptions.forEach { product in
             if proIdentifiers.contains(where: {$0 == product.id}) {
-                debugPrint("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying product status ⚈ ⚈ ⚈")
-                if let state = await getSubscriptionStatus(product: product) {
-                    debugPrint("🏦 verifyPremium ✅ subscription \(product.id) status \(state.rawValue) verified")
-                    let premiumStatus = VerifyPremiumStatus(product: product, state: state)
-                    statuses.append(premiumStatus)
-                }
+                let premiumStatus = VerifyPremiumStatus(product: product, state: .subscribed)
+                statuses.append(premiumStatus)
             }
         }
         
-        statuses.forEach { status in
-            debugPrint("🏦 verifyPremium ✅ purchased product \(status.product.id) status \(status.state), \(status.state.rawValue)")
-        }
+//        await subscriptions.asyncForEach { product in
+//            if proIdentifiers.contains(where: {$0 == product.id}) {
+//                debugPrint("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying product status ⚈ ⚈ ⚈")
+//                if let state = await getSubscriptionStatus(product: product) {
+//                    debugPrint("🏦 verifyPremium ✅ subscription \(product.id) status \(state.rawValue) verified")
+//                    let premiumStatus = VerifyPremiumStatus(product: product, state: state)
+//                    statuses.append(premiumStatus)
+//                }
+//            }
+//        }
+        
         
         if let premium = statuses.last(where: {$0.state == .subscribed}) {
             debugPrint("🏦 verifyPremium ✅ return active premium product \(premium.product.id) status \(premium.state), \(premium.state.rawValue)")

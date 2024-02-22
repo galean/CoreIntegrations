@@ -53,9 +53,17 @@ extension PurchasesManager {
                     }
                 case .autoRenewable:
                     if let subscription = subscriptions.first(where: { $0.id == transaction.productID }) {
-                        purchasedSubscriptions.append(subscription)
+                        
+                        let status = await transaction.subscriptionStatus
+                        if status?.state == .subscribed {
+                            purchasedSubscriptions.append(subscription)
+                            debugPrint("🏦 updateCustomerProductStatus ✅ Auto-Renewable Subscription added to purchased auto-renewable subscriptions \(transaction.productID).")
+                        }
+                        if status?.state == .expired {
+                            debugPrint("🏦 updateCustomerProductStatus ❌ Auto-Renewable Subscription \(transaction.productID) is expired, skip.")
+                        }
                         debugPrint("🏦 updateCustomerProductStatus ✅ Transaction purchaseDate \(transaction.purchaseDate), Transaction expirationDate \(transaction.expirationDate)")
-                        debugPrint("🏦 updateCustomerProductStatus ✅ Auto-Renewable Subscription added to purchased auto-renewable subscriptions \(transaction.productID).")
+                        
                     } else {
                         debugPrint("🏦 updateCustomerProductStatus ❌ Auto-Renewable Subscripton Product Id not within the offering : \(transaction.productID).")
                     }
