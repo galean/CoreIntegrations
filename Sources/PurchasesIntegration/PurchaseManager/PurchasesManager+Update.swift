@@ -84,10 +84,14 @@ extension PurchasesManager {
             return nil
         }
         do {
+            debugPrint("🏦 ⚈ ⚈ ⚈ getSubscriptionStatuses ⚈ ⚈ ⚈")
             let statuses = try await subscription.status
+            debugPrint("🏦 getSubscriptionStatuses ✅ \(statuses) for product \(product.id)")
             
             for status in statuses {
+                debugPrint("🏦 getSubscriptionStatuses ✅ status check \(status)")
                 let info = try checkVerified(status.renewalInfo)
+                debugPrint("🏦 getSubscriptionStatuses ✅ status state \(status.state)")
                 switch status.state {
                 case .subscribed:
                     if info.willAutoRenew {
