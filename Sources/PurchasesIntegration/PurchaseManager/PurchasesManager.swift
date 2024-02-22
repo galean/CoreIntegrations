@@ -27,11 +27,13 @@ public class PurchasesManager: NSObject, PurchasesManagerProtocol {
     public var purchasedSubscriptions: [Product] = []
     public var purchasedNonRenewables: [Product] = []
     
+    var allIdentifiers: [String] = []
     var proIdentifiers: [String] = []
     // MARK: Lifecycle
     public func initialize(allIdentifiers: [String], proIdentifiers: [String]) {
         debugPrint("🏦 initialize ⚈ ⚈ ⚈ Initializing... ⚈ ⚈ ⚈")
         debugPrint("🏦 initialize ⚈ ⚈ ⚈ Starting Transaction Listener... ⚈ ⚈ ⚈")
+        self.allIdentifiers = allIdentifiers
         self.proIdentifiers = proIdentifiers
         
         updateListenerTask = listenForTransactions()

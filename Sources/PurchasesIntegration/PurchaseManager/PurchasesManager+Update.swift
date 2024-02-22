@@ -52,6 +52,9 @@ extension PurchasesManager {
                         debugPrint("🏦 updateCustomerProductStatus ❌ Non-Renewing Subscription Product Id not within the offering : \(transaction.productID).")
                     }
                 case .autoRenewable:
+                    if subscriptions.isEmpty {
+                        let _ =  await requestAllProducts(self.allIdentifiers)
+                    }
                     if let subscription = subscriptions.first(where: { $0.id == transaction.productID }) {
                         
                         let status = await transaction.subscriptionStatus
