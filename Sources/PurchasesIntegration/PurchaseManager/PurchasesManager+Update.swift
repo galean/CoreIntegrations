@@ -86,7 +86,7 @@ extension PurchasesManager {
         do {
             debugPrint("🏦 ⚈ ⚈ ⚈ getSubscriptionStatuses ⚈ ⚈ ⚈")
             let statuses = try await subscription.status
-            debugPrint("🏦 getSubscriptionStatuses ✅ \(statuses) for product \(product.id)")
+            debugPrint("🏦 getSubscriptionStatuses ✅ \(statuses.count) for product \(product.id)")
             
             for status in statuses {
                 debugPrint("🏦 getSubscriptionStatuses ✅ status check \(status)")
