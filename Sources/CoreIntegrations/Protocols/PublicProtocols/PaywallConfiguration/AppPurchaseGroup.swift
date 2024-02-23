@@ -7,6 +7,6 @@
 
 import Foundation
 
-public enum AppPurchaseGroup: CorePurchaseGroup {
+public enum AppPurchaseGroup: String, CorePurchaseGroup {
   case Pro
 }

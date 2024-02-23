@@ -39,7 +39,7 @@ extension CorePaywallConfiguration {
     }
     
     static var allProPurchases: [PurchaseIdentifier] {
-        return PurchaseIdentifier.allCases.filter({$0.purchaseGroup == .Pro})
+        return PurchaseIdentifier.allCases.filter({$0.purchaseGroup.isPro})
     }
     
     var activeForPaywallIDs: [String] {
