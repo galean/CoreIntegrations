@@ -15,7 +15,8 @@ extension CoreManager {
         let result = await purchaseManager.requestProducts(config.activeForPaywallIDs)
         switch result {
         case .success(let products):
-            let purchases = mapProducts(products)
+            var purchases = mapProducts(products)
+            purchases = sortPurchases(purchases, ids: config.activeForPaywallIDs)
             return .success(purchases: purchases)
         case .error(let error):
             return .error(error)
@@ -29,5 +30,19 @@ extension CoreManager {
             purchases.append(purchase)
         }
         return purchases
+    }
+    
+    private func sortPurchases(_ purchases: [Purchase], ids: [String]) -> [Purchase] {
+        return purchases.sorted { f, s in
+            guard let first = ids.firstIndex(of: f.identifier) else {
+                return false
+            }
+
+            guard let second = ids.firstIndex(of: s.identifier) else {
+                return true
+            }
+
+            return first < second
+        }
     }
 }
