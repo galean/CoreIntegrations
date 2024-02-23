@@ -8,6 +8,6 @@
 import Foundation
 import StoreKit
 
-public enum SKVerifyResult {
+public enum SKVerifyAllResult {
     case success(consumables: [Product], nonConsumables : [Product], subscriptions: [Product], nonRenewables: [Product])
 }

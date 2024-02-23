@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol CorePaywallConfiguration: CaseIterable {
-    associatedtype PurchaseIdentifier: CorePurchaseIdentifier//RawRepresentable, CaseIterable where PurchaseIdentifier.RawValue == String
+    associatedtype PurchaseIdentifier: CorePurchaseIdentifier
     
     var id: String { get }
     var purchases: [PurchaseIdentifier] { get }

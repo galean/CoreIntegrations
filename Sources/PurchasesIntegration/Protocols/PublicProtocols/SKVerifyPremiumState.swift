@@ -8,7 +8,7 @@
 import Foundation
 import StoreKit
 
-struct VerifyPremiumStatus {
+struct SKVerifyPremiumState {
     var product: Product
     var state: RenewalState
 }

@@ -7,6 +7,6 @@
 
 import Foundation
 
-public protocol CorePurchaseGroup: CaseIterable {
-  static var Pro: Self { get }
+public protocol CorePurchaseGroup:CaseIterable {
+    static var Pro: Self { get }
 }

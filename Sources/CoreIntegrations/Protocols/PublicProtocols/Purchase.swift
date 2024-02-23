@@ -17,7 +17,7 @@ public enum PurchaseType: String {
 }
 
 public enum PurchasePeriod: String {
-    case daily, weekly, monthly, quarterly, annual
+    case daily, weekly, monthly, quarterly, sixMonths, annual
 }
 
 public struct Purchase: Hashable {
@@ -44,7 +44,7 @@ public struct Purchase: Hashable {
         return product.id
     }
     
-    public var localisedPrice: String {
+    public var localizedPrice: String {
         return product.displayPrice
     }
     
@@ -73,6 +73,9 @@ public struct Purchase: Hashable {
         case .month:
             if count == 3 {
                 return .quarterly
+            }
+            if count == 6 {
+                return .sixMonths
             }
             return .monthly
         case .year:

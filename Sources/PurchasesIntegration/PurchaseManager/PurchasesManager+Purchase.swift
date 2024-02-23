@@ -44,7 +44,7 @@ extension PurchasesManager {
         }
     }
     
-    public func purchase(_ product: Product, promoOffer:PromoOffer) async throws -> SKPurchaseResult {
+    public func purchase(_ product: Product, promoOffer:SKPromoOffer) async throws -> SKPurchaseResult {
         debugPrint("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
 
         var options:Set<Product.PurchaseOption> = []
@@ -97,38 +97,36 @@ extension PurchasesManager {
                         nonRenewables: self.purchasedNonRenewables)
     }
     
-    public func verifyPremium() async -> PurchasesVerifyPremiumResult {
+    public func verifyPremium() async -> SKVerifyPremiumResult {
         debugPrint("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
-//        let _ =  await requestAllProducts(self.allIdentifiers)
-        
         await updateProductStatus()
         
-        var statuses:[VerifyPremiumStatus] = []
+        var statuses:[SKVerifyPremiumState] = []
         
         purchasedConsumables.forEach { product in
             if proIdentifiers.contains(where: {$0 == product.id}) {
                 debugPrint("🏦 verifyPremium ✅ non-consumable \(product.id) status 'purchased' verified")
-                let premiumStatus = VerifyPremiumStatus(product: product, state: .subscribed)
+                let premiumStatus = SKVerifyPremiumState(product: product, state: .subscribed)
                 statuses.append(premiumStatus)
             }
         }
         
         purchasedSubscriptions.forEach { product in
             if proIdentifiers.contains(where: {$0 == product.id}) {
-                let premiumStatus = VerifyPremiumStatus(product: product, state: .subscribed)
+                let premiumStatus = SKVerifyPremiumState(product: product, state: .subscribed)
                 statuses.append(premiumStatus)
             }
         }
         
         if let premium = statuses.last(where: {$0.state == .subscribed}) {
             debugPrint("🏦 verifyPremium ✅ return active premium product \(premium.product.id) status \(premium.state), \(premium.state.rawValue)")
-            return .premium(purchase: Purchase(product: premium.product))
+            return .premium(purchase: premium.product)
         }else{
             return .notPremium
         }
     }
     
-    public func verifyAll() async -> SKVerifyResult {
+    public func verifyAll() async -> SKVerifyAllResult {
         debugPrint("🏦 verifyAll ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
         await updateProductStatus()
         

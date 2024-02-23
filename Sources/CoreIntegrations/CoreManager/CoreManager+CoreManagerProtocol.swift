@@ -7,7 +7,6 @@
 
 import Foundation
 import UIKit
-import PurchasesIntegration
 import AppTrackingTransparency
 
 extension CoreManager: CoreManagerProtocol {
@@ -34,39 +33,42 @@ extension CoreManager: CoreManagerProtocol {
         }
     }
     
-    public func purchase(_ purchase: Purchase, promoOffer: PromoOffer) async -> PurchasesPurchaseResult {
-        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
-        let result = try? await purchaseManager.purchase(purchase.product, promoOffer: promoOffer)
-
-        switch result {
-        case .success(let purchaseInfo):
-            let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: purchaseInfo.transaction, jws: purchaseInfo.jwsRepresentation, originalTransactionID: purchaseInfo.originalID, decodedTransaction: purchaseInfo.jsonRepresentation)
-            
-            // check if premium group
-            self.sendSubscriptionTypeUserProperty(identifier: details.productId)
-            
-            self.sendPurchaseToAttributionServer(details)
-            self.sendPurchaseToFacebook(details)
-            self.sendPurchaseToAppsflyer(details)
-            return .success(details: details)
-        case .pending:
-            return .pending
-        case .userCancelled:
-            return .userCancelled
-        case .unknown:
-            return .unknown
-        case .none:
-            return .unknown
-        }
-    }
+    //may be implemented in future
+//    public func purchase(_ purchase: Purchase, promoOffer: PromoOffer) async -> PurchasesPurchaseResult {
+//        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
+//        let result = try? await purchaseManager.purchase(purchase.product, promoOffer: promoOffer)
+//
+//        switch result {
+//        case .success(let purchaseInfo):
+//            let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: purchaseInfo.transaction, jws: purchaseInfo.jwsRepresentation, originalTransactionID: purchaseInfo.originalID, decodedTransaction: purchaseInfo.jsonRepresentation)
+//            
+//            // check if premium group
+//            self.sendSubscriptionTypeUserProperty(identifier: details.productId)
+//            
+//            self.sendPurchaseToAttributionServer(details)
+//            self.sendPurchaseToFacebook(details)
+//            self.sendPurchaseToAppsflyer(details)
+//            return .success(details: details)
+//        case .pending:
+//            return .pending
+//        case .userCancelled:
+//            return .userCancelled
+//        case .unknown:
+//            return .unknown
+//        case .none:
+//            return .unknown
+//        }
+//    }
 
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
         guard let purchaseManager = purchaseManager else {return .notPremium}
         let result = await purchaseManager.verifyPremium()
-        if case .premium(let purchase) = result {
-            self.sendSubscriptionTypeUserProperty(identifier: purchase.identifier)
+        if case .premium(let product) = result {
+            self.sendSubscriptionTypeUserProperty(identifier: product.id)
+            return .premium(purchase: Purchase(product: product))
+        }else{
+            return .notPremium
         }
-        return result
     }
     
     public func verifyAll() async -> PurchaseVerifyAllResult {
@@ -75,10 +77,10 @@ extension CoreManager: CoreManagerProtocol {
         
         switch result {
         case .success(consumables: let consumables, nonConsumables: let nonConsumables, subscriptions: let subscriptions, nonRenewables: let nonRenewables):
-            let map_consumables = consumables.map({PurchasesIntegration.Purchase(product: $0)})
-            let map_nonConsumables = nonConsumables.map({PurchasesIntegration.Purchase(product: $0)})
-            let map_subscriptions = subscriptions.map({PurchasesIntegration.Purchase(product: $0)})
-            let map_nonRenewables = nonRenewables.map({PurchasesIntegration.Purchase(product: $0)})
+            let map_consumables = consumables.map({Purchase(product: $0)})
+            let map_nonConsumables = nonConsumables.map({Purchase(product: $0)})
+            let map_subscriptions = subscriptions.map({Purchase(product: $0)})
+            let map_nonRenewables = nonRenewables.map({Purchase(product: $0)})
             return .success(consumables: map_consumables, nonConsumables: map_nonConsumables, subscriptions: map_subscriptions, nonRenewables: map_nonRenewables)
         }
     }
@@ -89,10 +91,10 @@ extension CoreManager: CoreManagerProtocol {
         
         switch result {
         case .success(consumables: let consumables, nonConsumables: let nonConsumables, subscriptions: let subscriptions, nonRenewables: let nonRenewables):
-            let map_consumables = consumables.map({PurchasesIntegration.Purchase(product: $0)})
-            let map_nonConsumables = nonConsumables.map({PurchasesIntegration.Purchase(product: $0)})
-            let map_subscriptions = subscriptions.map({PurchasesIntegration.Purchase(product: $0)})
-            let map_nonRenewables = nonRenewables.map({PurchasesIntegration.Purchase(product: $0)})
+            let map_consumables = consumables.map({Purchase(product: $0)})
+            let map_nonConsumables = nonConsumables.map({Purchase(product: $0)})
+            let map_subscriptions = subscriptions.map({Purchase(product: $0)})
+            let map_nonRenewables = nonRenewables.map({Purchase(product: $0)})
             return .restore(consumables: map_consumables, nonConsumables: map_nonConsumables, subscriptions: map_subscriptions, nonRenewables: map_nonRenewables)
         case .error(let error):
             return .error(error)
