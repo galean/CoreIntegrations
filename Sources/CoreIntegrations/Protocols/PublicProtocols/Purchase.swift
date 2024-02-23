@@ -60,6 +60,14 @@ public struct Purchase: Hashable {
         return product.id.contains("lifetime")
     }
     
+    public var isFamilySharable: Bool {
+        return product.isFamilyShareable
+    }
+    
+    public var priceFormatStyle: Decimal.FormatStyle.Currency {
+        return product.priceFormatStyle
+    }
+    
     public var period: PurchasePeriod {
         let count = product.subscription?.subscriptionPeriod.value ?? 0
         switch product.subscription?.subscriptionPeriod.unit {
