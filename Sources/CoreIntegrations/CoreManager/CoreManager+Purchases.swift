@@ -15,7 +15,7 @@ extension CoreManager {
         let result = await purchaseManager.requestProducts(config.activeForPaywallIDs)
         switch result {
         case .success(let products):
-            var purchases = mapProducts(products)
+            var purchases = mapProducts(products, config)
             purchases = sortPurchases(purchases, ids: config.activeForPaywallIDs)
             return .success(purchases: purchases)
         case .error(let error):
@@ -23,10 +23,11 @@ extension CoreManager {
         }
     }
  
-    private func mapProducts(_ products: [Product]) -> [Purchase] {
+    private func mapProducts(_ products: [Product], _ config:any CorePaywallConfiguration) -> [Purchase] {
         var purchases:[Purchase] = []
         products.forEach { product in
-            let purchase = Purchase(product: product)
+            let purchaseGroup = config.allPurchases.first(where: {$0.id == product.id})?.purchaseGroup
+            let purchase = Purchase(product: product, purchaseGroup: purchaseGroup ?? AppPurchaseGroup.Pro)
             purchases.append(purchase)
         }
         return purchases

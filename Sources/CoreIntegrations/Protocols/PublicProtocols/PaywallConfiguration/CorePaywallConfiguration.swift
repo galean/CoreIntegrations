@@ -45,4 +45,8 @@ extension CorePaywallConfiguration {
     var activeForPaywallIDs: [String] {
         return purchases.map({$0.id})
     }
+    
+    var allPurchases: [PurchaseIdentifier] {
+        return PurchaseIdentifier.allCases as! [Self.PurchaseIdentifier]
+    }
 }

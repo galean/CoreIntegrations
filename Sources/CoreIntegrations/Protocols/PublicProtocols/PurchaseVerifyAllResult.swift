@@ -9,5 +9,5 @@ import Foundation
 import StoreKit
 
 public enum PurchaseVerifyAllResult {
-    case success(consumables: [Purchase], nonConsumables : [Purchase], subscriptions: [Purchase], nonRenewables: [Purchase])
+    case success(purchases: [Purchase])
 }

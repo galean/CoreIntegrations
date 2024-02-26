@@ -59,29 +59,31 @@ extension CoreManager: CoreManagerProtocol {
 //            return .unknown
 //        }
 //    }
+    
+    private func groupFor(_ productId: String) -> any CorePurchaseGroup {
+        let group = CoreManager.internalShared.configuration?.paywallDataSource.allPurchaseIdentifiers.first(where: {$0.id == productId})?.purchaseGroup
+        return group ?? AppPurchaseGroup.Pro
+    }
 
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
         guard let purchaseManager = purchaseManager else {return .notPremium}
         let result = await purchaseManager.verifyPremium()
         if case .premium(let product) = result {
             self.sendSubscriptionTypeUserProperty(identifier: product.id)
-            return .premium(purchase: Purchase(product: product))
+            return .premium(purchase: Purchase(product: product, purchaseGroup: groupFor(product.id)))
         }else{
             return .notPremium
         }
     }
     
     public func verifyAll() async -> PurchaseVerifyAllResult {
-        guard let purchaseManager = purchaseManager else {return .success(consumables: [], nonConsumables: [], subscriptions: [], nonRenewables: [])}
+        guard let purchaseManager = purchaseManager else {return .success(purchases: [])}
         let result = await purchaseManager.verifyAll()
         
         switch result {
-        case .success(consumables: let consumables, nonConsumables: let nonConsumables, subscriptions: let subscriptions, nonRenewables: let nonRenewables):
-            let map_consumables = consumables.map({Purchase(product: $0)})
-            let map_nonConsumables = nonConsumables.map({Purchase(product: $0)})
-            let map_subscriptions = subscriptions.map({Purchase(product: $0)})
-            let map_nonRenewables = nonRenewables.map({Purchase(product: $0)})
-            return .success(consumables: map_consumables, nonConsumables: map_nonConsumables, subscriptions: map_subscriptions, nonRenewables: map_nonRenewables)
+        case .success(products: let products):
+            let map_purchases = products.map({Purchase(product: $0, purchaseGroup: groupFor($0.id))})
+            return .success(purchases: map_purchases)
         }
     }
     
@@ -90,12 +92,9 @@ extension CoreManager: CoreManagerProtocol {
         let result = await purchaseManager.restore()
         
         switch result {
-        case .success(consumables: let consumables, nonConsumables: let nonConsumables, subscriptions: let subscriptions, nonRenewables: let nonRenewables):
-            let map_consumables = consumables.map({Purchase(product: $0)})
-            let map_nonConsumables = nonConsumables.map({Purchase(product: $0)})
-            let map_subscriptions = subscriptions.map({Purchase(product: $0)})
-            let map_nonRenewables = nonRenewables.map({Purchase(product: $0)})
-            return .restore(consumables: map_consumables, nonConsumables: map_nonConsumables, subscriptions: map_subscriptions, nonRenewables: map_nonRenewables)
+        case .success(products: let products):
+            let map_purchases = products.map({Purchase(product: $0, purchaseGroup: groupFor($0.id))})
+            return .restore(purchases: map_purchases)
         case .error(let error):
             return .error(error)
         }

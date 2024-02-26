@@ -9,6 +9,6 @@ import Foundation
 import StoreKit
 
 public enum PurchasesRestoreResult {
-    case restore(consumables: [Purchase], nonConsumables : [Purchase], subscriptions: [Purchase], nonRenewables: [Purchase])
+    case restore(purchases: [Purchase])
     case error(_ error: String)
 }

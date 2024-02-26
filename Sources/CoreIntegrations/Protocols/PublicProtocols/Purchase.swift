@@ -21,10 +21,19 @@ public enum PurchasePeriod: String {
 }
 
 public struct Purchase: Hashable {
-    public let product: Product
+    public func hash(into hasher: inout Hasher) {
+        return hasher.combine(identifier)
+    }
+    public static func == (lhs: Purchase, rhs: Purchase) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
     
-    public init(product: Product) {
+    public let product: Product
+    public let purchaseGroup: any CorePurchaseGroup
+    
+    public init(product: Product, purchaseGroup: any CorePurchaseGroup) {
         self.product = product
+        self.purchaseGroup = purchaseGroup
     }
     
     public var storeProduct: Product {
