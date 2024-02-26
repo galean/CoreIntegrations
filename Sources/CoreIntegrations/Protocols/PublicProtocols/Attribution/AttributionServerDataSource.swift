@@ -13,9 +13,9 @@ public protocol AttributionServerDataSource {
 
 extension AttributionServerDataSource {
     var installPath: String {
-        return AttributionEndpoints.install_server_path
+        return AttributionEndpoints.install_server_path.rawValue
     }
     var purchasePath: String {
-        return AttributionEndpoints.purchase_server_path
+        return AttributionEndpoints.purchase_server_path.rawValue
     }
 }
