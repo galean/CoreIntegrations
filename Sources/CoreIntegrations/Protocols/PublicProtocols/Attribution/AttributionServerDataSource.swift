@@ -7,20 +7,15 @@
 
 import Foundation
 
-//public protocol AttributionServerDataSource {
-//    associatedtype AttributionEndpoints: AttributionServerEndpointsProtocol
-//}
-//
-//extension AttributionServerDataSource {
-//    var serverURLPath: String {
-//        return AttributionEndpoints.serverURLPath
-//    }
-//    
-//    var installPath: String {
-//        return AttributionEndpoints.install.rawValue
-//    }
-//    
-//    var purchasePath: String {
-//        return AttributionEndpoints.purchase.rawValue
-//    }
-//}
+public protocol AttributionServerDataSource {
+    associatedtype AttributionEndpoints: AttributionServerEndpointsProtocol
+}
+
+extension AttributionServerDataSource {
+    var installPath: String {
+        return AttributionEndpoints.install_server_path
+    }
+    var purchasePath: String {
+        return AttributionEndpoints.purchase_server_path
+    }
+}

@@ -74,10 +74,11 @@ public class CoreManager {
                                                     fbUserData: facebookManager?.userData ?? "",
                                                     fbAnonId: facebookManager?.anonUserID ?? "")
         let appsflyerToken = appsflyerManager?.appsflyerID
+        
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
-        let installURLPath = ""
-        let purchaseURLPath = ""
+        let installURLPath = configuration.attributionServerDataSource?.installPath ?? ""
+        let purchaseURLPath = configuration.attributionServerDataSource?.purchasePath ?? ""
         
         revenueCatManager = RevenueCatManager(apiKey: configuration.appSettings.revenuecatApiKey)
         
@@ -200,11 +201,12 @@ public class CoreManager {
         }
         
         configurationManager.signForAttAndConfigLoaded {
+            let installPath = "/install-application"
+            let purchasePath = "/subscribe"
             
-            if let installURLPath = self.firebaseManager?.install_server_path,
-               let purchaseURLPath = self.firebaseManager?.purchase_server_path {
-                let installPath = "/install-application"
-                let purchasePath = "/subscribe"
+            if let serverDataSource = self.configuration?.attributionServerDataSource {
+                let installURLPath = serverDataSource.installPath
+                let purchaseURLPath = serverDataSource.purchasePath
                 
                 let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
                                                                      purchaseServerURLPath: purchaseURLPath,
@@ -212,7 +214,20 @@ public class CoreManager {
                                                                      purchasePath: purchasePath)
                 
                 AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
+            }else{
+                if let installURLPath = self.firebaseManager?.install_server_path,
+                   let purchaseURLPath = self.firebaseManager?.purchase_server_path {
+                    
+                    let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
+                                                                         purchaseServerURLPath: purchaseURLPath,
+                                                                         installPath: installPath,
+                                                                         purchasePath: purchasePath)
+                    
+                    AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
+                }
             }
+            
+            
             
             AttributionServerManager.shared.syncOnAppStart { result in
                 InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
