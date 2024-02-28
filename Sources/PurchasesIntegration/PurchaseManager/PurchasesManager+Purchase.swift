@@ -105,7 +105,7 @@ extension PurchasesManager {
         
         var statuses:[SKVerifyPremiumState] = []
         
-        purchasedConsumables.forEach { product in
+        purchasedNonConsumables.forEach { product in
             if proIdentifiers.contains(where: {$0 == product.id}) {
                 debugPrint("🏦 verifyPremium ✅ non-consumable \(product.id) status 'purchased' verified")
                 let premiumStatus = SKVerifyPremiumState(product: product, state: .subscribed)
