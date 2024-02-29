@@ -177,6 +177,7 @@ open class AttributionServerManager {
         let purchaseToken = dataWorker.receiptToken
         let jws = details.jws
         let originalTransactionID = details.originalTransactionID
+        let decodedTransaction = details.decodedTransaction
         
         let uuid = dataWorker.uuid
 
@@ -188,6 +189,7 @@ open class AttributionServerManager {
                                                    adid: userId,
                                                    version: 2,
                                                    signedTransaction: jws,
+                                                   decodedTransaction: decodedTransaction,
                                                    originalTransactionID:originalTransactionID,
                                                    paymentDetails: AttrubutionPurchaseRequestModel.PaymentDetails(price: price,
                                                                                                                   introductoryPrice: introPrice,

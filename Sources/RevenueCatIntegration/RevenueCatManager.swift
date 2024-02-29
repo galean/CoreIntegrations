@@ -164,14 +164,15 @@ public class RevenueCatManager: NSObject {
                     
                     //TODO: add originaltransactionID_sk2 to RevenueCatPurchaseInfo & server request
                     let originaltransactionID_sk2 = transaction?.sk2Transaction?.originalID
-//                    let originaltransactionID_sk1 = transaction?.sk1Transaction?.original?.transactionIdentifier
+                    let decoded = transaction?.sk2Transaction?.jsonRepresentation
                     
                     let isSubscription = product.productType == .autoRenewableSubscription || product.productType == .nonRenewableSubscription
                     let info = RevenueCatPurchaseInfo(isSubscription: isSubscription, productID: product.productIdentifier,
                                                       price: product.priceFloat, introductoryPrice: product.introPrice,
                                                       currencyCode: product.currencyCode ?? "",
                                                       transactionID: transaction?.transactionIdentifier ?? "",
-                                                      jws: jws, originalTransactionID: "\(originaltransactionID_sk2 ?? 0)")
+                                                      jws: jws, originalTransactionID: "\(originaltransactionID_sk2 ?? 0)",
+                                                      decodedTransaction: decoded)
                     completion(.success(info: info))
                 }
             } else {
