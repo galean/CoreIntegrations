@@ -12,5 +12,7 @@ extension CoreManager: AppsflyerManagerDelegate {
     public func handledDeeplink(_ result: [String : String]) {
         sendDeepLinkUserProperties(deepLinkResult: result)
         InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted()
+        
+        handleConfigurationUpdate()
     }
 }

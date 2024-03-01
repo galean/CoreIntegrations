@@ -267,67 +267,76 @@ public class CoreManager {
             return
         }
         
-        configurationManager.signForConfigurationEnd {
-            configurationResult in
+        configurationManager.signForConfigurationEnd { configurationResult in
             
-            let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
-            let remoteResult = self.firebaseManager?.remoteConfigResult ?? [:]
-            let asaResult = AttributionServerManager.shared.installResultData
-            let isIPAT = asaResult?.isIPAT ?? false
-            let deepLinkResult = self.appsflyerManager?.deeplinkResult ?? [:]
-            let isASA = (asaResult?.asaAttribution["campaignName"] as? String != nil) ||
-            (asaResult?.asaAttribution["campaign_name"] as? String != nil)
-            
-            var isRedirect = false
-            var networkSource: CoreUserSource = .unknown
-            
-            if let networkValue = deepLinkResult["network"] {
-                if networkValue.contains("web2app_fb") {
-                    networkSource = .facebook
-                } else if networkValue.contains("Google_StoreRedirect") {
-                    networkSource = .google
-                } else if networkValue.contains("tiktok") {
-                    networkSource = .tiktok
-                } else if networkValue.contains("instagram") {
-                    networkSource = .instagram
-                } else if networkValue == "Full_Access" {
-                    networkSource = .test_premium
-                } else {
-                    networkSource = .unknown
-                }
-                
-                isRedirect = true
-            }
-            
-            var userSource: CoreUserSource
-            
-            if isIPAT {
-                userSource = .ipat
-            } else if isASA {
-                userSource = .asa
-            } else if isRedirect {
-                userSource = networkSource
-            } else {
-                userSource = .organic
-            }
-            
-            let allConfigs = self.configuration?.remoteConfigDataSource.allConfigurables ?? []
-            self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
-                        
-            self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
-            self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
-
-            self.configurationResultManager.userSource = userSource
-            self.configurationResultManager.deepLinkResult = deepLinkResult
-            self.configurationResultManager.asaAttributionResult = asaResult?.asaAttribution
-            
-            
-            let result = self.configurationResultManager.calculateResult()
+            let result = self.getConfigurationResult()
             self.delegate?.coreConfigurationFinished(result: result)
+            
             // calculate attribution
             // calculate correct paywall name
             // return everything to the app
         }
+    }
+    
+    func handleConfigurationUpdate() {
+        let result = getConfigurationResult()
+        self.delegate?.coreConfigurationUpdated(newResult: result)
+    }
+    
+    func getConfigurationResult() -> CoreManagerResult {
+        let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
+        let remoteResult = self.firebaseManager?.remoteConfigResult ?? [:]
+        let asaResult = AttributionServerManager.shared.installResultData
+        let isIPAT = asaResult?.isIPAT ?? false
+        let deepLinkResult = self.appsflyerManager?.deeplinkResult ?? [:]
+        let isASA = (asaResult?.asaAttribution["campaignName"] as? String != nil) ||
+        (asaResult?.asaAttribution["campaign_name"] as? String != nil)
+        
+        var isRedirect = false
+        var networkSource: CoreUserSource = .unknown
+        
+        if let networkValue = deepLinkResult["network"] {
+            if networkValue.contains("web2app_fb") {
+                networkSource = .facebook
+            } else if networkValue.contains("Google_StoreRedirect") {
+                networkSource = .google
+            } else if networkValue.contains("tiktok") {
+                networkSource = .tiktok
+            } else if networkValue.contains("instagram") {
+                networkSource = .instagram
+            } else if networkValue == "Full_Access" {
+                networkSource = .test_premium
+            } else {
+                networkSource = .unknown
+            }
+            
+            isRedirect = true
+        }
+        
+        var userSource: CoreUserSource
+        
+        if isIPAT {
+            userSource = .ipat
+        } else if isASA {
+            userSource = .asa
+        } else if isRedirect {
+            userSource = networkSource
+        } else {
+            userSource = .organic
+        }
+        
+        let allConfigs = self.configuration?.remoteConfigDataSource.allConfigurables ?? []
+        self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
+                    
+        self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
+        self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
+
+        self.configurationResultManager.userSource = userSource
+        self.configurationResultManager.deepLinkResult = deepLinkResult
+        self.configurationResultManager.asaAttributionResult = asaResult?.asaAttribution
+        
+        let result = self.configurationResultManager.calculateResult()
+        return result
     }
     
     func saveRemoteConfig(attribution: CoreUserSource, allConfigs: [any CoreFirebaseConfigurable],
