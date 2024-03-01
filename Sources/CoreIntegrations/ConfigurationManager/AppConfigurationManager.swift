@@ -19,7 +19,7 @@ class AppConfigurationManager {
     private var waitingCallbacks = [(ConfigurationResult) -> Void]()
     private var attributionCallback: (() -> Void)?
     private var isTimerFinished = false
-    private var configurationFinishHandled = false
+    var configurationFinishHandled = false
     private var configurationAttFinishHandled = false
     
     private var configurationCompletelyFinished: Bool {

@@ -17,7 +17,11 @@ extension CoreManager: CoreManagerProtocol {
         switch result {
         case .success(let purchaseInfo):
             let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: purchaseInfo.transaction, jws: purchaseInfo.jwsRepresentation, originalTransactionID: purchaseInfo.originalID, decodedTransaction: purchaseInfo.jsonRepresentation)
-            self.sendSubscriptionTypeUserProperty(identifier: details.productId)
+            
+            if purchase.purchaseGroup.isPro {
+                self.sendSubscriptionTypeUserProperty(identifier: details.productId)
+            }
+            
             self.sendPurchaseToAttributionServer(details)
             self.sendPurchaseToFacebook(details)
             self.sendPurchaseToAppsflyer(details)
@@ -72,6 +76,7 @@ extension CoreManager: CoreManagerProtocol {
             self.sendSubscriptionTypeUserProperty(identifier: product.id)
             return .premium(purchase: Purchase(product: product, purchaseGroup: groupFor(product.id)))
         }else{
+            self.sendSubscriptionTypeUserProperty(identifier: "")
             return .notPremium
         }
     }
@@ -83,6 +88,11 @@ extension CoreManager: CoreManagerProtocol {
         switch result {
         case .success(products: let products):
             let map_purchases = products.map({Purchase(product: $0, purchaseGroup: groupFor($0.id))})
+            
+            if let proPurchase = map_purchases.first(where: {$0.purchaseGroup.isPro}) {
+                self.sendSubscriptionTypeUserProperty(identifier: proPurchase.identifier)
+            }
+           
             return .success(purchases: map_purchases)
         }
     }
@@ -94,6 +104,11 @@ extension CoreManager: CoreManagerProtocol {
         switch result {
         case .success(products: let products):
             let map_purchases = products.map({Purchase(product: $0, purchaseGroup: groupFor($0.id))})
+            
+            if let proPurchase = map_purchases.first(where: {$0.purchaseGroup.isPro}) {
+                self.sendSubscriptionTypeUserProperty(identifier: proPurchase.identifier)
+            }
+            
             return .restore(purchases: map_purchases)
         case .error(let error):
             return .error(error)
