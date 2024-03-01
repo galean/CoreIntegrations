@@ -261,7 +261,7 @@ public class CoreManager {
         
         configurationManager.signForConfigurationEnd { configurationResult in
             
-            let result = self.getConfigurationResult()
+            let result = self.getConfigurationResult(true)
             self.delegate?.coreConfigurationFinished(result: result)
             
             // calculate attribution
@@ -271,11 +271,11 @@ public class CoreManager {
     }
     
     func handleConfigurationUpdate() {
-        let result = getConfigurationResult()
+        let result = getConfigurationResult(false)
         self.delegate?.coreConfigurationUpdated(newResult: result)
     }
     
-    func getConfigurationResult() -> CoreManagerResult {
+    func getConfigurationResult(_ isFirstLaunch: Bool) -> CoreManagerResult {
         let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
         let remoteResult = self.firebaseManager?.remoteConfigResult ?? [:]
         let asaResult = AttributionServerManager.shared.installResultData
@@ -321,8 +321,9 @@ public class CoreManager {
         self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
                     
         self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
-        self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
-
+        if isFirstLaunch {
+            self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
+        }
         self.configurationResultManager.userSource = userSource
         self.configurationResultManager.deepLinkResult = deepLinkResult
         self.configurationResultManager.asaAttributionResult = asaResult?.asaAttribution
