@@ -8,13 +8,14 @@
 import Foundation
 import AppsflyerIntegration
 
-public protocol CoreConfigurationProtocol {//}: CoreIntegrationDelegate {
+public protocol CoreConfigurationProtocol {
     var appSettings: CoreSettingsProtocol { get }
     var remoteConfigDataSource: any CoreRemoteDataSource { get }
     var amplitudeDataSource: any CoreAnalyticsDataSource { get }
     var initialConfigurationDataSource: (any ConfigurationEventsDataSource)? { get }
     var paywallDataSource: any CorePaywallDataSource { get }
     var useDefaultATTRequest: Bool { get }
+    var attributionServerDataSource: (any AttributionServerDataSource)? { get }
 }
 
 extension CoreConfigurationProtocol {

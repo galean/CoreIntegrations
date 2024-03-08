@@ -12,15 +12,10 @@ public protocol AttributionServerDataSource {
 }
 
 extension AttributionServerDataSource {
-    var serverURLPath: String {
-        return AttributionEndpoints.serverURLPath
-    }
-    
     var installPath: String {
-        return AttributionEndpoints.install.rawValue
+        return AttributionEndpoints.install_server_path.rawValue
     }
-    
     var purchasePath: String {
-        return AttributionEndpoints.purchase.rawValue
+        return AttributionEndpoints.purchase_server_path.rawValue
     }
 }
