@@ -14,6 +14,7 @@ import StoreKit
 extension CoreManager {
     func sendFirstLaunchEvent() {
         InternalAnalyticsEvent.first_launch.log()
+        analyticsManager?.forceEventsUpload()
     }
     
     func sendAttEvent(answer: Bool) {
