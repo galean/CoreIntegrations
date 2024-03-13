@@ -6,7 +6,10 @@
 //
 
 import Foundation
+
+#if !COCOAPODS
 import AppsflyerIntegration
+#endif
 
 public protocol CoreConfigurationProtocol {
     var appSettings: CoreSettingsProtocol { get }

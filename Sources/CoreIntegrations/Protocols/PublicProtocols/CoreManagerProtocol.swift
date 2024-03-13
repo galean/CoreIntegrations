@@ -5,12 +5,15 @@
 //  Created by Andrii Plotnikov on 03.10.2023.
 //
 import UIKit
+
+#if !COCOAPODS
 import PurchasesIntegration
 import AppsflyerIntegration
 import AttributionServerIntegration
-import AppTrackingTransparency
 import AnalyticsIntegration
 import FirebaseIntegration
+#endif
+import AppTrackingTransparency
 
 public protocol CoreManagerProtocol {
     static var shared: CoreManagerProtocol { get }

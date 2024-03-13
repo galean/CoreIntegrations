@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import AnalyticsIntegration
+#endif
 
 public protocol CoreAnalyzableEvent: CaseIterable, AmplitudeAnalyzableEvent {
     static var contact_permission: Self { get }

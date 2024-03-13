@@ -23,11 +23,6 @@ Pod::Spec.new do |s|
   s.static_framework = true
 
   s.source_files = 'Sources/**/*.swift'
-  #'Sources/**/*'
- 
-  # s.public_header_files = 'Pod/Classes/**/*.h'
-  # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
 
   s.dependency 'FirebaseRemoteConfig'
   s.dependency 'FirebaseAnalytics'
@@ -38,8 +33,6 @@ Pod::Spec.new do |s|
   s.dependency 'AnalyticsConnector'
   s.dependency 'SwiftyStoreKit'
   s.dependency 'GrowthBook-IOS'
-            #s.dependency ''
-                #s.dependency ''
-                    #s.dependency ''
+
   
 end

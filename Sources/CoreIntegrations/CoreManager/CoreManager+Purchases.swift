@@ -7,7 +7,9 @@
 
 import Foundation
 import StoreKit
+#if !COCOAPODS
 import PurchasesIntegration
+#endif
 
 extension CoreManager {
     public func purchases(config:any CorePaywallConfiguration) async -> CorePaywallPurchasesResult {

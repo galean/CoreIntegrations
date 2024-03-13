@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import PurchasesIntegration
+#endif
 
 public enum CorePaywallPurchasesResult {
     case success(purchases: [Purchase])

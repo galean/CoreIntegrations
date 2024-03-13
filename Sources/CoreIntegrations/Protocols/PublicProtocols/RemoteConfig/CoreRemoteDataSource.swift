@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import FirebaseIntegration
+#endif
 
 public protocol CoreRemoteDataSource {
     associatedtype CoreRemoteConfigs: CoreRemoteConfigurable
