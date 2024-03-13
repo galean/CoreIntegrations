@@ -6,8 +6,10 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import AttributionServerIntegration
 import PurchasesIntegration
+#endif
 
 extension AttributionPurchaseModel {
     init(_ details: PurchaseDetails) {

@@ -6,7 +6,7 @@
 //
 
 import FirebaseAnalytics
-import Firebase
+import FirebaseCore
 import FirebaseRemoteConfig
 
 public class FirebaseManager {

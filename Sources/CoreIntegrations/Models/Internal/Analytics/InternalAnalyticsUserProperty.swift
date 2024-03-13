@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import AnalyticsIntegration
+#endif
 
 enum InternalUserProperty: String, CaseIterable, AmplitudeAnalyzableUserProperty {
     case att_status

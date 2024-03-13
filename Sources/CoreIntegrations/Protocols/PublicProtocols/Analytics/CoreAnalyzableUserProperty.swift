@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import AnalyticsIntegration
+#endif
 
 public protocol CoreAnalyzableUserProperty: CaseIterable, AmplitudeAnalyzableUserProperty {
 //    static var att_status: Self { get }
