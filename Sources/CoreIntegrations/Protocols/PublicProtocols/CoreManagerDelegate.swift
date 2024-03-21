@@ -13,7 +13,7 @@ public protocol CoreManagerDelegate: AnyObject {
     func coreConfiguration(didReceive deepLinkReult: [AnyHashable : Any])
 }
 
-extension CoreManagerDelegate {
+public extension CoreManagerDelegate {
     func coreConfiguration(didReceive deepLinkReult: [AnyHashable : Any]) {
         
     }
