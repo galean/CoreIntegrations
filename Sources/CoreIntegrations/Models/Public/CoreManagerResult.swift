@@ -14,4 +14,7 @@ public struct CoreManagerResult {
     public var asaPaywallName: String
     public var facebookPaywallName: String
     public var googlePaywallName: String
+    public var snapchatPaywallName: String
+    public var tiktokPaywallName: String
+    public var instagramPaywallName: String
 }

@@ -317,7 +317,9 @@ public class CoreManager {
                 networkSource = .tiktok
             } else if networkValue.contains("instagram") {
                 networkSource = .instagram
-            } else if networkValue == "Full_Access" {
+            }else if networkValue.contains("snapchat") {
+                networkSource = .snapchat
+            }else if networkValue == "Full_Access" {
                 networkSource = .test_premium
             } else {
                 networkSource = .unknown
@@ -383,8 +385,10 @@ class ConfigurationResultManager {
         let facebookPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_fb.value)
         let googlePaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_google.value)
         let asaPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_asa.value)
+        let snapchatPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_snapchat.value)
+        let tiktokPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_tiktok.value)
+        let instagramPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_instagram.value)
         let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_organic.value)
-        //tiktok & instagram paywalls should be added later
         
         let activePaywallName: String
         
@@ -393,7 +397,7 @@ class ConfigurationResultManager {
                 activePaywallName = getPaywallNameFromConfig(firebaseValue)
         }else{
             switch userSource {
-            case .organic, .ipat, .test_premium, .tiktok, .instagram, .unknown:
+            case .organic, .ipat, .test_premium, .unknown:
                 activePaywallName = organicPaywallName
             case .asa:
                 activePaywallName = asaPaywallName
@@ -401,6 +405,12 @@ class ConfigurationResultManager {
                 activePaywallName = facebookPaywallName
             case .google:
                 activePaywallName = googlePaywallName
+            case .snapchat:
+                activePaywallName = snapchatPaywallName
+            case .tiktok:
+                activePaywallName = tiktokPaywallName
+            case .instagram:
+                activePaywallName = instagramPaywallName
             }
         }
         
@@ -409,7 +419,11 @@ class ConfigurationResultManager {
                                                   organicPaywallName: organicPaywallName,
                                                   asaPaywallName: asaPaywallName,
                                                   facebookPaywallName: facebookPaywallName,
-                                                  googlePaywallName: googlePaywallName)
+                                                  googlePaywallName: googlePaywallName,
+                                                  snapchatPaywallName: snapchatPaywallName,
+                                                  tiktokPaywallName: tiktokPaywallName,
+                                                  instagramPaywallName: instagramPaywallName)
+        
         return coreManagerResult
     }
     

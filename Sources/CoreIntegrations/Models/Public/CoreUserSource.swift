@@ -16,5 +16,6 @@ public enum CoreUserSource: CaseIterable {
     case test_premium
     case tiktok
     case instagram
+    case snapchat
     case unknown
 }

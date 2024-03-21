@@ -9,4 +9,5 @@ import Foundation
 
 public protocol AppsflyerManagerDelegate {
     func handledDeeplink(_ result: [String: String])
+    func coreConfiguration(didReceive deepLinkReult: [AnyHashable : Any])
 }

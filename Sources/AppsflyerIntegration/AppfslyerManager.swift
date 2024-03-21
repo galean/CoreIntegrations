@@ -106,6 +106,7 @@ extension AppfslyerManager: AppsFlyerLibDelegate {
         let deepLinkInfo = parseDeepLink(conversionInfo)
         deeplinkResult = deepLinkInfo
         delegate?.handledDeeplink(deepLinkInfo)
+        delegate?.coreConfiguration(didReceive: conversionInfo)
     }
     
     public func onConversionDataFail(_ error: Error) {

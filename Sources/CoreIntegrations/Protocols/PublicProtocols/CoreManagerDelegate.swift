@@ -10,4 +10,11 @@ import Foundation
 public protocol CoreManagerDelegate: AnyObject {
     func coreConfigurationFinished(result: CoreManagerResult)
     func coreConfigurationUpdated(newResult: CoreManagerResult)
+    func coreConfiguration(didReceive deepLinkReult: [AnyHashable : Any])
+}
+
+extension CoreManagerDelegate {
+    func coreConfiguration(didReceive deepLinkReult: [AnyHashable : Any]) {
+        
+    }
 }
