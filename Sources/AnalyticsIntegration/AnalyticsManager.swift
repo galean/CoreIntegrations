@@ -18,10 +18,11 @@ public class AnalyticsManager {
     
     // MARK: - MethodsforceEventsUpload
     
-    public func configure(appKey: String) {
+    public func configure(appKey: String, useDynamicConfig: Bool) {
         Amplitude.instance().initializeApiKey(appKey)
         Amplitude.instance().defaultTracking.sessions = true
         Amplitude.instance().minTimeBetweenSessionsMillis = 0
+        Amplitude.instance().useDynamicConfig = useDynamicConfig
     }
     
     public func forceEventsUpload() {

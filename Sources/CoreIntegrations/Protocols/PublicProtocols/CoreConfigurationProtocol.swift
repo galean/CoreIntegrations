@@ -15,7 +15,7 @@ public protocol CoreConfigurationProtocol {
     var initialConfigurationDataSource: (any ConfigurationEventsDataSource)? { get }
     var paywallDataSource: any CorePaywallDataSource { get }
     var useDefaultATTRequest: Bool { get }
-    var attributionServerDataSource: (any AttributionServerDataSource)? { get }
+    var attributionServerDataSource: any AttributionServerDataSource { get }
 }
 
 extension CoreConfigurationProtocol {

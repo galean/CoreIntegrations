@@ -20,6 +20,18 @@ import FirebaseIntegration
     I think it would be good to split CoreManager into different manager parts - for default configuration, for additional configurations like analytics, test_distribution etc, and for purchases and purchases attribution part
  */
 public class CoreManager {
+    
+    struct AmplitudeCountry {
+        //alpha2code - UK, ES, CN
+        static let regionCode = Locale.current.regionCode ?? ""
+        //alpha3code - UKR, ESP, CHN
+        static let countryCode = SKPaymentQueue.default().storefront?.countryCode ?? ""
+        
+        static var cnCheck: Bool {
+            return regionCode == "CN" || countryCode == "CHN"
+        }
+    }
+    
     public static var shared: CoreManagerProtocol = internalShared
     static var internalShared = CoreManager()
     
@@ -51,7 +63,9 @@ public class CoreManager {
         self.configuration = configuration
         
         analyticsManager = AnalyticsManager.shared
-        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret)
+        
+        let useDynamicConfig = AmplitudeCountry.cnCheck
+        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret, useDynamicConfig: useDynamicConfig)
         
         sendStoreCountryUserProperty()
         configuration.appSettings.launchCount += 1
@@ -88,8 +102,8 @@ public class CoreManager {
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
-        let installURLPath = configuration.attributionServerDataSource?.installPath ?? ""
-        let purchaseURLPath = configuration.attributionServerDataSource?.purchasePath ?? ""
+        let installURLPath = configuration.attributionServerDataSource.installPath
+        let purchaseURLPath = configuration.attributionServerDataSource.purchasePath
         
         let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
                                                                  installServerURLPath: installURLPath,
@@ -203,10 +217,10 @@ public class CoreManager {
             let installPath = "/install-application"
             let purchasePath = "/subscribe"
             
-            if let serverDataSource = self.configuration?.attributionServerDataSource {
-                let installURLPath = serverDataSource.installPath
-                let purchaseURLPath = serverDataSource.purchasePath
-                
+            if let installURLPath = self.firebaseManager?.install_server_path,
+               let purchaseURLPath = self.firebaseManager?.purchase_server_path,
+               installURLPath != "",
+               purchaseURLPath != "" {
                 let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
                                                                      purchaseServerURLPath: purchaseURLPath,
                                                                      installPath: installPath,
@@ -214,8 +228,9 @@ public class CoreManager {
                 
                 AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
             }else{
-                if let installURLPath = self.firebaseManager?.install_server_path,
-                   let purchaseURLPath = self.firebaseManager?.purchase_server_path {
+                if let serverDataSource = self.configuration?.attributionServerDataSource {
+                    let installURLPath = serverDataSource.installPath
+                    let purchaseURLPath = serverDataSource.purchasePath
                     
                     let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
                                                                          purchaseServerURLPath: purchaseURLPath,
@@ -225,8 +240,6 @@ public class CoreManager {
                     AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
                 }
             }
-            
-            
             
             AttributionServerManager.shared.syncOnAppStart { result in
                 InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
