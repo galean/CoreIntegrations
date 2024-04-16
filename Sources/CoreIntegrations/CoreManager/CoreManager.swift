@@ -47,9 +47,10 @@ public class CoreManager {
     var facebookManager: FacebookManagerProtocol?
     var purchaseManager: PurchasesManagerProtocol?
     
-    var firebaseManager: FirebaseManager?
+//    var firebaseManager: FirebaseManager?
+    var remoteConfigManager: CoreRemoteConfigManager?
     var analyticsManager: AnalyticsManager?
-        
+    
     var delegate: CoreManagerDelegate?
     
     var configurationResultManager = ConfigurationResultManager()
@@ -64,8 +65,8 @@ public class CoreManager {
         
         analyticsManager = AnalyticsManager.shared
         
-        let useDynamicConfig = AmplitudeCountry.cnCheck
-        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret, useDynamicConfig: useDynamicConfig)
+        let cnCheck = AmplitudeCountry.cnCheck
+        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret, useDynamicConfig: cnCheck)
         
         sendStoreCountryUserProperty()
         configuration.appSettings.launchCount += 1
@@ -93,12 +94,13 @@ public class CoreManager {
         
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
         
-        firebaseManager = FirebaseManager()
-        firebaseManager?.configure()
-        
-        firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
-            InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
-        }
+//        firebaseManager = FirebaseManager()
+//        firebaseManager?.configure()
+//        
+//        firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
+//            InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
+//        }
+        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck)
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
@@ -144,8 +146,18 @@ public class CoreManager {
             appsflyerManager?.startAppsflyer()
             purchaseManager?.setUserID(id)
             self.facebookManager?.userID = id
-            self.firebaseManager?.setUserID(id)
+//            self.firebaseManager?.setUserID(id)
+            
+            self.remoteConfigManager?.configure(id: id) { [weak self] in
+                guard let self = self else {return}
+                remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
+                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
+                }
+            }
+            
             self.analyticsManager?.setUserID(id)
+            
+            
         }
         
         if configuration?.useDefaultATTRequest == true {
@@ -217,8 +229,8 @@ public class CoreManager {
             let installPath = "/install-application"
             let purchasePath = "/subscribe"
             
-            if let installURLPath = self.firebaseManager?.install_server_path,
-               let purchaseURLPath = self.firebaseManager?.purchase_server_path,
+            if let installURLPath = self.remoteConfigManager?.install_server_path,
+               let purchaseURLPath = self.remoteConfigManager?.purchase_server_path,
                installURLPath != "",
                purchaseURLPath != "" {
                 let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
@@ -311,7 +323,7 @@ public class CoreManager {
     
     func getConfigurationResult(isFirstConfiguration: Bool) -> CoreManagerResult {
         let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
-        let remoteResult = self.firebaseManager?.remoteConfigResult ?? [:]
+        let remoteResult = self.remoteConfigManager?.remoteConfigResult ?? [:]
         let asaResult = AttributionServerManager.shared.installResultData
         let isIPAT = asaResult?.isIPAT ?? false
         let deepLinkResult = self.appsflyerManager?.deeplinkResult ?? [:]
@@ -406,7 +418,7 @@ class ConfigurationResultManager {
         let activePaywallName: String
         
         if let deepLinkValue: String = deepLinkResult?["deep_link_value"], deepLinkValue != "none", deepLinkValue != "",
-           let firebaseValue = CoreManager.internalShared.firebaseManager?.internalConfigResult?[deepLinkValue] {
+           let firebaseValue = CoreManager.internalShared.remoteConfigManager?.internalConfigResult?[deepLinkValue] {
                 activePaywallName = getPaywallNameFromConfig(firebaseValue)
         }else{
             switch userSource {
