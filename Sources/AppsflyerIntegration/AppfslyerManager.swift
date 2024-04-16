@@ -111,6 +111,15 @@ extension AppfslyerManager: AppsFlyerLibDelegate {
     
     public func onConversionDataFail(_ error: Error) {
         delegate?.handledDeeplink([:])
+        delegate?.coreConfiguration(handleDeeplinkError: error)
         // handle error
+    }
+    
+    public func onAppOpenAttribution(_ attributionData: [AnyHashable : Any]) {
+        delegate?.coreConfiguration(handleOnAppOpenAttribution: attributionData)
+    }
+    
+    public func onAppOpenAttributionFailure(_ error: Error) {
+        delegate?.coreConfiguration(handleOnAppOpenAttributionError: error)
     }
 }
