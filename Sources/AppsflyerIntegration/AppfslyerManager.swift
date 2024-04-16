@@ -23,6 +23,7 @@ public class AppfslyerManager: NSObject {
         AppsFlyerLib.shared().appsFlyerDevKey = config.appsFlyerDevKey
         AppsFlyerLib.shared().appleAppID = config.appleAppID
         AppsFlyerLib.shared().delegate = self
+        AppsFlyerLib.shared().deepLinkDelegate = self
         AppsFlyerLib.shared().waitForATTUserAuthorization(timeoutInterval: 30)
 #if DEBUG
         AppsFlyerLib.shared().isDebug = true
