@@ -15,6 +15,7 @@ public protocol CoreManagerDelegate: AnyObject {
     func coreConfiguration(handleDeeplinkError error: Error)
     func coreConfiguration(handleOnAppOpenAttribution deepLinkReult: [AnyHashable : Any])
     func coreConfiguration(handleOnAppOpenAttributionError error: Error)
+    func coreConfiguration(didResolveDeeplink result: [AnyHashable : Any])
 }
 
 public extension CoreManagerDelegate {
