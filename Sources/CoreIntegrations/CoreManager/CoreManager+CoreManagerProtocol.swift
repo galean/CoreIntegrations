@@ -40,7 +40,8 @@ extension CoreManager: CoreManagerProtocol {
     
     public func purchase(_ purchase: Purchase, promoOffer: PromoOffer) async -> PurchasesPurchaseResult {
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
-        let result = try? await purchaseManager.purchase(purchase.product, promoOffer: promoOffer)
+        let skOffer = SKPromoOffer(offerID: promoOffer.offerID, keyID: promoOffer.keyID, nonce: promoOffer.nonce, signature: promoOffer.signature, timestamp: promoOffer.timestamp)
+        let result = try? await purchaseManager.purchase(purchase.product, promoOffer: skOffer)
 
         switch result {
         case .success(let purchaseInfo):

@@ -44,7 +44,7 @@ extension PurchasesManager {
         }
     }
     
-    public func purchase(_ product: Product, promoOffer:PromoOffer) async throws -> SKPurchaseResult {
+    public func purchase(_ product: Product, promoOffer:SKPromoOffer) async throws -> SKPurchaseResult {
         debugPrint("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
 
         var options:Set<Product.PurchaseOption> = []

@@ -7,7 +7,6 @@
 
 import Foundation
 import StoreKit
-import PurchasesIntegration
 
 extension CoreManager {
     public func purchases(config:any CorePaywallConfiguration) async -> CorePaywallPurchasesResult {

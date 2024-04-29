@@ -5,7 +5,6 @@
 //  Created by Andrii Plotnikov on 03.10.2023.
 //
 import UIKit
-import PurchasesIntegration
 import AppsflyerIntegration
 import AttributionServerIntegration
 import AppTrackingTransparency
