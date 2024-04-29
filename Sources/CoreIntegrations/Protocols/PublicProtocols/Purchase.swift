@@ -66,7 +66,7 @@ public struct Purchase: Hashable {
     }
     
     public var isLifetime: Bool {
-        return product.id.contains("lifetime")
+        return product.id.lowercased().contains("lifetime")
     }
     
     public var isFamilySharable: Bool {
@@ -148,7 +148,15 @@ public struct Purchase: Hashable {
         return product.subscription?.introductoryOffer?.period.value ?? 0
     }
     
+    //"USD"
     public var currencyCode:String {
         return product.priceFormatStyle.currencyCode
     }
+    
+    //"$"
+    public var currencySymbol:String? {
+        return product.priceFormatStyle.locale.currencySymbol
+    }
+    
+
 }
