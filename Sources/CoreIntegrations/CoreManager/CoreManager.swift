@@ -371,6 +371,10 @@ public class CoreManager {
                         
             self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
             self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
+        } else {
+            let allConfigs = InternalRemoteABTests.allCases
+            self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
+            self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
         }
         
         self.configurationResultManager.userSource = userSource
