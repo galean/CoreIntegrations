@@ -65,8 +65,9 @@ public class CoreManager {
         
         analyticsManager = AnalyticsManager.shared
         
+        let amplitudeCustomURL = configuration.amplitudeDataSource.customServerURL
         let cnCheck = AmplitudeCountry.cnCheck
-        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret, useDynamicConfig: cnCheck)
+        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret, cnConfig: cnCheck, customURL: amplitudeCustomURL)
         
         sendStoreCountryUserProperty()
         configuration.appSettings.launchCount += 1

@@ -12,6 +12,7 @@ public protocol CoreAnalyticsDataSource {
     associatedtype AnalyticsUserProperties: CoreAnalyzableUserProperty
     var allEvents: [AnalyticsEvents] { get }
     var allUserProperties: [AnalyticsUserProperties] { get }
+    var customServerURL: String { get }
 }
 
 public extension CoreAnalyticsDataSource {
