@@ -41,6 +41,11 @@ public class GrowthBookManager {
             .initializer()
         
         privateInstance = sdkInstance
+        
+        DispatchQueue.global().asyncAfter(deadline: .now() + 5.0) {
+            semaphore.signal()
+        }
+        
         semaphore.wait()
         
         completion()
