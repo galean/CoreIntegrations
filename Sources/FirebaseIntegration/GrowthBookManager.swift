@@ -34,8 +34,8 @@ public class GrowthBookManager {
         }, refreshHandler: { handler in
             print("refreshHandler \(handler)")
             semaphore.signal()
-        }, backgroundSync: true)
-            .setLogLevel(.trace)
+        })
+            .setLogLevel(.debug)
             .initializer()
         
         privateInstance = sdkInstance
