@@ -33,7 +33,9 @@ public class GrowthBookManager {
             semaphore.signal()
         }, refreshHandler: { handler in
             print("refreshHandler \(handler)")
-            semaphore.signal()
+            if handler {
+                semaphore.signal()
+            }
         })
             .setLogLevel(.debug)
             .initializer()
