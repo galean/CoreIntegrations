@@ -1,3 +1,3 @@
 # CoreIntegrations
 
-Framework version - 2.2.1c
+Framework version - 2.2.2c

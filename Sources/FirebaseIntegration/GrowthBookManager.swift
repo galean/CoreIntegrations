@@ -21,12 +21,12 @@ public class GrowthBookManager {
     
     public init() { }
     
-    public func configure(id:String, completion: @escaping () -> Void) {
+    public func configure(id:String, clientKey:String, completion: @escaping () -> Void) {
         let attrs = [ "id":id ]
         
         let semaphore = DispatchSemaphore(value: 0)
         
-        let sdkInstance = GrowthBookBuilder(apiHost: "https://cdn.growthbook.io", clientKey: "sdk-QcyY2yKqDGjEW3k", encryptionKey: nil, attributes: attrs, trackingCallback: { experiment, result in
+        let sdkInstance = GrowthBookBuilder(apiHost: "https://cdn.growthbook.io", clientKey: clientKey, encryptionKey: nil, attributes: attrs, trackingCallback: { experiment, result in
             print("Viewed Experiment")
             print("Experiment Id: ", experiment.key)//ab_paywall_organic
             print("Variation Id: ", result.value)//2box or none_2box

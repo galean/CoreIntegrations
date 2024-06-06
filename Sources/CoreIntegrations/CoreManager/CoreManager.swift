@@ -47,7 +47,6 @@ public class CoreManager {
     var facebookManager: FacebookManagerProtocol?
     var purchaseManager: PurchasesManagerProtocol?
     
-//    var firebaseManager: FirebaseManager?
     var remoteConfigManager: CoreRemoteConfigManager?
     var analyticsManager: AnalyticsManager?
     
@@ -94,14 +93,8 @@ public class CoreManager {
         let appsflyerToken = appsflyerManager?.appsflyerID
         
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
-        
-//        firebaseManager = FirebaseManager()
-//        firebaseManager?.configure()
-//        
-//        firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
-//            InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
-//        }
-        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck)
+
+        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, growthBookClientKey: configuration.appSettings.growthBookClientKey)
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
@@ -136,6 +129,7 @@ public class CoreManager {
     @objc public func applicationDidBecomeActive() {
         let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
         let uuid = AttributionServerManager.shared.savedUserUUID
+       
         let id: String?
         if savedIDFV != nil {
             id = AttributionServerManager.shared.uniqueUserID
@@ -147,7 +141,6 @@ public class CoreManager {
             appsflyerManager?.startAppsflyer()
             purchaseManager?.setUserID(id)
             self.facebookManager?.userID = id
-//            self.firebaseManager?.setUserID(id)
             
             self.remoteConfigManager?.configure(id: id) { [weak self] in
                 guard let self = self else {return}
@@ -157,8 +150,6 @@ public class CoreManager {
             }
             
             self.analyticsManager?.setUserID(id)
-            
-            
         }
         
         if configuration?.useDefaultATTRequest == true {
@@ -358,11 +349,11 @@ public class CoreManager {
         
         if isIPAT {
             userSource = .ipat
-        } else if isASA {
-            userSource = .asa
-        } else if isRedirect {
+        }else if isRedirect {
             userSource = networkSource
-        } else {
+        }else if isASA {
+            userSource = .asa
+        }else {
             userSource = .organic
         }
         

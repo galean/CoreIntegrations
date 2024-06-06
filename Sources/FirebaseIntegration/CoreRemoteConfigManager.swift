@@ -22,9 +22,11 @@ public class CoreRemoteConfigManager {
     private var isConfigFetched:Bool = false
     
     private let cnConfig: Bool
+    private var growthBookKey:String?
     
-    public init(cnConfig: Bool) {
+    public init(cnConfig: Bool, growthBookClientKey:String?) {
         self.cnConfig = cnConfig
+        self.growthBookKey = growthBookClientKey
     }
     
     public func configure(id:String, completion: @escaping () -> Void) {
@@ -32,8 +34,8 @@ public class CoreRemoteConfigManager {
             return
         }
         
-        if cnConfig {
-            growthBookManager.configure(id: id) { [weak self] in
+        if cnConfig, let growthBookClientKey = growthBookKey {
+            growthBookManager.configure(id: id, clientKey: growthBookClientKey) { [weak self] in
                 completion()
                 self?.isConfigured = true
             }
