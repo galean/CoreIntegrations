@@ -53,7 +53,7 @@ public class CoreRemoteConfigManager {
             completion()
             return
         }
-        if cnConfig {
+        if cnConfig, let growthBookClientKey = growthBookKey {
             growthBookManager.fetchRemoteConfig(appConfigurables) { [weak self] in
                 guard let self = self else {return}
                 
