@@ -18,4 +18,5 @@ public struct CoreManagerResult {
     public var snapchatPaywallName: String
     public var tiktokPaywallName: String
     public var instagramPaywallName: String
+    public var bingPaywallName: String
 }

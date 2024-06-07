@@ -336,6 +336,8 @@ public class CoreManager {
                 networkSource = .instagram
             }else if networkValue.contains("snapchat") {
                 networkSource = .snapchat
+            }else if networkValue.contains("bing") {
+                networkSource = .bing
             }else if networkValue == "Full_Access" {
                 networkSource = .test_premium
             } else {
@@ -409,6 +411,7 @@ class ConfigurationResultManager {
         let snapchatPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_snapchat.value)
         let tiktokPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_tiktok.value)
         let instagramPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_instagram.value)
+        let bingPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_bing.value)
         let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_organic.value)
         
         let activePaywallName: String
@@ -435,6 +438,8 @@ class ConfigurationResultManager {
                 activePaywallName = tiktokPaywallName
             case .instagram:
                 activePaywallName = instagramPaywallName
+            case .bing:
+                activePaywallName = bingPaywallName
             }
         }
         
@@ -447,7 +452,8 @@ class ConfigurationResultManager {
                                                   googlePaywallName: googlePaywallName,
                                                   snapchatPaywallName: snapchatPaywallName,
                                                   tiktokPaywallName: tiktokPaywallName,
-                                                  instagramPaywallName: instagramPaywallName)
+                                                  instagramPaywallName: instagramPaywallName,
+                                                  bingPaywallName: bingPaywallName)
         
         return coreManagerResult
     }
