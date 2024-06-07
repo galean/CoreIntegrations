@@ -66,7 +66,7 @@ public struct Purchase: Hashable {
     }
     
     public var isLifetime: Bool {
-        return product.id.contains("lifetime")
+        return product.id.lowercased().contains("lifetime")
     }
     
     public var isFamilySharable: Bool {

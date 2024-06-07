@@ -23,6 +23,7 @@ public class AppfslyerManager: NSObject {
         AppsFlyerLib.shared().appsFlyerDevKey = config.appsFlyerDevKey
         AppsFlyerLib.shared().appleAppID = config.appleAppID
         AppsFlyerLib.shared().delegate = self
+        AppsFlyerLib.shared().deepLinkDelegate = self
         AppsFlyerLib.shared().waitForATTUserAuthorization(timeoutInterval: 30)
 #if DEBUG
         AppsFlyerLib.shared().isDebug = true
@@ -111,6 +112,46 @@ extension AppfslyerManager: AppsFlyerLibDelegate {
     
     public func onConversionDataFail(_ error: Error) {
         delegate?.handledDeeplink([:])
+        delegate?.coreConfiguration(handleDeeplinkError: error)
         // handle error
+    }
+    
+    public func onAppOpenAttribution(_ attributionData: [AnyHashable : Any]) {
+        delegate?.coreConfiguration(handleOnAppOpenAttribution: attributionData)
+    }
+    
+    public func onAppOpenAttributionFailure(_ error: Error) {
+        delegate?.coreConfiguration(handleOnAppOpenAttributionError: error)
+    }
+}
+
+extension AppfslyerManager: DeepLinkDelegate {
+    public func didResolveDeepLink(_ result: DeepLinkResult) {
+        guard let deeplink = result.deepLink else {
+            delegate?.coreConfiguration(didResolveDeeplink: [:])
+            return
+        }
+        
+        let description = deeplink.toString()
+        let campaign = deeplink.campaign ?? ""
+        let campaignId = deeplink.campaignId ?? ""
+        let mediaSource = deeplink.mediaSource ?? ""
+        let deeplinkValue = deeplink.deeplinkValue ?? ""
+        let afSub1 = deeplink.afSub1 ?? ""
+        let afSub2 = deeplink.afSub2 ?? ""
+        let afSub3 = deeplink.afSub3 ?? ""
+        let afSub4 = deeplink.afSub4 ?? ""
+        
+        let parseResult = ["description": description,
+                           "campaign": campaign,
+                           "campaignID": campaignId,
+                           "mediaSource": mediaSource,
+                           "deeplinkValue": deeplinkValue,
+                           "afSub1": afSub1,
+                           "afSub2": afSub2,
+                           "afSub3": afSub3,
+                           "afSub4": afSub4]
+        
+        delegate?.coreConfiguration(didResolveDeeplink: parseResult)
     }
 }

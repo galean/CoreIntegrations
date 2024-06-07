@@ -20,6 +20,18 @@ import FirebaseIntegration
     I think it would be good to split CoreManager into different manager parts - for default configuration, for additional configurations like analytics, test_distribution etc, and for purchases and purchases attribution part
  */
 public class CoreManager {
+    
+    struct AmplitudeCountry {
+        //alpha2code - UK, ES, CN
+        static let regionCode = Locale.current.regionCode ?? ""
+        //alpha3code - UKR, ESP, CHN
+        static let countryCode = SKPaymentQueue.default().storefront?.countryCode ?? ""
+        
+        static var cnCheck: Bool {
+            return regionCode == "CN" || countryCode == "CHN"
+        }
+    }
+    
     public static var shared: CoreManagerProtocol = internalShared
     static var internalShared = CoreManager()
     
@@ -35,9 +47,9 @@ public class CoreManager {
     var facebookManager: FacebookManagerProtocol?
     var purchaseManager: PurchasesManagerProtocol?
     
-    var firebaseManager: FirebaseManager?
+    var remoteConfigManager: CoreRemoteConfigManager?
     var analyticsManager: AnalyticsManager?
-        
+    
     var delegate: CoreManagerDelegate?
     
     var configurationResultManager = ConfigurationResultManager()
@@ -51,7 +63,10 @@ public class CoreManager {
         self.configuration = configuration
         
         analyticsManager = AnalyticsManager.shared
-        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret)
+        
+        let amplitudeCustomURL = configuration.amplitudeDataSource.customServerURL
+        let cnCheck = AmplitudeCountry.cnCheck
+        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret, cnConfig: cnCheck, customURL: amplitudeCustomURL)
         
         sendStoreCountryUserProperty()
         configuration.appSettings.launchCount += 1
@@ -78,13 +93,8 @@ public class CoreManager {
         let appsflyerToken = appsflyerManager?.appsflyerID
         
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
-        
-        firebaseManager = FirebaseManager()
-        firebaseManager?.configure()
-        
-        firebaseManager?.fetchRemoteConfig(configuration.remoteConfigDataSource.allConfigurables) {
-            InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
-        }
+
+        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, growthBookClientKey: configuration.appSettings.growthBookClientKey)
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
@@ -119,6 +129,7 @@ public class CoreManager {
     @objc public func applicationDidBecomeActive() {
         let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
         let uuid = AttributionServerManager.shared.savedUserUUID
+       
         let id: String?
         if savedIDFV != nil {
             id = AttributionServerManager.shared.uniqueUserID
@@ -130,7 +141,14 @@ public class CoreManager {
             appsflyerManager?.startAppsflyer()
             purchaseManager?.setUserID(id)
             self.facebookManager?.userID = id
-            self.firebaseManager?.setUserID(id)
+            
+            self.remoteConfigManager?.configure(id: id) { [weak self] in
+                guard let self = self else {return}
+                remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
+                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
+                }
+            }
+            
             self.analyticsManager?.setUserID(id)
         }
         
@@ -203,8 +221,8 @@ public class CoreManager {
             let installPath = "/install-application"
             let purchasePath = "/subscribe"
             
-            if let installURLPath = self.firebaseManager?.install_server_path,
-               let purchaseURLPath = self.firebaseManager?.purchase_server_path,
+            if let installURLPath = self.remoteConfigManager?.install_server_path,
+               let purchaseURLPath = self.remoteConfigManager?.purchase_server_path,
                installURLPath != "",
                purchaseURLPath != "" {
                 let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
@@ -297,7 +315,7 @@ public class CoreManager {
     
     func getConfigurationResult(isFirstConfiguration: Bool) -> CoreManagerResult {
         let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
-        let remoteResult = self.firebaseManager?.remoteConfigResult ?? [:]
+        let remoteResult = self.remoteConfigManager?.remoteConfigResult ?? [:]
         let asaResult = AttributionServerManager.shared.installResultData
         let isIPAT = asaResult?.isIPAT ?? false
         let deepLinkResult = self.appsflyerManager?.deeplinkResult ?? [:]
@@ -318,6 +336,8 @@ public class CoreManager {
                 networkSource = .instagram
             }else if networkValue.contains("snapchat") {
                 networkSource = .snapchat
+            }else if networkValue.contains("bing") {
+                networkSource = .bing
             }else if networkValue == "Full_Access" {
                 networkSource = .test_premium
             } else {
@@ -331,11 +351,11 @@ public class CoreManager {
         
         if isIPAT {
             userSource = .ipat
-        } else if isASA {
-            userSource = .asa
-        } else if isRedirect {
+        }else if isRedirect {
             userSource = networkSource
-        } else {
+        }else if isASA {
+            userSource = .asa
+        }else {
             userSource = .organic
         }
         
@@ -345,6 +365,10 @@ public class CoreManager {
                         
             self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
             self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
+        } else {
+            let allConfigs = InternalRemoteABTests.allCases
+            self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
+            self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
         }
         
         self.configurationResultManager.userSource = userSource
@@ -387,19 +411,23 @@ class ConfigurationResultManager {
         let snapchatPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_snapchat.value)
         let tiktokPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_tiktok.value)
         let instagramPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_instagram.value)
+        let bingPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_bing.value)
         let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_organic.value)
         
         let activePaywallName: String
+        var userSourceInfo: [String: String]? = deepLinkResult
         
         if let deepLinkValue: String = deepLinkResult?["deep_link_value"], deepLinkValue != "none", deepLinkValue != "",
-           let firebaseValue = CoreManager.internalShared.firebaseManager?.internalConfigResult?[deepLinkValue] {
+           let firebaseValue = CoreManager.internalShared.remoteConfigManager?.internalConfigResult?[deepLinkValue] {
                 activePaywallName = getPaywallNameFromConfig(firebaseValue)
+            userSourceInfo = deepLinkResult
         }else{
             switch userSource {
             case .organic, .ipat, .test_premium, .unknown:
                 activePaywallName = organicPaywallName
             case .asa:
                 activePaywallName = asaPaywallName
+                userSourceInfo = asaAttributionResult
             case .facebook:
                 activePaywallName = facebookPaywallName
             case .google:
@@ -410,10 +438,13 @@ class ConfigurationResultManager {
                 activePaywallName = tiktokPaywallName
             case .instagram:
                 activePaywallName = instagramPaywallName
+            case .bing:
+                activePaywallName = bingPaywallName
             }
         }
         
         let coreManagerResult = CoreManagerResult(userSource: userSource,
+                                                  userSourceInfo: userSourceInfo,
                                                   activePaywallName: activePaywallName,
                                                   organicPaywallName: organicPaywallName,
                                                   asaPaywallName: asaPaywallName,
@@ -421,7 +452,8 @@ class ConfigurationResultManager {
                                                   googlePaywallName: googlePaywallName,
                                                   snapchatPaywallName: snapchatPaywallName,
                                                   tiktokPaywallName: tiktokPaywallName,
-                                                  instagramPaywallName: instagramPaywallName)
+                                                  instagramPaywallName: instagramPaywallName,
+                                                  bingPaywallName: bingPaywallName)
         
         return coreManagerResult
     }
