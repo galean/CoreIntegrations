@@ -17,18 +17,6 @@ extension CoreManager: AppsflyerManagerDelegate {
         delegate?.coreConfiguration(handleDeeplinkError: error)
     }
     
-    public func coreConfiguration(handleOnAppOpenAttribution deepLinkResult: [AnyHashable : Any]) {
-        delegate?.coreConfiguration(handleOnAppOpenAttribution: deepLinkResult)
-    }
-    
-    public func coreConfiguration(handleOnAppOpenAttributionError error: Error) {
-        delegate?.coreConfiguration(handleOnAppOpenAttributionError: error)
-    }
-    
-    public func coreConfiguration(didResolveDeeplink result: [AnyHashable : Any]) {
-        delegate?.coreConfiguration(didResolveDeeplink: result)
-    }
-    
     public func handledDeeplink(_ result: [String : String]) {
         sendDeepLinkUserProperties(deepLinkResult: result)
         InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted()
