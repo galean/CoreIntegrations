@@ -412,16 +412,19 @@ class ConfigurationResultManager {
         let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_organic.value)
         
         let activePaywallName: String
+        var userSourceInfo: [String: String]? = deepLinkResult
         
         if let deepLinkValue: String = deepLinkResult?["deep_link_value"], deepLinkValue != "none", deepLinkValue != "",
            let firebaseValue = CoreManager.internalShared.remoteConfigManager?.internalConfigResult?[deepLinkValue] {
                 activePaywallName = getPaywallNameFromConfig(firebaseValue)
+            userSourceInfo = deepLinkResult
         }else{
             switch userSource {
             case .organic, .ipat, .test_premium, .unknown:
                 activePaywallName = organicPaywallName
             case .asa:
                 activePaywallName = asaPaywallName
+                userSourceInfo = asaAttributionResult
             case .facebook:
                 activePaywallName = facebookPaywallName
             case .google:
@@ -436,6 +439,7 @@ class ConfigurationResultManager {
         }
         
         let coreManagerResult = CoreManagerResult(userSource: userSource,
+                                                  userSourceInfo: userSourceInfo,
                                                   activePaywallName: activePaywallName,
                                                   organicPaywallName: organicPaywallName,
                                                   asaPaywallName: asaPaywallName,
