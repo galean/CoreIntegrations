@@ -334,11 +334,11 @@ public class CoreManager {
                 networkSource = .tiktok
             } else if networkValue.contains("instagram") {
                 networkSource = .instagram
-            }else if networkValue.contains("snapchat") {
+            } else if networkValue.contains("snapchat") {
                 networkSource = .snapchat
-            }else if networkValue.contains("bing") {
+            } else if networkValue.lowercased().contains("bing") {
                 networkSource = .bing
-            }else if networkValue == "Full_Access" {
+            } else if networkValue == "Full_Access" {
                 networkSource = .test_premium
             } else {
                 networkSource = .unknown
