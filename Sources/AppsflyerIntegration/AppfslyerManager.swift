@@ -110,7 +110,6 @@ extension AppfslyerManager: AppsFlyerLibDelegate {
     }
     
     public func onConversionDataFail(_ error: Error) {
-        delegate?.handledDeeplink([:])
-        // handle error
+        delegate?.coreConfiguration(handleDeeplinkError: error)
     }
 }

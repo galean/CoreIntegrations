@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Andrii Plotnikov on 19.07.2023.
 //
@@ -22,9 +22,11 @@ public class FirebaseManager {
         
     }
     
-    public func configure() {
+    public func configure(completion: @escaping () -> Void) {
         FirebaseApp.configure()
         Analytics.logEvent("Firebase Init", parameters: nil)
+        
+        completion()
     }
     
     public func setUserID(_ id: String) {
@@ -34,11 +36,9 @@ public class FirebaseManager {
     public func fetchRemoteConfig(_ appConfigurables: [any FirebaseConfigurable], completion: @escaping () -> Void) {
         let remoteConfig = RemoteConfig.remoteConfig()
         let settings = RemoteConfigSettings()
-//#if DEBUG
+        
         settings.minimumFetchInterval = 0
-//#else
-//        settings.minimumFetchInterval = 1800
-//#endif
+        
         remoteConfig.configSettings = settings
         remoteConfig.fetchAndActivate { status, error in
             guard error == nil else {
