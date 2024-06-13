@@ -18,12 +18,12 @@ public class AnalyticsManager {
     
     // MARK: - MethodsforceEventsUpload
     
-    public func configure(appKey: String, cnConfig: Bool, customURL: String) {
+    public func configure(appKey: String, cnConfig: Bool, customURL: String?) {
         Amplitude.instance().initializeApiKey(appKey)
         Amplitude.instance().defaultTracking.sessions = true
         Amplitude.instance().minTimeBetweenSessionsMillis = 0
 //        Amplitude.instance().useDynamicConfig = useDynamicConfig
-        if cnConfig {
+        if let customURL, cnConfig == true {
             Amplitude.instance().setServerUrl(customURL)
         }
     }
