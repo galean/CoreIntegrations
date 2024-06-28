@@ -11,7 +11,7 @@ import PurchasesIntegration
 import AppsflyerIntegration
 import AttributionServerIntegration
 import AnalyticsIntegration
-import FirebaseIntegration
+import RemoteConfigIntegration
 #endif
 import AppTrackingTransparency
 

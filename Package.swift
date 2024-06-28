@@ -30,7 +30,7 @@ let package = Package(
                     "AppsflyerIntegration",
                     "FacebookIntegration",
                     "AnalyticsIntegration",
-                    "FirebaseIntegration",
+                    "RemoteConfigIntegration",
                     "PurchasesIntegration",
                     "AttributionServerIntegration",
                 ],
@@ -65,14 +65,14 @@ let package = Package(
                   .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]
         ),
-        .target(name: "FirebaseIntegration",
+        .target(name: "RemoteConfigIntegration",
                 dependencies: [
                     .product(name: "FirebaseRemoteConfig", package: "firebase-ios-sdk"),
                     .product(name: "FirebaseRemoteConfigSwift", package: "firebase-ios-sdk"),
                     .product(name: "FirebaseAnalytics", package: "firebase-ios-sdk"),
                     .product(name: "GrowthBook-IOS", package: "growthbook-swift"),
                 ],
-                path: "Sources/FirebaseIntegration",
+                path: "Sources/RemoteConfigIntegration",
                 linkerSettings: [
                   .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]

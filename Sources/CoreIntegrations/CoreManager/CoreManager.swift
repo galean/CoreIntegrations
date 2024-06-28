@@ -12,7 +12,7 @@ import FacebookIntegration
 import AttributionServerIntegration
 import PurchasesIntegration
 import AnalyticsIntegration
-import FirebaseIntegration
+import RemoteConfigIntegration
 #endif
 import AppTrackingTransparency
 import Foundation
@@ -95,8 +95,7 @@ public class CoreManager {
         let appsflyerToken = appsflyerManager?.appsflyerID
         
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
-
-        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, growthBookClientKey: configuration.appSettings.growthBookClientKey)
+        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, growthBookConfig: configuration.appSettings.growthBookConfiguration)
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
@@ -144,7 +143,7 @@ public class CoreManager {
             purchaseManager?.setUserID(id)
             self.facebookManager?.userID = id
             
-            self.remoteConfigManager?.configure(id: id) { [weak self] in
+            self.remoteConfigManager?.configure(userID: id) { [weak self] in
                 guard let self = self else {return}
                 remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
                     InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()

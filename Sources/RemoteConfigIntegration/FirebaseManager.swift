@@ -15,22 +15,17 @@ public class FirebaseManager {
     public private(set) var install_server_path: String? = nil
     public private(set) var purchase_server_path: String? = nil
     
-    private let kInstallURL = "install_server_path"
-    private let kPurchaseURL = "purchase_server_path"
-    
     public init() {
         
     }
-    
-    public func configure(completion: @escaping () -> Void) {
+}
+
+extension FirebaseManager: RemoteConfigManager {
+    public func configure(id:String, completion: @escaping () -> Void) {
         FirebaseApp.configure()
         Analytics.logEvent("Firebase Init", parameters: nil)
-        
-        completion()
-    }
-    
-    public func setUserID(_ id: String) {
         Analytics.setUserID(id)
+        completion()
     }
     
     public func fetchRemoteConfig(_ appConfigurables: [any FirebaseConfigurable], completion: @escaping () -> Void) {

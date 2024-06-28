@@ -7,7 +7,7 @@
 
 import Foundation
 #if !COCOAPODS
-import FirebaseIntegration
+import RemoteConfigIntegration
 #endif
 
 public protocol CoreRemoteDataSource {

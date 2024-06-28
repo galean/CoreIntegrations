@@ -14,25 +14,49 @@ public class GrowthBookManager {
     public private(set) var install_server_path: String? = nil
     public private(set) var purchase_server_path: String? = nil
     
-    private let kInstallURL = "install_server_path"
-    private let kPurchaseURL = "purchase_server_path"
-    
     private var privateInstance:GrowthBookSDK?
+    private let configuration: GrowthBookConfiguration
     
-    public init() { }
+    public init(growthBookConfig: GrowthBookConfiguration) {
+        configuration = growthBookConfig
+    }
     
-    public func configure(id:String, clientKey:String, completion: @escaping () -> Void) {
-        let attrs = [ "id":id ]
+    private func getFeatures() -> [String: GrowthBook.Feature] {
+        guard let privateInstance = privateInstance else {
+            assertionFailure()
+            return [:]
+        }
+        return privateInstance.getFeatures()
+    }
+    
+    private func getStringValue(for feature:String) -> String {
+        guard let privateInstance = privateInstance else {
+            assertionFailure()
+            return ""
+        }
+        return privateInstance.getFeatureValue(feature: feature, default: "default").stringValue
+    }
+    
+    private func getBoolValue(for feature:String) -> Bool {
+        guard let privateInstance = privateInstance else {
+            assertionFailure()
+            return false
+        }
+        return privateInstance.getFeatureValue(feature: feature, default: "default").boolValue
+    }
+    
+}
+
+extension GrowthBookManager: RemoteConfigManager {
+    public func configure(id: String, completion: @escaping () -> Void) {
+        let attrs = [ "id": id ]
         
         let semaphore = DispatchSemaphore(value: 0)
         
-        let sdkInstance = GrowthBookBuilder(apiHost: "https://cdn.growthbook.io", clientKey: clientKey, encryptionKey: nil, attributes: attrs, trackingCallback: { experiment, result in
-            print("Viewed Experiment")
-            print("Experiment Id: ", experiment.key)//ab_paywall_organic
-            print("Variation Id: ", result.value)//2box or none_2box
+        let sdkInstance = GrowthBookBuilder(apiHost: configuration.hostURL, clientKey: configuration.clientKey,
+                                            encryptionKey: nil, attributes: attrs, trackingCallback: { experiment, result in
             semaphore.signal()
         }, refreshHandler: { handler in
-            print("refreshHandler \(handler)")
             if handler {
                 semaphore.signal()
             }
@@ -78,29 +102,4 @@ public class GrowthBookManager {
         self.remoteConfigResult = configResult
         completion()
     }
-    
-    func getFeatures() -> [String: GrowthBook.Feature] {
-        guard let privateInstance = privateInstance else {
-            assertionFailure()
-            return [:]
-        }
-        return privateInstance.getFeatures()
-    }
-    
-    func getStringValue(for feature:String) -> String {
-        guard let privateInstance = privateInstance else {
-            assertionFailure()
-            return ""
-        }
-        return privateInstance.getFeatureValue(feature: feature, default: "default").stringValue
-    }
-    
-    func getBoolValue(for feature:String) -> Bool {
-        guard let privateInstance = privateInstance else {
-            assertionFailure()
-            return false
-        }
-        return privateInstance.getFeatureValue(feature: feature, default: "default").boolValue
-    }
-    
 }
