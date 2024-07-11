@@ -101,8 +101,6 @@ extension CoreManager: GrowthBookDebugDelegate {
         InternalAnalyticsEvent.GBFetchedRemoteConfig.log(parameters: ["configResult": configResult,
                                                                       "featuresInfo": featuresInfo])
     }
-    
-    
 }
 
 extension Dictionary {

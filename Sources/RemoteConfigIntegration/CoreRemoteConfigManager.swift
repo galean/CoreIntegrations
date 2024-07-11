@@ -17,10 +17,10 @@ public class CoreRemoteConfigManager {
     
     private var isConfigured:Bool = false
     private var isConfigFetched:Bool = false
-    
-    public init(cnConfig: Bool, growthBookConfig: GrowthBookConfiguration?) {
+        
+    public init(cnConfig: Bool, growthBookConfig: GrowthBookConfiguration?, growthBookDebugDelegate: GrowthBookDebugDelegate?) {
         if cnConfig, let growthBookConfig {
-            remoteConfigManager = GrowthBookManager(growthBookConfig: growthBookConfig)
+            remoteConfigManager = GrowthBookManager(growthBookConfig: growthBookConfig, debugDelegate: growthBookDebugDelegate)
         } else {
             remoteConfigManager = FirebaseManager()
         }
