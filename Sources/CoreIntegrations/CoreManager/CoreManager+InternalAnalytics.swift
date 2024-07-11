@@ -79,6 +79,32 @@ extension CoreManager {
     }
 }
 
+extension CoreManager: GrowthBookDebugDelegate {
+    public func trackingCallbackResult(experimentInfo: String, resultInfo: String) {
+        InternalAnalyticsEvent.GBTrackingCallbackResult.log(parameters: ["experimentInfo": experimentInfo,
+                                                                         "resultInfo": resultInfo])
+    }
+    
+    public func refreshHandlerResult(result: Bool) {
+        InternalAnalyticsEvent.GBRefreshHandlerResult.log(parameter: result)
+    }
+    
+    public func configTimeout() {
+        InternalAnalyticsEvent.GBConfigTimeout.log()
+    }
+    
+    public func configurationFinished() {
+        InternalAnalyticsEvent.GBConfigurationFinished.log()
+    }
+    
+    public func fetchedRemoteConfig(configResult: [String : String], featuresInfo: [String]) {
+        InternalAnalyticsEvent.GBFetchedRemoteConfig.log(parameters: ["configResult": configResult,
+                                                                      "featuresInfo": featuresInfo])
+    }
+    
+    
+}
+
 extension Dictionary {
     static func += (lhs: inout [Key:Value], rhs: [Key:Value]) {
         lhs.merge(rhs){$1}

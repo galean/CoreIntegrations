@@ -8,6 +8,14 @@
 import Foundation
 import GrowthBook
 
+public protocol GrowthBookDebugDelegate: AnyObject {
+    func trackingCallbackResult(experimentInfo: String, resultInfo: String)
+    func refreshHandlerResult(result: Bool)
+    func configTimeout()
+    func configurationFinished()
+    func fetchedRemoteConfig(configResult: [String: String], featuresInfo: [String])
+}
+
 public class GrowthBookManager {
     public private(set) var remoteConfigResult: [String: String]? = nil
     public private(set) var internalConfigResult: [String: String]? = nil
@@ -17,8 +25,11 @@ public class GrowthBookManager {
     private var privateInstance:GrowthBookSDK?
     private let configuration: GrowthBookConfiguration
     
-    public init(growthBookConfig: GrowthBookConfiguration) {
+    private var debugDelegate: GrowthBookDebugDelegate?
+    
+    public init(growthBookConfig: GrowthBookConfiguration, debugDelegate: GrowthBookDebugDelegate?) {
         configuration = growthBookConfig
+        self.debugDelegate = debugDelegate
     }
     
     private func getFeatures() -> [String: GrowthBook.Feature] {
@@ -55,23 +66,27 @@ extension GrowthBookManager: RemoteConfigManager {
         
         let sdkInstance = GrowthBookBuilder(apiHost: configuration.hostURL, clientKey: configuration.clientKey,
                                             encryptionKey: nil, attributes: attrs, trackingCallback: { experiment, result in
+            self.debugDelegate?.trackingCallbackResult(experimentInfo: experiment.debugDescription, resultInfo: result.debugDescription)
             semaphore.signal()
         }, refreshHandler: { handler in
+            self.debugDelegate?.refreshHandlerResult(result: handler)
             if handler {
                 semaphore.signal()
             }
         })
-            .setLogLevel(.debug)
+            .setLogLevel(.warning)
             .initializer()
         
         privateInstance = sdkInstance
         
         DispatchQueue.global().asyncAfter(deadline: .now() + 5.0) {
+            self.debugDelegate?.configTimeout()
             semaphore.signal()
         }
         
         semaphore.wait()
         
+        self.debugDelegate?.configurationFinished()
         completion()
     }
     
@@ -91,7 +106,15 @@ extension GrowthBookManager: RemoteConfigManager {
         self.install_server_path = getStringValue(for: self.kInstallURL)
         self.purchase_server_path = getStringValue(for: self.kPurchaseURL)
         
-        let keys = getFeatures().keys
+        let features = getFeatures()
+        var featuresInfo: [String] = []
+        features.forEach { (key: String, value: Feature) in
+            featuresInfo.append(value.debugDescription)
+        }
+        
+        let keys = features.keys
+
+        
         self.internalConfigResult = keys.reduce(into: [String:String](), { partialResult, key in
             let configValue = getStringValue(for: key)
             if configValue != "" {
@@ -100,6 +123,7 @@ extension GrowthBookManager: RemoteConfigManager {
         })
         
         self.remoteConfigResult = configResult
+        debugDelegate?.fetchedRemoteConfig(configResult: configResult, featuresInfo: featuresInfo)
         completion()
     }
 }

@@ -38,7 +38,7 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
     }
     
     var sdkVersion: String {
-        return "2.3.5gr"
+        return "2.3.6gr"
     }
     
     var osVersion: String {

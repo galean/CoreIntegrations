@@ -95,7 +95,8 @@ public class CoreManager {
         let appsflyerToken = appsflyerManager?.appsflyerID
         
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
-        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, growthBookConfig: configuration.appSettings.growthBookConfiguration)
+        
+        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, growthBookConfig: configuration.appSettings.growthBookConfiguration, growthBookDebugDelegate: self)
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"

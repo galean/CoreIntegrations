@@ -15,6 +15,12 @@ enum InternalAnalyticsEvent: String, CaseIterable, AmplitudeAnalyzableEvent {
     case test_distribution
     case att_permission
     
+    case GBTrackingCallbackResult
+    case GBRefreshHandlerResult
+    case GBConfigTimeout
+    case GBConfigurationFinished
+    case GBFetchedRemoteConfig
+    
     public var key: String {
         return rawValue
     }
