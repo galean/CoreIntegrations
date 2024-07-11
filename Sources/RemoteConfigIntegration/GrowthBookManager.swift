@@ -56,6 +56,10 @@ public class GrowthBookManager {
         return privateInstance.getFeatureValue(feature: feature, default: "default").boolValue
     }
     
+    private var appVersion: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        return version
+    }
 }
 
 extension GrowthBookManager: RemoteConfigManager {
@@ -91,7 +95,7 @@ extension GrowthBookManager: RemoteConfigManager {
     }
     
     public func setUserID(_ id: String) {
-        privateInstance?.setAttributes(attributes: ["id":id])
+        privateInstance?.setAttributes(attributes: ["id":id, "App version": appVersion])
     }
     
     public func fetchRemoteConfig(_ appConfigurables: [any FirebaseConfigurable], completion: @escaping () -> Void) {
