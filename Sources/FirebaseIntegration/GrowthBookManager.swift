@@ -8,6 +8,14 @@
 import Foundation
 import GrowthBook
 
+public protocol GrowthBookDebugDelegate: AnyObject {
+    func trackingCallbackResult(experimentInfo: String, resultInfo: String)
+    func refreshHandlerResult(result: Bool)
+    func configTimeout()
+    func configurationFinished()
+    func fetchedRemoteConfig(configResult: [String: String], featuresInfo: [String])
+}
+
 public class GrowthBookManager {
     public private(set) var remoteConfigResult: [String: String]? = nil
     public private(set) var internalConfigResult: [String: String]? = nil
@@ -19,35 +27,38 @@ public class GrowthBookManager {
     
     private var privateInstance:GrowthBookSDK?
     
+    private var debugDelegate: GrowthBookDebugDelegate?
+    
     public init() { }
     
-    public func configure(id:String, clientKey:String, completion: @escaping () -> Void) {
+    public func configure(id:String, clientKey:String, debugDelegate: GrowthBookDebugDelegate?, completion: @escaping () -> Void) {
+        self.debugDelegate = debugDelegate
         let attrs = [ "id":id ]
         
         let semaphore = DispatchSemaphore(value: 0)
         
         let sdkInstance = GrowthBookBuilder(apiHost: "https://cdn.growthbook.io", clientKey: clientKey, encryptionKey: nil, attributes: attrs, trackingCallback: { experiment, result in
-            print("Viewed Experiment")
-            print("Experiment Id: ", experiment.key)//ab_paywall_organic
-            print("Variation Id: ", result.value)//2box or none_2box
+            debugDelegate?.trackingCallbackResult(experimentInfo: experiment.debugDescription, resultInfo: result.debugDescription)
             semaphore.signal()
         }, refreshHandler: { handler in
-            print("refreshHandler \(handler)")
+            debugDelegate?.refreshHandlerResult(result: handler)
             if handler {
                 semaphore.signal()
             }
         })
-            .setLogLevel(.debug)
+            .setLogLevel(.warning)
             .initializer()
         
         privateInstance = sdkInstance
         
         DispatchQueue.global().asyncAfter(deadline: .now() + 5.0) {
+            debugDelegate?.configTimeout()
             semaphore.signal()
         }
         
         semaphore.wait()
         
+        debugDelegate?.configurationFinished()
         completion()
     }
     
@@ -67,7 +78,15 @@ public class GrowthBookManager {
         self.install_server_path = getStringValue(for: self.kInstallURL)
         self.purchase_server_path = getStringValue(for: self.kPurchaseURL)
         
-        let keys = getFeatures().keys
+        let features = getFeatures()
+        var featuresInfo: [String] = []
+        features.forEach { (key: String, value: Feature) in
+            featuresInfo.append(value.debugDescription)
+        }
+        
+        let keys = features.keys
+
+        
         self.internalConfigResult = keys.reduce(into: [String:String](), { partialResult, key in
             let configValue = getStringValue(for: key)
             if configValue != "" {
@@ -76,6 +95,7 @@ public class GrowthBookManager {
         })
         
         self.remoteConfigResult = configResult
+        debugDelegate?.fetchedRemoteConfig(configResult: configResult, featuresInfo: featuresInfo)
         completion()
     }
     
@@ -84,6 +104,7 @@ public class GrowthBookManager {
             assertionFailure()
             return [:]
         }
+        
         return privateInstance.getFeatures()
     }
     

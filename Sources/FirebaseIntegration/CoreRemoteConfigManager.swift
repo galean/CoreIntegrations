@@ -24,6 +24,8 @@ public class CoreRemoteConfigManager {
     private let cnConfig: Bool
     private var growthBookKey:String?
     
+    public var growthBookDebugDelegate: GrowthBookDebugDelegate?
+    
     public init(cnConfig: Bool, growthBookClientKey:String?) {
         self.cnConfig = cnConfig
         self.growthBookKey = growthBookClientKey
@@ -35,7 +37,7 @@ public class CoreRemoteConfigManager {
         }
         
         if cnConfig, let growthBookClientKey = growthBookKey {
-            growthBookManager.configure(id: id, clientKey: growthBookClientKey) { [weak self] in
+            growthBookManager.configure(id: id, clientKey: growthBookClientKey, debugDelegate: growthBookDebugDelegate) { [weak self] in
                 completion()
                 self?.isConfigured = true
             }

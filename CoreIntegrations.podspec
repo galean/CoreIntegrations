@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CoreIntegrations'
-  s.version          = '2.3.4'
+  s.version          = '2.3.5gbd'
   s.summary          = 'CoreIntegrations framework'
 
   s.description      = 'Description'
@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.homepage         = 'https://github.com/galean/CoreIntegrations.git'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'u-texas' => 'kanarskyi.anatolii@gmail.com' }
-  s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'main' }
+  s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'feature/Growthbook_logging' }
 
   s.ios.deployment_target = '15.0'
   
