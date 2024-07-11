@@ -27,6 +27,8 @@ public class GrowthBookManager {
     
     private var debugDelegate: GrowthBookDebugDelegate?
     
+    var configurationFinished = false
+    
     public init(growthBookConfig: GrowthBookConfiguration, debugDelegate: GrowthBookDebugDelegate?) {
         configuration = growthBookConfig
         self.debugDelegate = debugDelegate
@@ -64,17 +66,19 @@ public class GrowthBookManager {
 
 extension GrowthBookManager: RemoteConfigManager {
     public func configure(id: String, completion: @escaping () -> Void) {
-        let attrs = [ "id": id ]
-        
+        let attrs = [ "id": id, "App version": appVersion ]
+
         let semaphore = DispatchSemaphore(value: 0)
         
         let sdkInstance = GrowthBookBuilder(apiHost: configuration.hostURL, clientKey: configuration.clientKey,
                                             encryptionKey: nil, attributes: attrs, trackingCallback: { experiment, result in
             self.debugDelegate?.trackingCallbackResult(experimentInfo: experiment.debugDescription, resultInfo: result.debugDescription)
+            self.configurationFinished = true
             semaphore.signal()
         }, refreshHandler: { handler in
             self.debugDelegate?.refreshHandlerResult(result: handler)
             if handler {
+                self.configurationFinished = true
                 semaphore.signal()
             }
         })
@@ -84,7 +88,9 @@ extension GrowthBookManager: RemoteConfigManager {
         privateInstance = sdkInstance
         
         DispatchQueue.global().asyncAfter(deadline: .now() + 5.0) {
-            self.debugDelegate?.configTimeout()
+            if !self.configurationFinished {
+                self.debugDelegate?.configTimeout()
+            }
             semaphore.signal()
         }
         
@@ -92,10 +98,6 @@ extension GrowthBookManager: RemoteConfigManager {
         
         self.debugDelegate?.configurationFinished()
         completion()
-    }
-    
-    public func setUserID(_ id: String) {
-        privateInstance?.setAttributes(attributes: ["id":id, "App version": appVersion])
     }
     
     public func fetchRemoteConfig(_ appConfigurables: [any FirebaseConfigurable], completion: @escaping () -> Void) {
