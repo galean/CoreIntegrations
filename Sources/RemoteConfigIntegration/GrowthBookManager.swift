@@ -111,7 +111,8 @@ extension GrowthBookManager: RemoteConfigManager {
         features.forEach { (key: String, value: Feature) in
             let ruleCount = value.rules?.count ?? 0
             let rule = value.rules?.first?.variations?.description ?? ""
-            featuresInfo.append("defaultInfo: \(value.defaultValue?.stringValue ?? ""), ruleInfo: { ruleCount: \(ruleCount), ruleVariations: \(rule) }")
+            let condition = value.rules?.first?.condition?.string ?? ""
+            featuresInfo.append("key: \(key), defaultInfo: \(value.defaultValue?.stringValue ?? ""), ruleInfo: { ruleCount: \(ruleCount), ruleVariations: \(rule), condition: \(condition) }")
         }
         
         let keys = features.keys
