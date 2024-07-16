@@ -17,6 +17,8 @@ public protocol CoreSettingsProtocol: AnyObject {
     var amplitudeSecret: String { get }
     
     var launchCount: Int { get set }
+    
+    var paywallSourceForRestricted: CoreUserSource? { get set }
 }
 
 public extension CoreSettingsProtocol {
@@ -24,6 +26,10 @@ public extension CoreSettingsProtocol {
         launchCount == 1
     }
     var growthBookClientKey: String? {
+        return nil
+    }
+    
+    var paywallSourceForRestricted: CoreUserSource? {
         return nil
     }
 }
