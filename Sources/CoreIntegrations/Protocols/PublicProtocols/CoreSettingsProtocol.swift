@@ -18,7 +18,7 @@ public protocol CoreSettingsProtocol: AnyObject {
     
     var launchCount: Int { get set }
     
-    var paywallSourceForRestricted: CoreUserSource? { get set }
+    var paywallSourceForRestricted: CoreUserSource? { get }
 }
 
 public extension CoreSettingsProtocol {
