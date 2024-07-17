@@ -81,7 +81,7 @@ extension GrowthBookManager: RemoteConfigManager {
                 self.configurationFinished = true
                 semaphore.signal()
             }
-        })
+        }, backgroundSync: true)
             .setLogLevel(.warning)
             .initializer()
         
