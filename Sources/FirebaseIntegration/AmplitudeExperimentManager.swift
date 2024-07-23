@@ -54,5 +54,25 @@ public class AmplitudeExperimentManager {
             self.remoteConfigResult = configResult
             completion()
         }
+        
+        DispatchQueue.global().asyncAfter(deadline: .now()+5.0) { [weak self] in
+            self?.client.fetch(user: nil) { client, error in
+                let configResult = appConfigurables.reduce(into: [String: String]()) { partialResult, configurable in
+                    let variantToDebug = client.variant(configurable.key)
+                    let variant = client.variant(configurable.key, fallback: Variant(configurable.defaultValue))
+                    if let value = variant.value, value != "" {
+                        partialResult[configurable.key] = value
+                    }
+                }
+                
+                self?.internalConfigResult = client.all().reduce(into: [String:String](), { partialResult, variantWithKey in
+                    if let value = variantWithKey.value.value, value != "" {
+                        partialResult[variantWithKey.key] = value
+                    }
+                })
+                self?.remoteConfigResult = configResult
+                completion()
+            }
+        }
     }
 }
