@@ -56,8 +56,8 @@ public class AmplitudeExperimentManager {
         }
         
         DispatchQueue.global().asyncAfter(deadline: .now()+5.0) { [weak self] in
-            print("EXPERIMENT: test_flag: \(self?.client.variant("test_flag_adv"))")
-            print("EXPERIMENT: test_flag RESULT: \(self?.client.variant("test_flag_adv").value)")
+            print("EXPERIMENT: test_flag: \(self?.client.variant("test_local_adv"))")
+            print("EXPERIMENT: test_flag RESULT: \(self?.client.variant("test_local_adv").value)")
         }
     }
 }
