@@ -96,7 +96,7 @@ public class CoreManager {
         
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
 
-        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, growthBookClientKey: configuration.appSettings.growthBookClientKey, amplitudeKey: configuration.appSettings.amplitudeSecret)
+        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, growthBookClientKey: configuration.appSettings.growthBookClientKey, deploymentKey: configuration.appSettings.deploymentKey)
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"

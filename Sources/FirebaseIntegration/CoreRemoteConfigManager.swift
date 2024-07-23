@@ -27,10 +27,10 @@ public class CoreRemoteConfigManager {
     private let cnConfig: Bool
     private var growthBookKey:String?
     
-    public init(cnConfig: Bool, growthBookClientKey:String?, amplitudeKey: String) {
+    public init(cnConfig: Bool, growthBookClientKey:String?, deploymentKey: String) {
         self.cnConfig = cnConfig
         self.growthBookKey = growthBookClientKey
-        amplExperimentManager = AmplitudeExperimentManager(apiKey: amplitudeKey)
+        amplExperimentManager = AmplitudeExperimentManager(deploymentKey: deploymentKey)
     }
     
     public func configure(id:String, completion: @escaping () -> Void) {

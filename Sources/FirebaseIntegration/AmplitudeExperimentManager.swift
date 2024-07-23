@@ -14,9 +14,9 @@ public class AmplitudeExperimentManager {
     public private(set) var remoteConfigResult: [String: String]? = nil
     public private(set) var internalConfigResult: [String: String]? = nil
     
-    init(apiKey: String) {
+    init(deploymentKey: String) {
         client = Experiment.initializeWithAmplitudeAnalytics(
-            apiKey: apiKey,
+            apiKey: deploymentKey,
             config: ExperimentConfigBuilder().build()
         )
     }
@@ -24,6 +24,15 @@ public class AmplitudeExperimentManager {
     func configure(completion: @escaping () -> Void) {
         client.start(nil) { error in
             completion()
+            let variant = self.client.variant("test_flag")
+            let var2 = self.client.variant("test_paywall_name")
+            print(variant)
+            print(var2)
+            if variant.value == "on" {
+                // Flag is on
+            } else {
+                // Flag is off
+            }
         }
     }
     
