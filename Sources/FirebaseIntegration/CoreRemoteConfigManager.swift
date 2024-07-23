@@ -18,15 +18,19 @@ public class CoreRemoteConfigManager {
     
     private let firebaseManager = FirebaseManager()
     private let growthBookManager = GrowthBookManager()
-    private var isConfigured:Bool = false
-    private var isConfigFetched:Bool = false
+    private let amplExperimentManager: AmplitudeExperimentManager
+    private var mainConfigConfigured = false
+    private var amplConfigured = false
+    private var isConfigured = false
+    private var isConfigFetched = false
     
     private let cnConfig: Bool
     private var growthBookKey:String?
     
-    public init(cnConfig: Bool, growthBookClientKey:String?) {
+    public init(cnConfig: Bool, growthBookClientKey:String?, amplitudeKey: String) {
         self.cnConfig = cnConfig
         self.growthBookKey = growthBookClientKey
+        amplExperimentManager = AmplitudeExperimentManager(apiKey: amplitudeKey)
     }
     
     public func configure(id:String, completion: @escaping () -> Void) {
@@ -36,13 +40,26 @@ public class CoreRemoteConfigManager {
         
         if cnConfig, let growthBookClientKey = growthBookKey {
             growthBookManager.configure(id: id, clientKey: growthBookClientKey) { [weak self] in
-                completion()
-                self?.isConfigured = true
+                self?.mainConfigConfigured = true
+                if self?.amplConfigured == true {
+                    completion()
+                    self?.isConfigured = true
+                }
             }
         }else{
             firebaseManager.configure() { [weak self] in
-                completion()
                 self?.firebaseManager.setUserID(id)
+                self?.mainConfigConfigured = true
+                if self?.amplConfigured == true {
+                    completion()
+                    self?.isConfigured = true
+                }
+            }
+        }
+        amplExperimentManager.configure { [weak self] in
+            self?.amplConfigured = true
+            if self?.mainConfigConfigured == true {
+                completion()
                 self?.isConfigured = true
             }
         }
@@ -79,6 +96,12 @@ public class CoreRemoteConfigManager {
                 isConfigFetched = true
                 completion()
             }
+        }
+        amplExperimentManager.fetchRemoteConfig(appConfigurables) { [weak self] in
+            guard let self = self else {return}
+            
+            print(amplExperimentManager.internalConfigResult)
+            print(amplExperimentManager.remoteConfigResult)
         }
     }
     

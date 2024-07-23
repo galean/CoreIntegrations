@@ -37,38 +37,13 @@ public class AmplitudeExperimentManager {
                 }
             }
             
-//            let allVariants = client.all()
-            
-            appConfigurables.forEach { configurable in
-                let variant = client.variant(configurable.key)
-                
-//                let foundVariant = allVariants.first{ $0.key == configurable.key }
-//                let result = foun
-            }
-            
-            /*
-             let allKeys = appConfigurables.map { $0.key }
-             let configResult = allKeys.reduce(into: [String: String]()) { partialResult, key in
-                 let configValue = getStringValue(for: key)
-                 if configValue != "" {
-                     partialResult[key] = configValue
-                 }
-             }
-             
-             self.install_server_path = getStringValue(for: self.kInstallURL)
-             self.purchase_server_path = getStringValue(for: self.kPurchaseURL)
-             
-             let keys = getFeatures().keys
-             self.internalConfigResult = keys.reduce(into: [String:String](), { partialResult, key in
-                 let configValue = getStringValue(for: key)
-                 if configValue != "" {
-                     partialResult[key] = configValue
-                 }
-             })
-             
-             self.remoteConfigResult = configResult
-             completion()
-             */
+            self.internalConfigResult = client.all().reduce(into: [String:String](), { partialResult, variantWithKey in
+                if let value = variantWithKey.value.value, value != "" {
+                    partialResult[variantWithKey.key] = value
+                }
+            })
+            self.remoteConfigResult = configResult
+            completion()
         }
     }
 }
