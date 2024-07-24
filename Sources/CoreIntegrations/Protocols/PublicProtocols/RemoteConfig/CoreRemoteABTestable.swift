@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Experiment
 
 public protocol CoreRemoteABTestable: CaseIterable, CoreFirebaseConfigurable {
     static var ab_paywall_fb: Self { get }

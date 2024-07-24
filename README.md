@@ -1,3 +1,3 @@
 # CoreIntegrations
 
-Framework version - 2.3.6.5gr
+Framework version - 2.3.6.5grampl
