@@ -16,6 +16,8 @@ public protocol CoreRemoteConfigurable: CaseIterable, CoreFirebaseConfigurable {
     
     var amplitudeValue: String { get }
     
+    func getAmplitudeValueWithFetching(completion: @escaping (String) -> Void)
+    
     static var allAmplitudeValues: [String: String] { get }
 }
 
@@ -51,9 +53,12 @@ public extension CoreRemoteConfigurable {
     
     var amplitudeValue: String {
         get {
-            let variants = CoreManager.internalShared.remoteConfigManager?.amplitudeVariants
-            return variants?[self.key]?.value ?? ""
+            return CoreManager.internalShared.remoteConfigManager?.getValue(key: self.key) ?? ""
         }
+    }
+    
+    func getAmplitudeValueWithFetching(completion: @escaping (String) -> Void) {
+        CoreManager.internalShared.remoteConfigManager?.getValueWithFetching(key: self.key, completion: completion)
     }
     
     static var allAmplitudeValues: [String: String] {

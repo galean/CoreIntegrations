@@ -14,7 +14,17 @@ public class CoreRemoteConfigManager {
     public private(set) var install_server_path: String? = nil
     public private(set) var purchase_server_path: String? = nil
     
-    public private(set) var amplitudeVariants = [String: Variant]()
+    public var amplitudeVariants: [String: Variant] {
+        return amplExperimentManager.getAllVariants()
+    }
+    
+    public func getValue(key: String) -> String {
+        return amplExperimentManager.getValue(key: key)
+    }
+    
+    public func getValueWithFetching(key:String, completion: @escaping (_ value:String) -> Void) {
+        amplExperimentManager.getValueWithFetching(key: key, completion: completion)
+    }
 
     private var remoteConfigManager: RemoteConfigManager
     
@@ -46,8 +56,6 @@ public class CoreRemoteConfigManager {
         amplExperimentManager.configure { [weak self] in
             self?.amplExperimentManager.fetchRemoteConfig { [weak self] variants in
                 guard let self = self else {return}
-                
-                amplitudeVariants = variants
             }
         }
     }

@@ -25,6 +25,22 @@ public class AmplitudeExperimentManager {
         client.start(nil) { error in
             completion()
         }
+        
+        
+    }
+    
+    public func getAllVariants() -> [String: Variant] {
+        return client.all()
+    }
+    
+    public func getValue(key: String) -> String {
+        return client.variant(key).value ?? ""
+    }
+    
+    public func getValueWithFetching(key:String, completion: @escaping (_ value:String) -> Void) {
+        client.fetch(user: nil) { client, error in
+            completion(client.variant(key).value ?? "")
+        }
     }
     
     public func fetchRemoteConfig(completion: @escaping (_ variants: [String: Variant]) -> Void) {
