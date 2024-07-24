@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Experiment
 
 public class CoreRemoteConfigManager {
     public private(set) var remoteConfigResult: [String: String]? = nil
@@ -13,13 +14,15 @@ public class CoreRemoteConfigManager {
     public private(set) var install_server_path: String? = nil
     public private(set) var purchase_server_path: String? = nil
     
+    public private(set) var amplitudeVariants = [String: Variant]()
+
     private let kInstallURL = "install_server_path"
     private let kPurchaseURL = "purchase_server_path"
     
     private let firebaseManager = FirebaseManager()
     private let growthBookManager = GrowthBookManager()
     private let amplExperimentManager: AmplitudeExperimentManager
-    private var mainConfigConfigured = false
+    
     private var amplConfigured = false
     private var isConfigured = false
     private var isConfigFetched = false
@@ -40,27 +43,21 @@ public class CoreRemoteConfigManager {
         
         if cnConfig, let growthBookClientKey = growthBookKey {
             growthBookManager.configure(id: id, clientKey: growthBookClientKey) { [weak self] in
-                self?.mainConfigConfigured = true
-                if self?.amplConfigured == true {
-                    completion()
-                    self?.isConfigured = true
-                }
+                completion()
+                self?.isConfigured = true
             }
         }else{
             firebaseManager.configure() { [weak self] in
+                completion()
                 self?.firebaseManager.setUserID(id)
-                self?.mainConfigConfigured = true
-                if self?.amplConfigured == true {
-                    completion()
-                    self?.isConfigured = true
-                }
+                self?.isConfigured = true
             }
         }
         amplExperimentManager.configure { [weak self] in
-            self?.amplConfigured = true
-            if self?.mainConfigConfigured == true {
-                completion()
-                self?.isConfigured = true
+            self?.amplExperimentManager.fetchRemoteConfig { [weak self] variants in
+                guard let self = self else {return}
+                
+                amplitudeVariants = variants
             }
         }
     }
@@ -70,7 +67,7 @@ public class CoreRemoteConfigManager {
             completion()
             return
         }
-        if cnConfig, let growthBookClientKey = growthBookKey {
+        if cnConfig, growthBookKey != nil {
             growthBookManager.fetchRemoteConfig(appConfigurables) { [weak self] in
                 guard let self = self else {return}
                 
@@ -97,12 +94,5 @@ public class CoreRemoteConfigManager {
                 completion()
             }
         }
-        amplExperimentManager.fetchRemoteConfig(appConfigurables) { [weak self] in
-            guard let self = self else {return}
-            
-            print(amplExperimentManager.internalConfigResult)
-            print(amplExperimentManager.remoteConfigResult)
-        }
     }
-    
 }
