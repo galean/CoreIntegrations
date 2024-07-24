@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Experiment
 
 public class CoreRemoteConfigManager {
     public private(set) var remoteConfigResult: [String: String]? = nil
@@ -13,17 +14,23 @@ public class CoreRemoteConfigManager {
     public private(set) var install_server_path: String? = nil
     public private(set) var purchase_server_path: String? = nil
     
+    public private(set) var amplitudeVariants = [String: Variant]()
+
     private var remoteConfigManager: RemoteConfigManager
     
     private var isConfigured:Bool = false
     private var isConfigFetched:Bool = false
-        
-    public init(cnConfig: Bool, growthBookConfig: GrowthBookConfiguration?, growthBookDebugDelegate: GrowthBookDebugDelegate?) {
+     
+    private let amplExperimentManager: AmplitudeExperimentManager
+
+    public init(cnConfig: Bool, growthBookConfig: GrowthBookConfiguration?, growthBookDebugDelegate: GrowthBookDebugDelegate?,
+                deploymentKey: String) {
         if cnConfig, let growthBookConfig {
             remoteConfigManager = GrowthBookManager(growthBookConfig: growthBookConfig, debugDelegate: growthBookDebugDelegate)
         } else {
             remoteConfigManager = FirebaseManager()
         }
+        amplExperimentManager = AmplitudeExperimentManager(deploymentKey: deploymentKey)
     }
     
     public func configure(userID: String, completion: @escaping () -> Void) {
@@ -34,6 +41,14 @@ public class CoreRemoteConfigManager {
         remoteConfigManager.configure(id: userID) { [weak self] in
             self?.isConfigured = true
             completion()
+        }
+        
+        amplExperimentManager.configure { [weak self] in
+            self?.amplExperimentManager.fetchRemoteConfig { [weak self] variants in
+                guard let self = self else {return}
+                
+                amplitudeVariants = variants
+            }
         }
     }
     
