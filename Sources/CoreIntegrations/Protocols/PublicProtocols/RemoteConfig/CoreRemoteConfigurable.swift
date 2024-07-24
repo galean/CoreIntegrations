@@ -6,12 +6,17 @@
 //
 
 import Foundation
+import Experiment
 
 public protocol CoreRemoteConfigurable: CaseIterable, CoreFirebaseConfigurable {
     static var subscription_screen_style_full: Self { get }
     static var subscription_screen_style_h: Self { get }
     static var rate_us_primary_shown: Self { get }
     static var rate_us_secondary_shown: Self { get }
+    
+    var amplitudeValue: String { get }
+    
+    static var allAmplitudeValues: [String: String] { get }
 }
 
 public extension CoreRemoteConfigurable {
@@ -40,6 +45,22 @@ public extension CoreRemoteConfigurable {
                     assertionFailure()
                     return false
                 }
+            }
+        }
+    }
+    
+    var amplitudeValue: String {
+        get {
+            let variants = CoreManager.internalShared.remoteConfigManager?.amplitudeVariants
+            return variants?[self.key]?.value ?? ""
+        }
+    }
+    
+    static var allAmplitudeValues: [String: String] {
+        get {
+            let variants = CoreManager.internalShared.remoteConfigManager?.amplitudeVariants ?? [String: Variant]()
+            return variants.reduce(into: [String: String]()) { partialResult, valueWithKey in
+                partialResult[valueWithKey.key] = valueWithKey.value.value
             }
         }
     }
