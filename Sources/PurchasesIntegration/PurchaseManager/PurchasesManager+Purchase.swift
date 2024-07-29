@@ -99,6 +99,17 @@ extension PurchasesManager {
         return .success(products: products)
     }
     
+    public func restoreAll() async -> SKRestoreResult {
+        do {
+            try await AppStore.sync()
+        }
+        catch {
+            return .error(error.localizedDescription)
+        }
+        
+        return .success(products: self.purchasedAllProducts)
+    }
+    
     public func verifyPremium() async -> SKVerifyPremiumResult {
         debugPrint("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
         await updateProductStatus()

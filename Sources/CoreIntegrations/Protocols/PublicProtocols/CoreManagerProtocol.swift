@@ -44,4 +44,6 @@ public protocol CoreManagerProtocol {
     func verifyAll() async -> PurchaseVerifyAllResult
     
     func restore() async -> PurchasesRestoreResult
+    
+    func restoreAll() async -> PurchasesRestoreResult
 }

@@ -115,6 +115,24 @@ extension CoreManager: CoreManagerProtocol {
         }
     }
     
+    public func restoreAll() async -> PurchasesRestoreResult {
+        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
+        let result = await purchaseManager.restoreAll()
+        
+        switch result {
+        case .success(products: let products):
+            let map_purchases = products.map({Purchase(product: $0, purchaseGroup: groupFor($0.id))})
+            
+            if let proPurchase = map_purchases.first(where: {$0.purchaseGroup.isPro}) {
+                self.sendSubscriptionTypeUserProperty(identifier: proPurchase.identifier)
+            }
+            
+            return .restore(purchases: map_purchases)
+        case .error(let error):
+            return .error(error)
+        }
+    }
+    
     public func application(_ application: UIApplication,
                             didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]?,
                             coreCofiguration configuration: CoreConfigurationProtocol,
