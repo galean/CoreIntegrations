@@ -100,9 +100,9 @@ extension PurchasesManager {
     }
     
     public func restoreAll() async -> SKRestoreResult {
-        await updateProductStatus()
+        let allProducts = await updateAllProductsStatus()
         
-        return .success(products: self.purchasedAllProducts)
+        return .success(products: allProducts)
     }
     
     public func verifyPremium() async -> SKVerifyPremiumResult {

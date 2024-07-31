@@ -9,6 +9,46 @@ import Foundation
 import StoreKit
 
 extension PurchasesManager {
+    
+    public func updateAllProductsStatus() async -> [Product] {
+        var purchasedAllProducts: [Product] = []
+        
+        for await result in Transaction.all {
+            do {
+                let transaction = try checkVerified(result)
+                
+                switch transaction.productType {
+                case .consumable:
+                    if let consumable = consumables.first(where: { $0.id == transaction.productID }) {
+                        purchasedAllProducts.append(consumable)
+                    }
+                case .nonConsumable:
+                    if let nonConsumable = nonConsumables.first(where: { $0.id == transaction.productID }) {
+                        purchasedAllProducts.append(nonConsumable)
+                    }
+                case .nonRenewable:
+                    if let nonRenewable = nonRenewables.first(where: { $0.id == transaction.productID }) {
+                        purchasedAllProducts.append(nonRenewable)
+                    }
+                case .autoRenewable:
+                    if subscriptions.isEmpty {
+                        let _ =  await requestAllProducts(self.allIdentifiers)
+                    }
+                    if let subscription = subscriptions.first(where: { $0.id == transaction.productID }) {
+                        purchasedAllProducts.append(subscription)
+                    }
+                default:
+                    debugPrint("🏦 updateCustomerProductStatus ❌ Hit default \(transaction.productID).")
+                    break
+                }
+            } catch {
+                debugPrint("🏦 updateCustomerProductStatus ❌ failed to grant product access \(result.debugDescription).")
+            }
+        }
+        debugPrint("🏦 updateAllProductsStatus ✅ array \(purchasedAllProducts).")
+        return purchasedAllProducts
+    }
+    
     public func updateProductStatus() async {
         debugPrint("🏦 updateCustomerProductStatus ⚈ ⚈ ⚈ Updating Customer Product Status... ⚈ ⚈ ⚈")
         var purchasedConsumables: [Product] = []
