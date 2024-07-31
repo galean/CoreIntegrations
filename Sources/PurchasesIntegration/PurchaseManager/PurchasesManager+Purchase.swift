@@ -100,12 +100,7 @@ extension PurchasesManager {
     }
     
     public func restoreAll() async -> SKRestoreResult {
-        do {
-            try await AppStore.sync()
-        }
-        catch {
-            return .error(error.localizedDescription)
-        }
+        await updateProductStatus()
         
         return .success(products: self.purchasedAllProducts)
     }
