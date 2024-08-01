@@ -99,6 +99,10 @@ internal struct AttributionInstallRequestModel: Codable {
                 if let value = value as? String {
                     return value
                 }else if let value = value as? Int {
+                    //should we send default value of 1234567890 or erase it ??
+//                    if value == 1234567890 {
+//                        return ""
+//                    }
                     return String(value)
                 } else {
                     return "\(value ?? "")"
