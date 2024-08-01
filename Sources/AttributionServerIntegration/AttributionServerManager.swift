@@ -37,14 +37,16 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
         }
         
         guard let userID = validateInstallAttributed() else {
-            let installData: AttributionInstallRequestModel
-            if let savedInstallData = udefWorker.getInstallData() {
-                installData = savedInstallData
-            } else {
-                installData = collectInstallData()
+            Task {
+                let installData: AttributionInstallRequestModel
+                if let savedInstallData = udefWorker.getInstallData() {
+                    installData = savedInstallData
+                } else {
+                    installData = await collectInstallData()
+                }
+                
+                sendInstallData(installData, authToken: authorizationToken, completion: completion)
             }
-            
-            sendInstallData(installData, authToken: authorizationToken, completion: completion)
             return
         }
         
@@ -91,12 +93,13 @@ open class AttributionServerManager {
         return savedUserIDOrNil
     }
     
-    fileprivate func collectInstallData() -> AttributionInstallRequestModel {
+    fileprivate func collectInstallData() async -> AttributionInstallRequestModel {
+        let attributionDetails = try? await dataWorker.attributionDetails()
+        
         let sdkVersion = dataWorker.sdkVersion
         let osVersion = dataWorker.osVersion
         let appVersion = dataWorker.appVersion
         let isTrackingEnabled = dataWorker.isAdTrackingEnabled
-        let attributionDetails = dataWorker.attributionDetails
         let uuid = dataWorker.uuid
         let idfa = dataWorker.idfa
         let idfv = dataWorker.idfv
