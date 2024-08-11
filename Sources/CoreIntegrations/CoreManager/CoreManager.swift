@@ -96,7 +96,7 @@ public class CoreManager {
         
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
 
-        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, growthBookClientKey: configuration.appSettings.growthBookClientKey, deploymentKey: configuration.appSettings.deploymentKey)
+        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, deploymentKey: configuration.appSettings.deploymentKey)
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
@@ -144,7 +144,7 @@ public class CoreManager {
             purchaseManager?.setUserID(id)
             self.facebookManager?.userID = id
             
-            self.remoteConfigManager?.configure(id: id) { [weak self] in
+            self.remoteConfigManager?.configure(userID: id) { [weak self] in
                 guard let self = self else {return}
                 remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
                     InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
