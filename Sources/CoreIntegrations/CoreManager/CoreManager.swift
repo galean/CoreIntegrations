@@ -67,7 +67,7 @@ public class CoreManager {
         analyticsManager = AnalyticsManager.shared
         
         let amplitudeCustomURL = configuration.amplitudeDataSource.customServerURL
-        let cnCheck = AmplitudeCountry.cnCheck
+        let cnCheck = AmplitudeCountry.cnCheck && amplitudeCustomURL != nil
         analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret, cnConfig: cnCheck, customURL: amplitudeCustomURL)
         
         sendStoreCountryUserProperty()
@@ -293,7 +293,6 @@ public class CoreManager {
         }
         
         configurationManager.signForConfigurationEnd { configurationResult in
-            
             let result = self.getConfigurationResult(isFirstConfiguration: true)
             self.delegate?.coreConfigurationFinished(result: result)
             
@@ -316,6 +315,7 @@ public class CoreManager {
     }
     
     func getConfigurationResult(isFirstConfiguration: Bool) -> CoreManagerResult {
+        remoteConfigManager?.updateConfig(configuration?.remoteConfigDataSource.allConfigurables ?? [])
         let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
         let remoteResult = self.remoteConfigManager?.remoteConfigResult ?? [:]
         let asaResult = AttributionServerManager.shared.installResultData
