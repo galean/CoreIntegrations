@@ -1,3 +1,3 @@
 # CoreIntegrations
 
-Framework version - 2.3.5iad
+Framework version - 2.4.0
