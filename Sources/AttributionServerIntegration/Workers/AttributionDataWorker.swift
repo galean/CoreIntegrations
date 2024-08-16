@@ -66,12 +66,9 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
             request.httpBody = Data(attToken.utf8)
             
             let (data, response) = try await URLSession.shared.data(for: request as URLRequest)
-            print("attributionDetailsResponse \(response) \n data: \(data)")
             let result = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [String:Any]
-            print("\n attributionDetailsJson \(result)")
             return result
         } else {
-            print("\n attributionDetails nil")
             return nil
         }
     }
