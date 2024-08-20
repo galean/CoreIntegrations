@@ -7,11 +7,13 @@
 
 import Foundation
 import AdSupport
+import AdServices
 import StoreKit
+import AppTrackingTransparency
 
-#if canImport(iAd)
-import iAd
-#endif
+//#if canImport(iAd)
+//import iAd
+//#endif
 
 class AttributionDataWorker: AttributionDataWorkerProtocol {
     var idfa: String? {
@@ -27,7 +29,7 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
     }
     
     var idfv: String? {
-        var uuid = UIDevice.current.identifierForVendor?.uuidString ?? ""
+        let uuid = UIDevice.current.identifierForVendor?.uuidString ?? ""
         return uuid
     }
     
@@ -38,7 +40,7 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
     }
     
     var sdkVersion: String {
-        return "2.3.5ampl"
+        return "2.4.0ampl"
     }
     
     var osVersion: String {
@@ -52,21 +54,23 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
     }
     
     var isAdTrackingEnabled: Bool {
-        let enabled = ASIdentifierManager.shared().isAdvertisingTrackingEnabled
-        return enabled
+        let attStatus = ATTrackingManager.trackingAuthorizationStatus
+        return attStatus == .authorized
     }
-    var attributionDetails: [String: String]? {
-        var dataResult: [String: String]?
-        let sema = DispatchSemaphore(value: 0)
-        ADClient.shared().requestAttributionDetails { (data, error) in
-            if let details = data, let dict = details[(data?.keys.first)!] as? [String:String] {
-                dataResult = dict
-            }
-            sema.signal()
+    
+    func attributionDetails() async throws -> [String: Any]? {
+        if let attToken = try? AAAttribution.attributionToken() {
+            let request = NSMutableURLRequest(url: URL(string: "https://api-adservices.apple.com/api/v1/")!)
+            request.httpMethod = "POST"
+            request.setValue("text/plain", forHTTPHeaderField: "Content-Type")
+            request.httpBody = Data(attToken.utf8)
+            
+            let (data, response) = try await URLSession.shared.data(for: request as URLRequest)
+            let result = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [String:Any]
+            return result
+        } else {
+            return nil
         }
-        
-        sema.wait()
-        return dataResult
     }
     
     var storeCountry: String {
@@ -111,7 +115,7 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
         uuidStringPointer.deallocate()
         
         assert(uuidString != nil, "uuid (V1 style) failed")
-        guard var uuid = uuidString else {
+        guard let uuid = uuidString else {
             return ""
         }
         

@@ -342,6 +342,10 @@ public class CoreManager {
                 networkSource = .bing
             } else if networkValue == "Full_Access" {
                 networkSource = .test_premium
+            } else if networkValue == "restricted" {
+                if let fixedSource = self.configuration?.appSettings.paywallSourceForRestricted {
+                    networkSource = fixedSource
+                }
             } else {
                 networkSource = .unknown
             }
