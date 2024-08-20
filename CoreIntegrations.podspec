@@ -31,8 +31,5 @@ Pod::Spec.new do |s|
   s.dependency 'AppsFlyerFramework'
   s.dependency 'Amplitude'
   s.dependency 'AnalyticsConnector'
-  s.dependency 'SwiftyStoreKit'
-  s.dependency 'GrowthBook-IOS'
-
   
 end
