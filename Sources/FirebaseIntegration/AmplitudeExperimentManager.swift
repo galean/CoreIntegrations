@@ -45,13 +45,15 @@ public class AmplitudeExperimentManager {
             }
         }
         
-        let installPayload = client.variant(self.kInstallURL).payload as? String
+        let installPayload = client.variant(self.kInstallURL).payload as? [String: String]
+        let installPayloadValue = installPayload?.first?.value
         let installValue = client.variant(self.kInstallURL).value
-        let purchasePayload = client.variant(self.kPurchaseURL).payload as? String
+        let purchasePayload = client.variant(self.kPurchaseURL).payload as? [String: String]
+        let purchasePayloadValue = purchasePayload?.first?.value
         let purchaseValue = client.variant(self.kPurchaseURL).value
         
-        self.install_server_path = installPayload ?? installValue ?? ""
-        self.purchase_server_path = purchasePayload ?? purchaseValue ?? ""
+        self.install_server_path = installPayloadValue ?? installValue ?? ""
+        self.purchase_server_path = purchasePayloadValue ?? purchaseValue ?? ""
         
         self.internalConfigResult = client.all().reduce(into: [String:String](), { partialResult, variantWithKey in
             let configValue = variantWithKey.value.value ?? ""
