@@ -37,7 +37,10 @@ public class AmplitudeExperimentManager {
         let allKeys = appConfigurables.map { $0.key }
         let configResult = allKeys.reduce(into: [String: String]()) { partialResult, key in
             let configValue = client.variant(key).value ?? ""
-            if configValue != "" {
+            let configPayload = client.variant(key).payload as? [String: String]
+            if let configPayload, let payloadValue = configPayload.first?.value {
+                partialResult[key] = payloadValue
+            } else if configValue != "" {
                 partialResult[key] = configValue
             }
         }
@@ -47,7 +50,10 @@ public class AmplitudeExperimentManager {
         
         self.internalConfigResult = client.all().reduce(into: [String:String](), { partialResult, variantWithKey in
             let configValue = variantWithKey.value.value ?? ""
-            if configValue != "" {
+            let configPayload = variantWithKey.value.payload as? [String: String]
+            if let configPayload, let payloadValue = configPayload.first?.value {
+                partialResult[variantWithKey.key] = payloadValue
+            } else if configValue != "" {
                 partialResult[variantWithKey.key] = configValue
             }
             
