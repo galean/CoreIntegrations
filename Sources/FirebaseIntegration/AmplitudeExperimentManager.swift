@@ -6,7 +6,12 @@
 //
 
 import Foundation
+
+#if !COCOAPODS
 import Experiment
+#else
+import AmplitudeExperiment
+#endif
 
 public class AmplitudeExperimentManager {
     let client: ExperimentClient

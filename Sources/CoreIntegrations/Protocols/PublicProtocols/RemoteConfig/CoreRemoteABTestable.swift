@@ -6,7 +6,12 @@
 //
 
 import Foundation
+
+#if !COCOAPODS
 import Experiment
+#else
+import AmplitudeExperiment
+#endif
 
 public protocol CoreRemoteABTestable: CaseIterable, CoreFirebaseConfigurable {
     static var ab_paywall_fb: Self { get }

@@ -6,10 +6,13 @@
 //
 
 import Foundation
+
 #if !COCOAPODS
 import FirebaseIntegration
-#endif
 import Experiment
+#else
+import AmplitudeExperiment
+#endif
 
 public protocol CoreFirebaseConfigurable: CaseIterable, FirebaseConfigurable {
     var boolValue: Bool { get }

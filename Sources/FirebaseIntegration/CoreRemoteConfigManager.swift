@@ -6,7 +6,12 @@
 //
 
 import Foundation
+
+#if !COCOAPODS
 import Experiment
+#else
+import AmplitudeExperiment
+#endif
 
 public class CoreRemoteConfigManager {
     public private(set) var remoteConfigResult: [String: String]? = nil
