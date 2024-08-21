@@ -14,7 +14,8 @@ enum InternalUserProperty: String, CaseIterable, AmplitudeAnalyzableUserProperty
     case att_status
     case store_country
     case subscription_type
-    
+    case app_environment
+
     public var key: String {
         return rawValue
     }

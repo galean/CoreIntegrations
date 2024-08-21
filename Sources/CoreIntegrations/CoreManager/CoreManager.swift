@@ -74,6 +74,7 @@ public class CoreManager {
         configuration.appSettings.launchCount += 1
         if configuration.appSettings.isFirstLaunch {
             sendFirstLaunchEvent()
+            sendAppEnvironment()
         }
         
         let allConfigurationEvents: [any ConfigurationEvent] = InternalConfigurationEvent.allCases + (configuration.initialConfigurationDataSource?.allEvents ?? [])
