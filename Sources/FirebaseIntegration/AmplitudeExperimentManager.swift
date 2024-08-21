@@ -22,9 +22,14 @@ public class AmplitudeExperimentManager {
     public private(set) var purchase_server_path: String? = nil
     
     init(deploymentKey: String) {
+        let builder = ExperimentConfigBuilder()
+        builder.automaticExposureTracking(false)
+        
+        let config = builder.build()
+        
         client = Experiment.initializeWithAmplitudeAnalytics(
             apiKey: deploymentKey,
-            config: ExperimentConfigBuilder().build()
+            config: config
         )
     }
     
