@@ -1,3 +1,3 @@
 # CoreIntegrations
 
-Framework version - 2.4.1
+Framework version - 2.4.1sntr
