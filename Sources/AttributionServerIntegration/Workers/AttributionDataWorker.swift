@@ -1,19 +1,9 @@
-//
-//  TLMAttributionManagerDataWorker.swift
-//  
-//
-//  Created by Andrii Plotnikov on 22.12.2022.
-//
 
 import Foundation
 import AdSupport
 import AdServices
 import StoreKit
 import AppTrackingTransparency
-
-//#if canImport(iAd)
-//import iAd
-//#endif
 
 class AttributionDataWorker: AttributionDataWorkerProtocol {
     var idfa: String? {
@@ -40,7 +30,7 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
     }
     
     var sdkVersion: String {
-        return "2.4.0"
+        return "2.4.1"
     }
     
     var osVersion: String {

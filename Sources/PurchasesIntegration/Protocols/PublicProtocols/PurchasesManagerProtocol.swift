@@ -1,9 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Anatolii Kanarskyi on 15/2/24.
-//
 
 import Foundation
 import StoreKit

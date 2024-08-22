@@ -1,9 +1,3 @@
-//
-//  CoreManager.swift
-//
-//
-//  Created by Andrii Plotnikov on 02.02.2023.
-//
 
 import UIKit
 #if !COCOAPODS

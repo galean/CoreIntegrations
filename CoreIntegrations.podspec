@@ -8,14 +8,14 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CoreIntegrations'
-  s.version          = '2.4.0'
+  s.version          = '2.4.1'
   s.summary          = 'CoreIntegrations framework'
 
   s.description      = 'Description'
 
   s.homepage         = 'https://github.com/galean/CoreIntegrations.git'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
-  s.author           = { 'u-texas' => 'kanarskyi.anatolii@gmail.com' }
+  s.author           = { 'galean' => 'galean@gmail.com' }
   s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'main' }
 
   s.ios.deployment_target = '15.0'

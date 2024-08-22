@@ -1,9 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Anzhy on 20.10.2023.
-//
 
 import Foundation
 #if !COCOAPODS

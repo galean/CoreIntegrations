@@ -1,9 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Anatolii Kanarskyi on 15/4/24.
-//
 
 import Foundation
 
