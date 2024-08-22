@@ -82,15 +82,6 @@
       }
     },
     {
-      "identity" : "growthbook-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/growthbook/growthbook-swift",
-      "state" : {
-        "revision" : "287558afd2d003371663c7d6f84b043732b85281",
-        "version" : "1.0.48"
-      }
-    },
-    {
       "identity" : "grpc-binary",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/grpc-binary.git",
@@ -142,6 +133,15 @@
       "state" : {
         "revision" : "e70e889c0196c76d22759eb50d6a0270ca9f1d9e",
         "version" : "2.3.1"
+      }
+    },
+    {
+      "identity" : "sentry-cocoa",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/getsentry/sentry-cocoa",
+      "state" : {
+        "revision" : "e2ac1723a4a9632e291c171b6e25a0c403b0fecb",
+        "version" : "8.35.0"
       }
     },
     {

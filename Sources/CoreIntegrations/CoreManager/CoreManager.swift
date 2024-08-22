@@ -7,6 +7,7 @@ import AttributionServerIntegration
 import PurchasesIntegration
 import AnalyticsIntegration
 import FirebaseIntegration
+import SentryIntegration
 #endif
 import AppTrackingTransparency
 import Foundation
@@ -45,6 +46,7 @@ public class CoreManager {
     
     var remoteConfigManager: CoreRemoteConfigManager?
     var analyticsManager: AnalyticsManager?
+    var sentryManager: SentryManagerProtocol?
     
     var delegate: CoreManagerDelegate?
     
@@ -58,6 +60,16 @@ public class CoreManager {
         
         self.configuration = configuration
         
+        sentryManager = SentryManager.shared
+        let sentryConfig = SentryConfigData(dsn: configuration.sentryConfigDataSource.dsn,
+                                            debug: configuration.sentryConfigDataSource.debug,
+                                            tracesSampleRate: configuration.sentryConfigDataSource.tracesSampleRate,
+                                            profilesSampleRate: configuration.sentryConfigDataSource.profilesSampleRate,
+                                            shouldCaptureHttpRequests: configuration.sentryConfigDataSource.shouldCaptureHttpRequests,
+                                            httpCodesRange: configuration.sentryConfigDataSource.httpCodesRange,
+                                            handledDomains: configuration.sentryConfigDataSource.handledDomains)
+        sentryManager?.configure(sentryConfig)
+
         analyticsManager = AnalyticsManager.shared
         
         let amplitudeCustomURL = configuration.amplitudeDataSource.customServerURL
@@ -90,7 +102,7 @@ public class CoreManager {
         
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
 
-        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, growthBookClientKey: configuration.appSettings.growthBookClientKey)
+        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck)
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
@@ -137,6 +149,7 @@ public class CoreManager {
             appsflyerManager?.startAppsflyer()
             purchaseManager?.setUserID(id)
             self.facebookManager?.userID = id
+            sentryManager?.setUserID(id)
             
             self.remoteConfigManager?.configure(id: id) { [weak self] in
                 guard let self = self else {return}
