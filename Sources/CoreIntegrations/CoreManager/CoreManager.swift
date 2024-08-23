@@ -36,6 +36,10 @@ public class CoreManager {
         return AttributionServerManager.shared.uniqueUserID
     }
     
+    public static var sentry:PublicSentryManagerProtocol {
+        return SentryManager.shared
+    }
+    
     var attAnswered: Bool = false
     var isConfigured: Bool = false
     
@@ -46,7 +50,7 @@ public class CoreManager {
     
     var remoteConfigManager: CoreRemoteConfigManager?
     var analyticsManager: AnalyticsManager?
-    var sentryManager: SentryManagerProtocol?
+    var sentryManager: InternalSentryManagerProtocol = SentryManager.shared
     
     var delegate: CoreManagerDelegate?
     
@@ -60,7 +64,6 @@ public class CoreManager {
         
         self.configuration = configuration
         
-        sentryManager = SentryManager.shared
         let sentryConfig = SentryConfigData(dsn: configuration.sentryConfigDataSource.dsn,
                                             debug: configuration.sentryConfigDataSource.debug,
                                             tracesSampleRate: configuration.sentryConfigDataSource.tracesSampleRate,
@@ -68,7 +71,7 @@ public class CoreManager {
                                             shouldCaptureHttpRequests: configuration.sentryConfigDataSource.shouldCaptureHttpRequests,
                                             httpCodesRange: configuration.sentryConfigDataSource.httpCodesRange,
                                             handledDomains: configuration.sentryConfigDataSource.handledDomains)
-        sentryManager?.configure(sentryConfig)
+        sentryManager.configure(sentryConfig)
 
         analyticsManager = AnalyticsManager.shared
         
@@ -149,7 +152,7 @@ public class CoreManager {
             appsflyerManager?.startAppsflyer()
             purchaseManager?.setUserID(id)
             self.facebookManager?.userID = id
-            sentryManager?.setUserID(id)
+            sentryManager.setUserID(id)
             
             self.remoteConfigManager?.configure(id: id) { [weak self] in
                 guard let self = self else {return}

@@ -2,7 +2,7 @@
 import Foundation
 import Sentry
 
-public class SentryManager: SentryManagerProtocol {
+public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerProtocol {
     
     public static var shared = SentryManager()
     
