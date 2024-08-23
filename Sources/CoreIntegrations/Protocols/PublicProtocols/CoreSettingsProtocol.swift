@@ -14,7 +14,7 @@ public protocol CoreSettingsProtocol: AnyObject {
     var subscriptionsSecret: String { get }
     
     var amplitudeSecret: String { get }
-    var amplitudeDeploymentKey: String { get }
+    var amplitudeDeploymentKey: String? { get }
     
     var launchCount: Int { get set }
     
@@ -27,6 +27,10 @@ public extension CoreSettingsProtocol {
     }
     
     var paywallSourceForRestricted: CoreUserSource? {
+        return nil
+    }
+    
+    var amplitudeDeploymentKey: String? {
         return nil
     }
 }

@@ -24,8 +24,8 @@ public class CoreRemoteConfigManager {
     private var isConfigured:Bool = false
     private var isConfigFetched:Bool = false
      
-    public init(cnConfig: Bool, deploymentKey: String) {
-        if cnConfig {
+    public init(cnConfig: Bool, deploymentKey: String?) {
+        if cnConfig, let deploymentKey {
             remoteConfigManager = AmplitudeExperimentManager(deploymentKey: deploymentKey)
         } else {
             remoteConfigManager = FirebaseManager()
