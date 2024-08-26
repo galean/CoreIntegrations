@@ -46,27 +46,42 @@ internal struct AttributionInstallRequestModel: Codable {
         let creativeSetId: String
         let creativeSetName: String
         let token: String
+        let adId: String
         
         init(data:[String:Any]) {
-            attribution = data["iad-attribution"] as? Bool ?? false
-            orgName = data["iad-org-name"] as? String ?? ""
-            orgId = data["iad-org-id"] as? String ?? ""
-            campaignName = data["iad-campaign-name"] as? String ?? ""
-            campaignId = data["iad-campaign-id"] as? String ?? ""
-            purchaseDate = data["iad-purchase-date"] as? String ?? ""
-            conversionDate = data["iad-conversion-date"] as? String ?? ""
-            conversionType = data["iad-conversion-type"] as? String ?? ""
-            clickDate = data["iad-click-date"] as? String ?? ""
-            adGroupId = data["iad-adgroup-id"] as? String ?? ""
-            adGroupName = data["iad-adgroup-name"] as? String ?? ""
-            region = data["iad-country-or-region"] as? String ?? ""
-            keyword = data["iad-keyword"] as? String ?? ""
-            keywordId = data["iad-keyword-id"] as? String ?? ""
-            keywordMatchType = data["iad-keyword-matchtype"] as? String ?? ""
-            creativeSetId = data["iad-creativeset-id"] as? String ?? ""
-            creativeSetName = data["iad-creativeset-name"] as? String ?? ""
-            token = data["token"] as? String ?? ""
+            attribution = data["attribution"] as? Bool ?? false
+            orgId = DictValue.toString(data["orgId"])
+            campaignId = DictValue.toString(data["campaignId"])
+            conversionType = DictValue.toString(data["conversionType"])
+            adGroupId = DictValue.toString(data["adGroupId"])
+            keywordId = DictValue.toString(data["keywordId"])
+            region = DictValue.toString(data["countryOrRegion"])
+            adId = DictValue.toString(data["adId"])
+            clickDate = DictValue.toString(data["clickDate"])
+            
+            orgName = DictValue.toString(data["orgName"])
+            campaignName = DictValue.toString(data["campaignName"])
+            purchaseDate = DictValue.toString(data["purchaseDate"])
+            conversionDate = DictValue.toString(data["conversionDate"])
+            adGroupName = DictValue.toString(data["adGroupName"])
+            keyword = DictValue.toString(data["keyword"])
+            keywordMatchType = DictValue.toString(data["keywordMatchtype"])
+            creativeSetId = DictValue.toString(data["creativesetId"])
+            creativeSetName = DictValue.toString(data["creativesetName"])
+            token = DictValue.toString(data["token"])
         }
+        
+        struct DictValue {
+           static func toString(_ value: Any?) -> String {
+               if let value = value as? String {
+                   return value
+               }else if let value = value as? Int {
+                   return String(value)
+               } else {
+                   return "\(value ?? "")"
+               }
+           }
+       }
         
         init(token: String) {
             attribution = false
@@ -86,6 +101,7 @@ internal struct AttributionInstallRequestModel: Codable {
             keywordMatchType = ""
             creativeSetId = ""
             creativeSetName = ""
+            adId = ""
             self.token = token
         }
     }

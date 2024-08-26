@@ -15,7 +15,7 @@ internal protocol AttributionDataWorkerProtocol {
     var osVersion: String { get }
     var appVersion: String { get }
     var isAdTrackingEnabled: Bool { get }
-    var attributionDetails: [String: String]? { get }
+    func attributionDetails() async throws -> [String: Any]?
     var storeCountry: String { get }
     
     var receiptToken: String { get }
