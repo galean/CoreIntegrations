@@ -12,27 +12,25 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
             options.debug = data.debug
             
             options.beforeSend = { [weak self] event in
-                var skip200 = true
-                
                 if let url = event.request?.url, url.contains("appsflyersdk.com") {
-                    event.exceptions?.first?.type = "Appsflyer_http_error"
+                    event.exceptions?.last?.type = "Appsflyer_http_error"
                     event.tags?["source"] = "Appsflyer"
                     if let description = self?.makeErrorDescription(event.breadcrumbs) {
-                        event.exceptions?.first?.value = description
+                        event.exceptions?.last?.value = description
                     }
                 }
                 if let url = event.request?.url, url.contains("amplitude.com") {
-                    event.exceptions?.first?.type = "Amplitude_http_error"
+                    event.exceptions?.last?.type = "Amplitude_http_error"
                     event.tags?["source"] = "Amplitude"
                     if let description = self?.makeErrorDescription(event.breadcrumbs) {
-                        event.exceptions?.first?.value = description
+                        event.exceptions?.last?.value = description
                     }
                 }
                 if let url = event.request?.url, url.contains("apitlm-protected.com") {
-                    event.exceptions?.first?.type = "Attribution_http_error"
+                    event.exceptions?.last?.type = "Attribution_http_error"
                     event.tags?["source"] = "AttributionServer"
                     if let description = self?.makeErrorDescription(event.breadcrumbs) {
-                        event.exceptions?.first?.value = description
+                        event.exceptions?.last?.value = description
                     }
                 }
                 
@@ -94,7 +92,7 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
             let url = breadcrumb.data?["url"] as? String ?? "-"
             let reason = breadcrumb.data?["reason"] as? String ?? "-"
             
-            var description: String = "method: \(method),\nstatus_code: \(status),\nurl: \(url),\nreason: \(reason)"
+            let description: String = "method: \(method),\nstatus_code: \(status),\nurl: \(url),\nreason: \(reason)"
             return description
         }else{
             return nil
