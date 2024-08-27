@@ -87,7 +87,7 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
     }
     
     private func makeErrorDescription(_ breadcrumbs: [Breadcrumb]?) -> String? {
-        if let breadcrumb = breadcrumbs?.first(where: {$0.category == "http"}),
+        if let breadcrumb = breadcrumbs?.last(where: {$0.category == "http"}),
            let status: Int = breadcrumb.data?["status_code"] as? Int, status != 200 {
             
             let method: String = breadcrumb.data?["method"] as? String ?? "-"
@@ -102,7 +102,7 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
     }
     
     private func checkStatusCode(_ breadcrumbs: [Breadcrumb]?) -> Int {
-        if let breadcrumb = breadcrumbs?.first(where: {$0.category == "http"}) {
+        if let breadcrumb = breadcrumbs?.last(where: {$0.category == "http"}) {
             let status: Int = breadcrumb.data?["status_code"] as? Int ?? 0
             return status
         }else{
