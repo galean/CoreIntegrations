@@ -12,6 +12,8 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
             options.debug = data.debug
             
             options.beforeSend = { [weak self] event in
+                var skip200 = true
+                
                 if let url = event.request?.url, url.contains("appsflyersdk.com") {
                     event.exceptions?.first?.type = "Appsflyer_http_error"
                     event.tags?["source"] = "Appsflyer"
@@ -34,7 +36,9 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
                     }
                 }
                 
-                return event
+                let statusCode = self?.checkStatusCode(event.breadcrumbs)
+                
+                return statusCode == 200 ? nil : event
             }
             
             // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
@@ -47,7 +51,7 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
             
             options.enableCaptureFailedRequests = data.shouldCaptureHttpRequests
             
-            let httpStatusCodeRange = HttpStatusCodeRange(min: data.httpCodesRange.lowerBound, max: data.httpCodesRange.upperBound)
+            let httpStatusCodeRange = HttpStatusCodeRange(min: data.httpCodesRange.lowerBound, max: data.httpCodesRange.length)
             options.failedRequestStatusCodes = [ httpStatusCodeRange ]
             
             options.failedRequestTargets = [
@@ -93,6 +97,15 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
             return description
         }else{
             return nil
+        }
+    }
+    
+    private func checkStatusCode(_ breadcrumbs: [Breadcrumb]?) -> Int {
+        if let breadcrumb = breadcrumbs?.first(where: {$0.category == "http"}) {
+            let status: Int = breadcrumb.data?["status_code"] as? Int ?? 0
+            return status
+        }else{
+            return 0
         }
     }
     
