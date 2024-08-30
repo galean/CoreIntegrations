@@ -15,28 +15,28 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
                 if let url = event.request?.url, url.contains("appsflyersdk.com") {
                     event.exceptions?.last?.type = "Appsflyer_http_error"
                     event.tags?["source"] = "Appsflyer"
-                    if let description = self?.makeErrorDescription(event.breadcrumbs) {
+                    if let description = self?.makeErrorDescription(event.breadcrumbs, domain: "appsflyersdk.com") {
                         event.exceptions?.last?.value = description
                     }
                 }
                 if let url = event.request?.url, url.contains("amplitude.com") {
                     event.exceptions?.last?.type = "Amplitude_http_error"
                     event.tags?["source"] = "Amplitude"
-                    if let description = self?.makeErrorDescription(event.breadcrumbs) {
+                    if let description = self?.makeErrorDescription(event.breadcrumbs, domain: "amplitude.com") {
                         event.exceptions?.last?.value = description
                     }
                 }
                 if let url = event.request?.url, url.contains("apitlm-protected.com") {
                     event.exceptions?.last?.type = "Attribution_http_error"
                     event.tags?["source"] = "AttributionServer"
-                    if let description = self?.makeErrorDescription(event.breadcrumbs) {
+                    if let description = self?.makeErrorDescription(event.breadcrumbs, domain: "apitlm-protected.com") {
                         event.exceptions?.last?.value = description
                     }
                 }
                 
-                let statusCode = self?.checkStatusCode(event.breadcrumbs)
+//                let statusCode = self?.checkStatusCode(event.breadcrumbs)
                 
-                return statusCode == 200 ? nil : event
+                return event //statusCode == 200 ? nil : event
             }
             
             // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
@@ -84,28 +84,35 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
         SentrySDK.capture(message: message)
     }
     
-    private func makeErrorDescription(_ breadcrumbs: [Breadcrumb]?) -> String? {
-        if let breadcrumb = breadcrumbs?.last(where: {$0.category == "http"}),
-           let status: Int = breadcrumb.data?["status_code"] as? Int, status != 200 {
-            
+    private func makeErrorDescription(_ breadcrumbs: [Breadcrumb]?, domain: String) -> String? {
+        
+        let filtered = breadcrumbs?.filter({$0.category == "http"})
+        
+        if let breadcrumb = filtered?.last(where: {
+            let url = $0.data?["url"] as? String ?? ""
+            let status: Int = $0.data?["status_code"] as? Int ?? 0
+            return url.contains(domain) && status != 200
+        }) {
             let method: String = breadcrumb.data?["method"] as? String ?? "-"
-            let url = breadcrumb.data?["url"] as? String ?? "-"
             let reason = breadcrumb.data?["reason"] as? String ?? "-"
+            let status: Int = breadcrumb.data?["status_code"] as? Int ?? 0
+            let url = breadcrumb.data?["url"] as? String ?? ""
             
             let description: String = "method: \(method),\nstatus_code: \(status),\nurl: \(url),\nreason: \(reason)"
             return description
-        }else{
+        } else {
             return nil
         }
+
     }
     
-    private func checkStatusCode(_ breadcrumbs: [Breadcrumb]?) -> Int {
-        if let breadcrumb = breadcrumbs?.last(where: {$0.category == "http"}) {
-            let status: Int = breadcrumb.data?["status_code"] as? Int ?? 0
-            return status
-        }else{
-            return 0
-        }
-    }
+//    private func checkStatusCode(_ breadcrumbs: [Breadcrumb]?) -> Int {
+//        if let breadcrumb = breadcrumbs?.last(where: {$0.category == "http"}) {
+//            let status: Int = breadcrumb.data?["status_code"] as? Int ?? 0
+//            return status
+//        }else{
+//            return 0
+//        }
+//    }
     
 }
