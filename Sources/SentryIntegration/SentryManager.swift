@@ -11,6 +11,12 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
             options.dsn = data.dsn
             options.debug = data.debug
             
+#if DEBUG
+            options.environment = "debug"
+#else
+            options.environment = "production"
+#endif
+            
             options.beforeSend = { [weak self] event in
                 if let url = event.request?.url, url.contains("appsflyersdk.com") {
                     event.exceptions?.last?.type = "Appsflyer_http_error"
@@ -33,10 +39,8 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
                         event.exceptions?.last?.value = description
                     }
                 }
-                
-//                let statusCode = self?.checkStatusCode(event.breadcrumbs)
-                
-                return event //statusCode == 200 ? nil : event
+                                
+                return event
             }
             
             // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
@@ -105,14 +109,5 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
         }
 
     }
-    
-//    private func checkStatusCode(_ breadcrumbs: [Breadcrumb]?) -> Int {
-//        if let breadcrumb = breadcrumbs?.last(where: {$0.category == "http"}) {
-//            let status: Int = breadcrumb.data?["status_code"] as? Int ?? 0
-//            return status
-//        }else{
-//            return 0
-//        }
-//    }
     
 }
