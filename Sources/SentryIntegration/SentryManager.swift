@@ -6,15 +6,18 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
     
     public static var shared = SentryManager()
     
+    
     public func configure(_ data: SentryConfigData) {
         SentrySDK.start { options in
+            let isTestFlight = Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt" || Bundle.main.appStoreReceiptURL == nil
+            
             options.dsn = data.dsn
             options.debug = data.debug
             
 #if DEBUG
             options.environment = "debug"
 #else
-            options.environment = "production"
+            options.environment = isTestFlight ? "debug" : "production"
 #endif
             
             options.beforeSend = { [weak self] event in
