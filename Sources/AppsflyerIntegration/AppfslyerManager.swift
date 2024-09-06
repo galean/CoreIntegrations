@@ -15,20 +15,18 @@ public class AppfslyerManager: NSObject {
             UserDefaults.standard.set(newValue, forKey: deepLinkResultUDKey)
         }
     }
+    public var enabled: Bool = true
     
     private var deepLinkResultUDKey = "coreintegrations_appsflyer_deeplinkResult"
+    
+    
     
     public init(config: AppsflyerConfigData) {
         super.init()
         AppsFlyerLib.shared().appsFlyerDevKey = config.appsFlyerDevKey
         AppsFlyerLib.shared().appleAppID = config.appleAppID
-        AppsFlyerLib.shared().delegate = self
         AppsFlyerLib.shared().waitForATTUserAuthorization(timeoutInterval: 30)
-#if DEBUG
-        AppsFlyerLib.shared().isDebug = true
-#else
         AppsFlyerLib.shared().isDebug = false
-#endif
     }
     
     private func parseDeepLink(_ conversionInfo: [AnyHashable : Any]) -> [String: String] {
@@ -103,10 +101,14 @@ extension AppfslyerManager: AppfslyerManagerProtocol {
 
 extension AppfslyerManager: AppsFlyerLibDelegate {
     public func onConversionDataSuccess(_ conversionInfo: [AnyHashable : Any]) {
-        let deepLinkInfo = parseDeepLink(conversionInfo)
-        deeplinkResult = deepLinkInfo
-        delegate?.handledDeeplink(deepLinkInfo)
         delegate?.coreConfiguration(didReceive: conversionInfo)
+        guard enabled else {
+            delegate?.handledDeeplink([:])
+            return
+        }
+        let deepLinkInfo = parseDeepLink(conversionInfo)
+        delegate?.handledDeeplink(deepLinkInfo)
+        deeplinkResult = deepLinkInfo
     }
     
     public func onConversionDataFail(_ error: Error) {

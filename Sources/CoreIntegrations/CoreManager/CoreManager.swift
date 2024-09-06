@@ -214,6 +214,9 @@ public class CoreManager {
         }
     
         configurationManager.signForAttAndConfigLoaded {
+            let enabled = CoreManager.internalShared.remoteConfigManager?.config_on ?? false
+            self.appsflyerManager?.enabled = enabled
+            
             let installPath = "/install-application"
             let purchasePath = "/subscribe"
             
@@ -287,13 +290,8 @@ public class CoreManager {
         }
         
         configurationManager.signForConfigurationEnd { configurationResult in
-            
             let result = self.getConfigurationResult(isFirstConfiguration: true)
             self.delegate?.coreConfigurationFinished(result: result)
-            
-            // calculate attribution
-            // calculate correct paywall name
-            // return everything to the app
         }
     }
     
@@ -321,38 +319,43 @@ public class CoreManager {
         var isRedirect = false
         var networkSource: CoreUserSource = .unknown
         
-        if let networkValue = deepLinkResult["network"] {
-            if networkValue.contains("web2app_fb") {
-                networkSource = .facebook
-            } else if networkValue.contains("Google_StoreRedirect") {
-                networkSource = .google
-            } else if networkValue.contains("tiktok") {
-                networkSource = .tiktok
-            } else if networkValue.contains("instagram") {
-                networkSource = .instagram
-            } else if networkValue.contains("snapchat") {
-                networkSource = .snapchat
-            } else if networkValue.lowercased().contains("bing") {
-                networkSource = .bing
-            } else if networkValue == "Full_Access" {
-                networkSource = .test_premium
-            } else if networkValue == "restricted" {
-                if let fixedSource = self.configuration?.appSettings.paywallSourceForRestricted {
-                    networkSource = fixedSource
+        let enabled = CoreManager.internalShared.remoteConfigManager?.config_on ?? false
+        if enabled {
+            if let networkValue = deepLinkResult["network"] {
+                if networkValue.contains("web2app_fb") {
+                    networkSource = .facebook
+                } else if networkValue.contains("Google_StoreRedirect") {
+                    networkSource = .google
+                } else if networkValue.contains("tiktok") {
+                    networkSource = .tiktok
+                } else if networkValue.contains("instagram") {
+                    networkSource = .instagram
+                } else if networkValue.contains("snapchat") {
+                    networkSource = .snapchat
+                } else if networkValue.lowercased().contains("bing") {
+                    networkSource = .bing
+                } else if networkValue == "Full_Access" {
+                    networkSource = .test_premium
+                } else if networkValue == "restricted" {
+                    if let fixedSource = self.configuration?.appSettings.paywallSourceForRestricted {
+                        networkSource = fixedSource
+                    }
+                } else {
+                    networkSource = .unknown
                 }
-            } else {
-                networkSource = .unknown
+                
+                isRedirect = true
             }
-            
-            isRedirect = true
         }
         
         var userSource: CoreUserSource
         
         if isIPAT {
             userSource = .ipat
-        }else if isRedirect {
-            userSource = networkSource
+        }else if enabled {
+            if isRedirect {
+                userSource = networkSource
+            }
         }else if isASA {
             userSource = .asa
         }else {

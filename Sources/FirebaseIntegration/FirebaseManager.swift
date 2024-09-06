@@ -8,7 +8,8 @@ public class FirebaseManager {
     public private(set) var internalConfigResult: [String: String]? = nil
     public private(set) var install_server_path: String? = nil
     public private(set) var purchase_server_path: String? = nil
-    
+    public private(set) var config_on: Bool = false
+
     private let kInstallURL = "install_server_path"
     private let kPurchaseURL = "purchase_server_path"
     
@@ -50,7 +51,8 @@ public class FirebaseManager {
             
             self.install_server_path = remoteConfig.configValue(forKey: self.kInstallURL).stringValue
             self.purchase_server_path = remoteConfig.configValue(forKey: self.kPurchaseURL).stringValue
-            
+            self.config_on = remoteConfig.configValue(forKey: "config_on").boolValue
+
             self.internalConfigResult = remoteConfig.keys(withPrefix: "").reduce(into: [String:String](), { partialResult, key in
                 let configValue = remoteConfig.configValue(forKey: key).stringValue
                 if configValue != nil && configValue != "" {
