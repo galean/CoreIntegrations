@@ -15,6 +15,10 @@ public class CoreRemoteConfigManager {
     private var isConfigured:Bool = false
     private var isConfigFetched:Bool = false
     
+    public init() {
+        
+    }
+    
     public func configure(id:String, completion: @escaping () -> Void) {
         guard !isConfigured else {
             return

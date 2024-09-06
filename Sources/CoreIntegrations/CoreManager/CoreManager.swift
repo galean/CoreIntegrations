@@ -90,7 +90,7 @@ public class CoreManager {
         
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
 
-        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck, growthBookClientKey: configuration.appSettings.growthBookClientKey)
+        remoteConfigManager = CoreRemoteConfigManager()
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
@@ -352,13 +352,11 @@ public class CoreManager {
         
         if isIPAT {
             userSource = .ipat
-        }else if enabled {
-            if isRedirect {
-                userSource = networkSource
-            }
-        }else if isASA {
+        } else if enabled && isRedirect {
+            userSource = networkSource
+        } else if isASA {
             userSource = .asa
-        }else {
+        } else {
             userSource = .organic
         }
         
