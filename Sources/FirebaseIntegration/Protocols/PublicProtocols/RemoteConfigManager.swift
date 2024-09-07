@@ -16,6 +16,8 @@ public protocol RemoteConfigManager {
     var kInstallURL: String { get }
     var kPurchaseURL: String { get }
     
+    var amplitudeOn: Bool { get }
+    
     func configure(id: String, completion: @escaping () -> Void)
     func fetchRemoteConfig(_ appConfigurables: [any FirebaseConfigurable], completion: @escaping () -> Void)
     

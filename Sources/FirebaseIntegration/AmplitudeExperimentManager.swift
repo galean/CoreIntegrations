@@ -20,7 +20,8 @@ public class AmplitudeExperimentManager {
     public private(set) var internalConfigResult: [String: String]? = nil
     public private(set) var install_server_path: String? = nil
     public private(set) var purchase_server_path: String? = nil
-    
+    public var amplitudeOn: Bool { return true }
+
     init(deploymentKey: String) {
         let builder = ExperimentConfigBuilder()
         builder.automaticExposureTracking(false)

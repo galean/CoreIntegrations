@@ -18,6 +18,7 @@ public class CoreRemoteConfigManager: RemoteConfigManager {
     public private(set) var internalConfigResult: [String: String]? = nil
     public private(set) var install_server_path: String? = nil
     public private(set) var purchase_server_path: String? = nil
+    public var amplitudeOn: Bool { return remoteConfigManager.amplitudeOn }
 
     private var remoteConfigManager: RemoteConfigManager
     

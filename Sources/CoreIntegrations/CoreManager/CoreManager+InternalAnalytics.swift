@@ -68,6 +68,10 @@ extension CoreManager {
         InternalUserProperty.app_environment.identify(parameter: Config.appConfiguration.rawValue)
     }
     
+    func sendAmplitudeAssigned(configs: [String: String]) {
+        InternalAnalyticsEvent.amplitude_assigned.log(parameters: configs)
+    }
+    
     func sendABTestsUserProperties(abTests: [any CoreRemoteABTestable], userSource: CoreUserSource) { // +
         let userProperties = abTests.reduce(into: [String:String]()) { partialResult, abtest in
             let shouldSend: Bool = abtest.activeForSources.contains(userSource)

@@ -148,6 +148,9 @@ public class CoreManager {
             self.remoteConfigManager?.configure(id: id) { [weak self] in
                 guard let self = self else {return}
                 remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
+                    if self.remoteConfigManager?.amplitudeOn == true {
+                        self.sendAmplitudeAssigned(configs: self.remoteConfigManager?.internalConfigResult ?? [:])
+                    }
                     InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
                 }
             }
