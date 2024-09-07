@@ -49,7 +49,7 @@ public class CoreManager {
     var facebookManager: FacebookManagerProtocol?
     var purchaseManager: PurchasesManagerProtocol?
     
-    var remoteConfigManager: CoreRemoteConfigManager?
+    var remoteConfigManager: RemoteConfigManager?
     var analyticsManager: AnalyticsManager?
     
     var delegate: CoreManagerDelegate?
@@ -145,7 +145,7 @@ public class CoreManager {
             purchaseManager?.setUserID(id)
             self.facebookManager?.userID = id
             
-            self.remoteConfigManager?.configure(userID: id) { [weak self] in
+            self.remoteConfigManager?.configure(id: id) { [weak self] in
                 guard let self = self else {return}
                 remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
                     InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
@@ -316,7 +316,6 @@ public class CoreManager {
     }
     
     func getConfigurationResult(isFirstConfiguration: Bool) -> CoreManagerResult {
-        remoteConfigManager?.updateConfig(configuration?.remoteConfigDataSource.allConfigurables ?? [])
         let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
         let remoteResult = self.remoteConfigManager?.remoteConfigResult ?? [:]
         let asaResult = AttributionServerManager.shared.installResultData
@@ -398,7 +397,7 @@ public class CoreManager {
             let value: String
             if config.activeForSources.contains(attribution) {
                 value = remoteValue
-                config.updateValue(value)
+                remoteConfigManager?.updateValue(forConfig: config, newValue: value)
             }
         }
     }

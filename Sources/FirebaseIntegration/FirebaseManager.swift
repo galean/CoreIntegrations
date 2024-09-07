@@ -28,6 +28,15 @@ extension FirebaseManager: RemoteConfigManager {
         completion()
     }
     
+    public func getValue(forConfig config: FirebaseConfigurable) -> String? {
+        let value = UserDefaults.standard.string(forKey: config.key)
+        return value
+    }
+    
+    public func updateValue(forConfig config: FirebaseConfigurable, newValue: String?) {
+        UserDefaults.standard.setValue(newValue, forKey: config.key)
+    }
+    
     public func fetchRemoteConfig(_ appConfigurables: [any FirebaseConfigurable], completion: @escaping () -> Void) {
         let remoteConfig = RemoteConfig.remoteConfig()
         let settings = RemoteConfigSettings()
@@ -62,9 +71,5 @@ extension FirebaseManager: RemoteConfigManager {
             self.remoteConfigResult = configResult
             completion()
         }
-    }
-    
-    public func updateConfig(_ appConfigurables: [FirebaseConfigurable]) {
-        
     }
 }

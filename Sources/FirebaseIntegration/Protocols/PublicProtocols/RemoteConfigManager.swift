@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol RemoteConfigManager {
+public protocol RemoteConfigManager {
     var remoteConfigResult: [String: String]? { get }
     var internalConfigResult: [String: String]?  { get }
     var install_server_path: String?  { get }
@@ -18,10 +18,12 @@ protocol RemoteConfigManager {
     
     func configure(id: String, completion: @escaping () -> Void)
     func fetchRemoteConfig(_ appConfigurables: [any FirebaseConfigurable], completion: @escaping () -> Void)
-    func updateConfig(_ appConfigurables: [any FirebaseConfigurable])
+    
+    func getValue(forConfig config: any FirebaseConfigurable) -> String?
+    func updateValue(forConfig config: any FirebaseConfigurable, newValue: String?)
 }
 
-extension RemoteConfigManager {
+public extension RemoteConfigManager {
     var kInstallURL: String {
         return "install_server_path"
     }

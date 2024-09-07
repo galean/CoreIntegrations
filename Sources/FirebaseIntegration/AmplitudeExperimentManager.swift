@@ -71,6 +71,14 @@ public class AmplitudeExperimentManager {
 }
 
 extension AmplitudeExperimentManager: RemoteConfigManager {
+    public func getValue(forConfig config: FirebaseConfigurable) -> String? {
+        return client.variant(config.key).value
+    }
+    
+    public func updateValue(forConfig config: FirebaseConfigurable, newValue: String?) {
+        //nothing to do here
+    }
+    
     public func configure(id: String, completion: @escaping () -> Void) {
         client.start(nil) { error in
             completion()
@@ -88,9 +96,5 @@ extension AmplitudeExperimentManager: RemoteConfigManager {
             
             completion()
         }
-    }
-    
-    public func updateConfig(_ appConfigurables: [FirebaseConfigurable]) {
-        internalUpdateConfig(client: client, appConfigurables: appConfigurables)
     }
 }

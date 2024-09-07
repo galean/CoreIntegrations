@@ -13,7 +13,7 @@ import Experiment
 import AmplitudeExperiment
 #endif
 
-public class CoreRemoteConfigManager {
+public class CoreRemoteConfigManager: RemoteConfigManager {
     public private(set) var remoteConfigResult: [String: String]? = nil
     public private(set) var internalConfigResult: [String: String]? = nil
     public private(set) var install_server_path: String? = nil
@@ -32,7 +32,7 @@ public class CoreRemoteConfigManager {
         }
     }
     
-    public func configure(userID: String, completion: @escaping () -> Void) {
+    public func configure(id userID: String, completion: @escaping () -> Void) {
         guard !isConfigured else {
             return
         }
@@ -63,16 +63,11 @@ public class CoreRemoteConfigManager {
         }
     }
     
-    public func updateConfig(_ appConfigurables: [FirebaseConfigurable]) {
-        guard !isConfigFetched else {
-            return
-        }
-        
-        remoteConfigManager.updateConfig(appConfigurables)
-        
-        remoteConfigResult = remoteConfigManager.remoteConfigResult
-        internalConfigResult = remoteConfigManager.internalConfigResult
-        install_server_path = remoteConfigManager.install_server_path
-        purchase_server_path = remoteConfigManager.purchase_server_path
+    public func getValue(forConfig config: FirebaseConfigurable) -> String? {
+        return remoteConfigManager.getValue(forConfig: config)
+    }
+    
+    public func updateValue(forConfig config: FirebaseConfigurable, newValue: String?) {
+        remoteConfigManager.updateValue(forConfig: config, newValue: newValue)
     }
 }

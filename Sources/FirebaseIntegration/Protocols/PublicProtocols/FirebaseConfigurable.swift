@@ -12,6 +12,6 @@ public protocol FirebaseConfigurable {
     var defaultValue: String { get }
     var value: String { get }
     
-    func updateValue(_ newValue: String)
+//    func updateValue(_ newValue: String)
 }
 
