@@ -59,8 +59,9 @@ public class CoreManager {
     
     var configurationResultManager = ConfigurationResultManager()
     
-    let configurationStartQueue = DispatchQueue(label: "coreIntegrations.manager.beginQueue")
     let configurationEndQueue = DispatchQueue(label: "coreIntegrations.manager.endQueue")
+    
+    var idConfigured = false
     
     func configureAll(configuration: CoreConfigurationProtocol) {
         guard isConfigured == false else {
@@ -136,6 +137,18 @@ public class CoreManager {
     }
     
     @objc public func applicationDidBecomeActive() {
+        configureID()
+        
+        Task {
+            await purchaseManager?.updateProductStatus()
+        }
+    }
+    
+    private func configureID() {
+        guard !idConfigured else {
+            return
+        }
+        
         let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
         let uuid = AttributionServerManager.shared.savedUserUUID
        
@@ -167,10 +180,6 @@ public class CoreManager {
         
         if configuration?.useDefaultATTRequest == true {
             requestATT()
-        }
-        
-        Task {
-            await purchaseManager?.updateProductStatus()
         }
     }
     
