@@ -117,6 +117,7 @@ extension AmplitudeExperimentManager: RemoteConfigManager {
             self.internalUpdateConfig(client: client, appConfigurables: appConfigurables)
             completion()
         } else {
+            self.savedConfigurables = appConfigurables
             self.fetchCompletion = completion
         }
     }
