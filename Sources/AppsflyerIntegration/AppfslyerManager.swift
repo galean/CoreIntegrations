@@ -25,8 +25,13 @@ public class AppfslyerManager: NSObject {
         super.init()
         AppsFlyerLib.shared().appsFlyerDevKey = config.appsFlyerDevKey
         AppsFlyerLib.shared().appleAppID = config.appleAppID
+        AppsFlyerLib.shared().delegate = self
         AppsFlyerLib.shared().waitForATTUserAuthorization(timeoutInterval: 30)
+#if DEBUG
+        AppsFlyerLib.shared().isDebug = true
+#else
         AppsFlyerLib.shared().isDebug = false
+#endif
     }
     
     private func parseDeepLink(_ conversionInfo: [AnyHashable : Any]) -> [String: String] {
@@ -107,8 +112,8 @@ extension AppfslyerManager: AppsFlyerLibDelegate {
             return
         }
         let deepLinkInfo = parseDeepLink(conversionInfo)
-        delegate?.handledDeeplink(deepLinkInfo)
         deeplinkResult = deepLinkInfo
+        delegate?.handledDeeplink(deepLinkInfo)
     }
     
     public func onConversionDataFail(_ error: Error) {
