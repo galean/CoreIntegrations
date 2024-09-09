@@ -56,6 +56,9 @@ public class CoreManager {
     
     var configurationResultManager = ConfigurationResultManager()
     
+    let configurationStartQueue = DispatchQueue(label: "coreIntegrations.manager.beginQueue")
+    let configurationEndQueue = DispatchQueue(label: "coreIntegrations.manager.endQueue")
+    
     func configureAll(configuration: CoreConfigurationProtocol) {
         guard isConfigured == false else {
             return
@@ -150,6 +153,7 @@ public class CoreManager {
                 remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
                     if self.remoteConfigManager?.amplitudeOn == true {
                         self.sendAmplitudeAssigned(configs: self.remoteConfigManager?.internalConfigResult ?? [:])
+                        self.handleConfigurationUpdate()
                     }
                     InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
                 }
@@ -297,9 +301,10 @@ public class CoreManager {
         }
         
         configurationManager.signForConfigurationEnd { configurationResult in
-            let result = self.getConfigurationResult(isFirstConfiguration: true)
-            self.delegate?.coreConfigurationFinished(result: result)
-            
+            self.configurationEndQueue.async {
+                let result = self.getConfigurationResult(isFirstConfiguration: true)
+                self.delegate?.coreConfigurationFinished(result: result)
+            }
             // calculate attribution
             // calculate correct paywall name
             // return everything to the app
@@ -313,8 +318,10 @@ public class CoreManager {
         }
         
         if configurationManager.configurationFinishHandled {
-            let result = getConfigurationResult(isFirstConfiguration: false)
-            self.delegate?.coreConfigurationUpdated(newResult: result)
+            self.configurationEndQueue.async {
+                let result = self.getConfigurationResult(isFirstConfiguration: false)
+                self.delegate?.coreConfigurationUpdated(newResult: result)
+            }
         }
     }
     

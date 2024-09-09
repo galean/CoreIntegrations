@@ -120,7 +120,9 @@ extension CoreManager: CoreManagerProtocol {
                             coreCofiguration configuration: CoreConfigurationProtocol,
                             coreDelegate delegate: CoreManagerDelegate) {
         self.delegate = delegate
-        configureAll(configuration: configuration)
+        configurationStartQueue.async {
+            self.configureAll(configuration: configuration)
+        }
     }
     
     public func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any]) -> Bool {

@@ -18,9 +18,16 @@ public class AmplitudeExperimentManager {
     
     public private(set) var remoteConfigResult: [String: String]? = nil
     public private(set) var internalConfigResult: [String: String]? = nil
-    public private(set) var install_server_path: String? = nil
-    public private(set) var purchase_server_path: String? = nil
+    public private(set) var install_server_path: String?
+    public private(set) var purchase_server_path: String?
     public var amplitudeOn: Bool { return true }
+    
+    var configured = false
+    var configurationCompletion: (() -> Void)? = nil
+    
+    var fetched = false
+    var savedConfigurables: [any FirebaseConfigurable]? = nil
+    var fetchCompletion: (() -> Void)? = nil
 
     init(deploymentKey: String) {
         let builder = ExperimentConfigBuilder()
@@ -32,6 +39,23 @@ public class AmplitudeExperimentManager {
             apiKey: deploymentKey,
             config: config
         )
+        
+        client.start(nil) { error in
+            self.configured = true
+            self.configurationCompletion?()
+            
+            self.client.fetch(user: nil) { [weak self] client, error in
+                guard error == nil else {
+                    self?.fetchCompletion?()
+                    return
+                }
+                
+                if let fetchCompletion = self?.fetchCompletion, let savedConfigurables = self?.savedConfigurables {
+                    self?.internalUpdateConfig(client: client, appConfigurables: savedConfigurables)
+                    fetchCompletion()
+                }
+            }
+        }
     }
     
     func internalUpdateConfig(client: ExperimentClient, appConfigurables: [FirebaseConfigurable]) {
@@ -49,12 +73,12 @@ public class AmplitudeExperimentManager {
         let installPayload = client.variant(self.kInstallURL).payload as? [String: String]
         let installPayloadValue = installPayload?.first?.value
         let installValue = client.variant(self.kInstallURL).value
+        install_server_path = installPayloadValue ?? installValue ?? ""
+        
         let purchasePayload = client.variant(self.kPurchaseURL).payload as? [String: String]
         let purchasePayloadValue = purchasePayload?.first?.value
         let purchaseValue = client.variant(self.kPurchaseURL).value
-        
-        self.install_server_path = installPayloadValue ?? installValue ?? ""
-        self.purchase_server_path = purchasePayloadValue ?? purchaseValue ?? ""
+        purchase_server_path = purchasePayloadValue ?? purchaseValue ?? ""
         
         self.internalConfigResult = client.all().reduce(into: [String:String](), { partialResult, variantWithKey in
             let configValue = variantWithKey.value.value ?? ""
@@ -81,21 +105,19 @@ extension AmplitudeExperimentManager: RemoteConfigManager {
     }
     
     public func configure(id: String, completion: @escaping () -> Void) {
-        client.start(nil) { error in
+        if configured {
             completion()
+        }else {
+            self.configurationCompletion = completion
         }
     }
     
     public func fetchRemoteConfig(_ appConfigurables: [any FirebaseConfigurable], completion: @escaping () -> Void) {
-        client.fetch(user: nil) { client, error in
-            guard error == nil else {
-                completion()
-                return
-            }
-            
+        if fetched {
             self.internalUpdateConfig(client: client, appConfigurables: appConfigurables)
-            
             completion()
+        } else {
+            self.fetchCompletion = completion
         }
     }
 }
