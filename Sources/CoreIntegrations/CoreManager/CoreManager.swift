@@ -36,6 +36,9 @@ public class CoreManager {
     
     public static var shared: CoreManagerProtocol = internalShared
     static var internalShared = CoreManager()
+    public static var isCn: Bool {
+        return AmplitudeCountry.cnCheck
+    }
     
     public static var uniqueUserID: String? {
         return AttributionServerManager.shared.uniqueUserID
