@@ -8,7 +8,7 @@ public class FirebaseManager {
     public private(set) var internalConfigResult: [String: String]? = nil
     public private(set) var install_server_path: String? = nil
     public private(set) var purchase_server_path: String? = nil
-    public private(set) var config_on: Bool = false
+    public private(set) var config_on: Bool = true
 
     private let kInstallURL = "install_server_path"
     private let kPurchaseURL = "purchase_server_path"
