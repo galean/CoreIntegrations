@@ -13,4 +13,8 @@ public enum CoreUserSource: CaseIterable {
     case snapchat
     case bing
     case unknown
+    
+    static var mostCases: [CoreUserSource] {
+        return [.organic, .asa, .facebook, .google, .test_premium, .tiktok, .instagram, .snapchat, .bing, .unknown]
+    }
 }

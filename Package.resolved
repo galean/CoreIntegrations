@@ -82,15 +82,6 @@
       }
     },
     {
-      "identity" : "growthbook-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/growthbook/growthbook-swift",
-      "state" : {
-        "revision" : "287558afd2d003371663c7d6f84b043732b85281",
-        "version" : "1.0.48"
-      }
-    },
-    {
       "identity" : "grpc-binary",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/grpc-binary.git",

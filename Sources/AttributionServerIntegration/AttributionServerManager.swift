@@ -18,16 +18,18 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
         authorizationToken = config.authToken
         
         serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
-                                                       purchaseServerURLPath: config.purchaseServerURLPath,
-                                                       installPath: config.installPath,
-                                                       purchasePath: config.purchasePath)
+                                               purchaseServerURLPath: config.purchaseServerURLPath,
+                                               installPath: config.installPath,
+                                               purchasePath: config.purchasePath,
+                                               isOn: false)
     }
     
-    public func configureURLs(config: AttributionConfigURLs) {
+    public func configureURLs(config: AttributionConfigURLs, isOn: Bool) {
         serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
                                                purchaseServerURLPath: config.purchaseServerURLPath,
                                                installPath: config.installPath,
-                                               purchasePath: config.purchasePath)
+                                               purchasePath: config.purchasePath,
+                                               isOn: isOn)
     }
     
     public func syncOnAppStart(_ completion: @escaping (AttributionManagerResult?) -> Void) {

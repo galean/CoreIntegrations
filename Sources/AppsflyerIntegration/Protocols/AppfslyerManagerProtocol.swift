@@ -7,6 +7,8 @@ public protocol AppfslyerManagerProtocol {
     var delegate: AppsflyerManagerDelegate? { get set }
     var enabled: Bool { get set }
     
+    func enableDelegate()
+    
     func application( _ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] )
     func application(_ application: UIApplication, continue userActivity: NSUserActivity,
                      restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool

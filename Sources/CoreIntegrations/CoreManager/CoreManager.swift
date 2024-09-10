@@ -76,7 +76,7 @@ public class CoreManager {
                                                                  isFirstStart: configuration.appSettings.isFirstLaunch)
         
         appsflyerManager = AppfslyerManager(config: configuration.appsflyerConfig)
-        appsflyerManager?.delegate = self
+        
         
         facebookManager = FacebookManager()
         
@@ -216,6 +216,7 @@ public class CoreManager {
         configurationManager.signForAttAndConfigLoaded {
             let enabled = CoreManager.internalShared.remoteConfigManager?.config_on ?? false
             self.appsflyerManager?.enabled = enabled
+            self.appsflyerManager?.enableDelegate()
             
             let installPath = "/install-application"
             let purchasePath = "/subscribe"
@@ -229,7 +230,7 @@ public class CoreManager {
                                                                      installPath: installPath,
                                                                      purchasePath: purchasePath)
                 
-                AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
+                AttributionServerManager.shared.configureURLs(config: attributionConfiguration, isOn: enabled)
             }else{
                 if let serverDataSource = self.configuration?.attributionServerDataSource {
                     let installURLPath = serverDataSource.installPath
@@ -240,7 +241,7 @@ public class CoreManager {
                                                                          installPath: installPath,
                                                                          purchasePath: purchasePath)
                     
-                    AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
+                    AttributionServerManager.shared.configureURLs(config: attributionConfiguration, isOn: enabled)
                 }
             }
             
@@ -405,15 +406,7 @@ class ConfigurationResultManager {
     
     func calculateResult() -> CoreManagerResult {
         // get appsflyer info
-        
-        let facebookPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_fb.value)
-        let googlePaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_google.value)
-        let asaPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_asa.value)
-        let snapchatPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_snapchat.value)
-        let tiktokPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_tiktok.value)
-        let instagramPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_instagram.value)
-        let bingPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_bing.value)
-        let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_organic.value)
+        let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall.value)
         
         let activePaywallName: String
         var userSourceInfo: [String: String]? = deepLinkResult
@@ -423,38 +416,12 @@ class ConfigurationResultManager {
                 activePaywallName = getPaywallNameFromConfig(firebaseValue)
             userSourceInfo = deepLinkResult
         }else{
-            switch userSource {
-            case .organic, .ipat, .test_premium, .unknown:
-                activePaywallName = organicPaywallName
-            case .asa:
-                activePaywallName = asaPaywallName
-                userSourceInfo = asaAttributionResult
-            case .facebook:
-                activePaywallName = facebookPaywallName
-            case .google:
-                activePaywallName = googlePaywallName
-            case .snapchat:
-                activePaywallName = snapchatPaywallName
-            case .tiktok:
-                activePaywallName = tiktokPaywallName
-            case .instagram:
-                activePaywallName = instagramPaywallName
-            case .bing:
-                activePaywallName = bingPaywallName
-            }
+            activePaywallName = organicPaywallName
         }
         
         let coreManagerResult = CoreManagerResult(userSource: userSource,
                                                   userSourceInfo: userSourceInfo,
-                                                  activePaywallName: activePaywallName,
-                                                  organicPaywallName: organicPaywallName,
-                                                  asaPaywallName: asaPaywallName,
-                                                  facebookPaywallName: facebookPaywallName,
-                                                  googlePaywallName: googlePaywallName,
-                                                  snapchatPaywallName: snapchatPaywallName,
-                                                  tiktokPaywallName: tiktokPaywallName,
-                                                  instagramPaywallName: instagramPaywallName,
-                                                  bingPaywallName: bingPaywallName)
+                                                  activePaywallName: activePaywallName)
         
         return coreManagerResult
     }

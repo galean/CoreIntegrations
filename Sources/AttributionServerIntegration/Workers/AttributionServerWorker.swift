@@ -6,12 +6,14 @@ public class AttributionServerWorker {
     let purchaseServerURLPath: String
     let installPath: String
     let purchasePath: String
+    let isOn: Bool
     
-    init(installServerURLPath: String, purchaseServerURLPath: String, installPath: String, purchasePath: String) {
+    init(installServerURLPath: String, purchaseServerURLPath: String, installPath: String, purchasePath: String, isOn: Bool) {
         self.installServerURLPath = installServerURLPath
         self.purchaseServerURLPath = purchaseServerURLPath
         self.installPath = installPath
         self.purchasePath = purchasePath
+        self.isOn = isOn
     }
     
     fileprivate var isSyncingInstall = false
@@ -62,6 +64,11 @@ public class AttributionServerWorker {
 extension AttributionServerWorker: AttributionServerWorkerProtocol {
     func sendInstallAnalytics(parameters: AttributionInstallRequestModel, authToken: String,
                               completion: @escaping (([String: String]?) -> Void)) {
+        guard isOn else {
+            completion(nil)
+            return
+        }
+        
         let jsonDataOrNil = try? JSONEncoder().encode(parameters)
         
         guard let url = installURL, let jsonData = jsonDataOrNil else {
@@ -107,6 +114,11 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
     func sendPurchaseAnalytics(analytics: AttrubutionPurchaseRequestModel, userId: String,
                                authToken: String,
                                completion: @escaping ((Bool) -> Void)) {
+        guard isOn else {
+            completion(false)
+            return
+        }
+        
         let jsonDataOrNil = try? JSONEncoder().encode(analytics)
         
         guard let url = subscribeURL, let jsonData = jsonDataOrNil else {
