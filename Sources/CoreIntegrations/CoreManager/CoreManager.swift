@@ -70,6 +70,7 @@ public class CoreManager {
         sendStoreCountryUserProperty()
         configuration.appSettings.launchCount += 1
         if configuration.appSettings.isFirstLaunch {
+            sendAppEnvironmentProperty()
             sendFirstLaunchEvent()
         }
         
