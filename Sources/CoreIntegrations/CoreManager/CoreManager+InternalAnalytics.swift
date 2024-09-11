@@ -8,6 +8,10 @@ import AppsflyerIntegration
 import StoreKit
 
 extension CoreManager {
+    func sendAppEnvironmentProperty() {
+        InternalUserProperty.app_environment.identify(parameter: AppEnvironment.current.rawValue)
+    }
+    
     func sendFirstLaunchEvent() {
         InternalAnalyticsEvent.first_launch.log()
         analyticsManager?.forceEventsUpload()

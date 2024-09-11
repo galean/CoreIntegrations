@@ -35,6 +35,8 @@ public class CoreManager {
         return AttributionServerManager.shared.uniqueUserID
     }
     
+    public static var appEnvironment: AppEnvironment = AppEnvironment.current
+    
     var attAnswered: Bool = false
     var isConfigured: Bool = false
     
@@ -49,6 +51,7 @@ public class CoreManager {
     var delegate: CoreManagerDelegate?
     
     var configurationResultManager = ConfigurationResultManager()
+    
     
     func configureAll(configuration: CoreConfigurationProtocol) {
         guard isConfigured == false else {
