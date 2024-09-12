@@ -1,7 +1,7 @@
 
 import Foundation
 
-public struct CoreManagerResult {
+public struct CoreManagerResult: Hashable, Sendable {
     public var userSource: CoreUserSource
     public var userSourceInfo: [String: String]?
     public var activePaywallName: String

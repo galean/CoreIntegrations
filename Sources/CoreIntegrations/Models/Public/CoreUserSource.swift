@@ -1,7 +1,7 @@
 
 import Foundation
 
-public enum CoreUserSource: CaseIterable {
+public enum CoreUserSource: CaseIterable, Hashable, Sendable {
     case organic
     case asa
     case facebook
