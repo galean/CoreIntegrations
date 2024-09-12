@@ -1,4 +1,5 @@
 import Foundation
+import StoreKit
 
 public enum AppEnvironment: String {
     case Debug, Testing, AppStore
@@ -22,5 +23,11 @@ public enum AppEnvironment: String {
         } else {
             return .AppStore
         }
+    }
+    
+    static var isChina: Bool {
+        if Locale.current.regionCode ?? "" == "CN" { return true }
+        if SKPaymentQueue.default().storefront?.countryCode == "CHN" { return true }
+        return false
     }
 }
