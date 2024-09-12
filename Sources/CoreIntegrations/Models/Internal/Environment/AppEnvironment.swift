@@ -15,7 +15,7 @@ public enum AppEnvironment: String {
 #endif
     }
     
-    static var current: AppEnvironment {
+    public static var current: AppEnvironment {
         if AppEnvironment.isDebug {
             return .Debug
         } else if AppEnvironment.isTestFlight {
@@ -25,8 +25,8 @@ public enum AppEnvironment: String {
         }
     }
     
-    static var isChina: Bool {
-        if Locale.current.regionCode ?? "" == "CN" { return true }
+    public static var isChina: Bool {
+        if Locale.current.regionCode == "CN" { return true }
         if SKPaymentQueue.default().storefront?.countryCode == "CHN" { return true }
         return false
     }
