@@ -45,6 +45,7 @@ public class AmplitudeExperimentManager {
             self.configurationCompletion?()
             
             self.client.fetch(user: nil) { [weak self] client, error in
+                self?.fetched = true
                 guard error == nil else {
                     self?.fetchCompletion?()
                     return
@@ -97,7 +98,10 @@ public class AmplitudeExperimentManager {
 
 extension AmplitudeExperimentManager: RemoteConfigManager {
     public func getValue(forConfig config: FirebaseConfigurable) -> String? {
-        return client.variant(config.key).value
+        let payload = client.variant(config.key, fallback: Variant(config.defaultValue)).payload as? [String: String]
+        let payloadValue = payload?.first?.value
+        let value = client.variant(config.key, fallback: Variant(config.defaultValue)).value
+        return payloadValue ?? value
     }
     
     public func updateValue(forConfig config: FirebaseConfigurable, newValue: String?) {

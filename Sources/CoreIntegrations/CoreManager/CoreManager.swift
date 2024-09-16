@@ -130,6 +130,7 @@ public class CoreManager {
         guard !idConfigured else {
             return
         }
+        idConfigured = true
         
         let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
         let uuid = AttributionServerManager.shared.savedUserUUID

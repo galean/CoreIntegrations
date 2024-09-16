@@ -1,9 +1,7 @@
 
 import Foundation
 
-enum InternalRemoteABTests: String, CoreRemoteABTestable {
-    static var allAmplitudeValues: [String: String] { return [:] }
-    
+enum InternalRemoteABTests: String, CoreRemoteABTestable {    
     // Framework
     case ab_paywall_fb
     case ab_paywall_google
