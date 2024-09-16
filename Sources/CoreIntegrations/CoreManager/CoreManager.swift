@@ -18,9 +18,6 @@ import StoreKit
 public class CoreManager {
     public static var shared: CoreManagerProtocol = internalShared
     static var internalShared = CoreManager()
-    public static var isCn: Bool {
-        return AmplitudeCountry.cnCheck
-    }
     
     public static var uniqueUserID: String? {
         return AttributionServerManager.shared.uniqueUserID
@@ -66,7 +63,6 @@ public class CoreManager {
         if configuration.appSettings.isFirstLaunch {
             sendAppEnvironmentProperty()
             sendFirstLaunchEvent()
-            sendAppEnvironment()
         }
         
         let allConfigurationEvents: [any ConfigurationEvent] = InternalConfigurationEvent.allCases + (configuration.initialConfigurationDataSource?.allEvents ?? [])

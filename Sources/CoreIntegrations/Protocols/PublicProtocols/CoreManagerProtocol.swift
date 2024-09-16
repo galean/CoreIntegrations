@@ -13,7 +13,6 @@ import AppTrackingTransparency
 public protocol CoreManagerProtocol {
     static var shared: CoreManagerProtocol { get }
     static var uniqueUserID: String? { get }
-    static var isCn: Bool { get }
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?,

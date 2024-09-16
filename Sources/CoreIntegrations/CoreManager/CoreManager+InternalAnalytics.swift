@@ -62,10 +62,6 @@ extension CoreManager {
         InternalUserProperty.identify(userProperties)
     }
     
-    func sendAppEnvironment() {
-        InternalUserProperty.app_environment.identify(parameter: Config.appConfiguration.rawValue)
-    }
-    
     func sendAmplitudeAssigned(configs: [String: String]) {
         InternalAnalyticsEvent.amplitude_assigned.log(parameters: configs)
     }
