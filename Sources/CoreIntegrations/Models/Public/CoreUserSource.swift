@@ -1,13 +1,7 @@
-//
-//  File.swift
-//  
-//
-//  Created by Anzhy on 17.10.2023.
-//
 
 import Foundation
 
-public enum CoreUserSource: CaseIterable {
+public enum CoreUserSource: CaseIterable, Hashable, Sendable {
     case organic
     case asa
     case facebook

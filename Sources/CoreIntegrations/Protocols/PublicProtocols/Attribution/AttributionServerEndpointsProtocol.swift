@@ -1,9 +1,3 @@
-//
-//  AttributionServerEndpointsProtocol.swift
-//  
-//
-//  Created by Andrii Plotnikov on 16.10.2023.
-//
 
 import Foundation
 

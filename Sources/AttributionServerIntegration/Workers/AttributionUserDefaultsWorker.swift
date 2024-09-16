@@ -1,9 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Andrii Plotnikov on 22.12.2022.
-//
 
 import Foundation
 

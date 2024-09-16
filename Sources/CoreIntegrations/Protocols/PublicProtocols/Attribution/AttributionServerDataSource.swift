@@ -1,9 +1,3 @@
-//
-//  AttributionServerDataSource.swift
-//  
-//
-//  Created by Anzhy on 16.10.2023.
-//
 
 import Foundation
 

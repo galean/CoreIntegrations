@@ -1,9 +1,3 @@
-//
-//  PurchasesRestoreResult.swift
-//
-//
-//  Created by Anatolii Kanarskyi on 8/2/24.
-//
 
 import Foundation
 import StoreKit

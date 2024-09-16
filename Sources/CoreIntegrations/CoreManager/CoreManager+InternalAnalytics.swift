@@ -1,9 +1,3 @@
-//
-//  CoreManager+InternalAnalytics.swift
-//  
-//
-//  Created by Andrii Plotnikov on 02.10.2023.
-//
 
 import Foundation
 #if !COCOAPODS
@@ -44,6 +38,10 @@ struct Config {
 }
 
 extension CoreManager {
+    func sendAppEnvironmentProperty() {
+        InternalUserProperty.app_environment.identify(parameter: AppEnvironment.current.rawValue)
+    }
+    
     func sendFirstLaunchEvent() {
         InternalAnalyticsEvent.first_launch.log()
         analyticsManager?.forceEventsUpload()

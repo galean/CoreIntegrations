@@ -1,9 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Anatolii Kanarskyi on 1/2/24.
-//
 
 import Foundation
 #if !COCOAPODS

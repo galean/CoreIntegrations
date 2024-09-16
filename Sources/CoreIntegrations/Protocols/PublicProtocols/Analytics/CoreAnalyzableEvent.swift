@@ -1,9 +1,3 @@
-//
-//  CoreAnalyzableEvent.swift
-//  
-//
-//  Created by Andrii Plotnikov on 02.10.2023.
-//
 
 import Foundation
 #if !COCOAPODS

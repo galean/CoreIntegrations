@@ -1,13 +1,7 @@
-//
-//  CoreManagerResult.swift
-//  
-//
-//  Created by Andrii Plotnikov on 03.10.2023.
-//
 
 import Foundation
 
-public struct CoreManagerResult {
+public struct CoreManagerResult: Hashable, Sendable {
     public var userSource: CoreUserSource
     public var userSourceInfo: [String: String]?
     public var activePaywallName: String

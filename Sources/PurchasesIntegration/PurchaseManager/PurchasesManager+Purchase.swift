@@ -1,9 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Anatolii Kanarskyi on 13/2/24.
-//
 
 import Foundation
 import StoreKit
@@ -97,6 +91,12 @@ extension PurchasesManager {
         products.append(contentsOf: self.purchasedSubscriptions)
         products.append(contentsOf: self.purchasedNonRenewables)
         return .success(products: products)
+    }
+    
+    public func restoreAll() async -> SKRestoreResult {
+        let allProducts = await updateAllProductsStatus()
+        
+        return .success(products: allProducts)
     }
     
     public func verifyPremium() async -> SKVerifyPremiumResult {

@@ -1,9 +1,3 @@
-//
-//  File.swift
-//
-//
-//  Created by Andrii Plotnikov on 19.07.2023.
-//
 
 import FirebaseAnalytics
 import FirebaseCore

@@ -1,9 +1,4 @@
-//
-//  CoreManagerProtocol.swift
-//
-//
-//  Created by Andrii Plotnikov on 03.10.2023.
-//
+
 import UIKit
 
 #if !COCOAPODS
@@ -45,4 +40,6 @@ public protocol CoreManagerProtocol {
     func verifyAll() async -> PurchaseVerifyAllResult
     
     func restore() async -> PurchasesRestoreResult
+    
+    func restoreAll() async -> PurchasesRestoreResult
 }
