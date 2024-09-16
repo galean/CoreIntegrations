@@ -17,18 +17,6 @@ import StoreKit
     I think it would be good to split CoreManager into different manager parts - for default configuration, for additional configurations like analytics, test_distribution etc, and for purchases and purchases attribution part
  */
 public class CoreManager {
-    
-    struct AmplitudeCountry {
-        //alpha2code - UK, ES, CN
-        static let regionCode = Locale.current.regionCode ?? ""
-        //alpha3code - UKR, ESP, CHN
-        static let countryCode = SKPaymentQueue.default().storefront?.countryCode ?? ""
-        
-        static var cnCheck: Bool {
-            return regionCode == "CN" || countryCode == "CHN"
-        }
-    }
-    
     public static var shared: CoreManagerProtocol = internalShared
     static var internalShared = CoreManager()
     
@@ -56,6 +44,7 @@ public class CoreManager {
     
     var configurationResultManager = ConfigurationResultManager()
     
+    
     func configureAll(configuration: CoreConfigurationProtocol) {
         guard isConfigured == false else {
             return
@@ -76,12 +65,14 @@ public class CoreManager {
         analyticsManager = AnalyticsManager.shared
         
         let amplitudeCustomURL = configuration.amplitudeDataSource.customServerURL
-        let cnCheck = AmplitudeCountry.cnCheck
-        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret, cnConfig: cnCheck, customURL: amplitudeCustomURL)
+        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret, 
+                                    cnConfig: AppEnvironment.isChina,
+                                    customURL: amplitudeCustomURL)
         
         sendStoreCountryUserProperty()
         configuration.appSettings.launchCount += 1
         if configuration.appSettings.isFirstLaunch {
+            sendAppEnvironmentProperty()
             sendFirstLaunchEvent()
         }
         
@@ -105,7 +96,8 @@ public class CoreManager {
         
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
 
-        remoteConfigManager = CoreRemoteConfigManager(cnConfig: cnCheck)
+        remoteConfigManager = CoreRemoteConfigManager(cnConfig: AppEnvironment.isChina,
+                                                      growthBookClientKey: configuration.appSettings.growthBookClientKey)
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"

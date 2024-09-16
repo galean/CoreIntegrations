@@ -26,6 +26,7 @@ public class PurchasesManager: NSObject, PurchasesManagerProtocol {
     public var purchasedNonConsumables: [Product] = []
     public var purchasedSubscriptions: [Product] = []
     public var purchasedNonRenewables: [Product] = []
+    public var purchasedAllProducts: [Product] = []
     
     var allIdentifiers: [String] = []
     var proIdentifiers: [String] = []

@@ -3,12 +3,53 @@ import Foundation
 import StoreKit
 
 extension PurchasesManager {
+    
+    public func updateAllProductsStatus() async -> [Product] {
+        var purchasedAllProducts: [Product] = []
+        
+        for await result in Transaction.all {
+            do {
+                let transaction = try checkVerified(result)
+                
+                switch transaction.productType {
+                case .consumable:
+                    if let consumable = consumables.first(where: { $0.id == transaction.productID }) {
+                        purchasedAllProducts.append(consumable)
+                    }
+                case .nonConsumable:
+                    if let nonConsumable = nonConsumables.first(where: { $0.id == transaction.productID }) {
+                        purchasedAllProducts.append(nonConsumable)
+                    }
+                case .nonRenewable:
+                    if let nonRenewable = nonRenewables.first(where: { $0.id == transaction.productID }) {
+                        purchasedAllProducts.append(nonRenewable)
+                    }
+                case .autoRenewable:
+                    if subscriptions.isEmpty {
+                        let _ =  await requestAllProducts(self.allIdentifiers)
+                    }
+                    if let subscription = subscriptions.first(where: { $0.id == transaction.productID }) {
+                        purchasedAllProducts.append(subscription)
+                    }
+                default:
+                    debugPrint("🏦 updateCustomerProductStatus ❌ Hit default \(transaction.productID).")
+                    break
+                }
+            } catch {
+                debugPrint("🏦 updateCustomerProductStatus ❌ failed to grant product access \(result.debugDescription).")
+            }
+        }
+        debugPrint("🏦 updateAllProductsStatus ✅ array \(purchasedAllProducts).")
+        return purchasedAllProducts
+    }
+    
     public func updateProductStatus() async {
         debugPrint("🏦 updateCustomerProductStatus ⚈ ⚈ ⚈ Updating Customer Product Status... ⚈ ⚈ ⚈")
         var purchasedConsumables: [Product] = []
         var purchasedNonConsumables: [Product] = []
         var purchasedSubscriptions: [Product] = []
         var purchasedNonRenewableSubscriptions: [Product] = []
+        var purchasedAllProducts: [Product] = []
 
         for await result in Transaction.currentEntitlements {
             do {
@@ -19,6 +60,7 @@ extension PurchasesManager {
                 case .consumable:
                     if let consumable = consumables.first(where: { $0.id == transaction.productID }) {
                         purchasedConsumables.append(consumable)
+                        purchasedAllProducts.append(consumable)
                         debugPrint("🏦 updateCustomerProductStatus ✅ Consumable added to purchased Non-Consumables.")
                     } else {
                         debugPrint("🏦 updateCustomerProductStatus ❌ Consumable Product Id not within the offering : \(transaction.productID).")
@@ -26,12 +68,14 @@ extension PurchasesManager {
                 case .nonConsumable:
                     if let nonConsumable = nonConsumables.first(where: { $0.id == transaction.productID }) {
                         purchasedNonConsumables.append(nonConsumable)
+                        purchasedAllProducts.append(nonConsumable)
                         debugPrint("🏦 updateCustomerProductStatus ✅ Non-Consumable added to purchased Non-Consumables \(transaction.productID).")
                     } else {
                         debugPrint("🏦 updateCustomerProductStatus ❌ Non-Consumable Product Id not within the offering : \(transaction.productID).")
                     }
                 case .nonRenewable:
                     if let nonRenewable = nonRenewables.first(where: { $0.id == transaction.productID }) {
+                        purchasedAllProducts.append(nonRenewable)
                         let currentDate = Date()
                         let expirationDate = Calendar(identifier: .gregorian).date(byAdding: DateComponents(year: 1),
                                                                                    to: transaction.purchaseDate)!
@@ -50,6 +94,7 @@ extension PurchasesManager {
                         let _ =  await requestAllProducts(self.allIdentifiers)
                     }
                     if let subscription = subscriptions.first(where: { $0.id == transaction.productID }) {
+                        purchasedAllProducts.append(subscription)
                         
                         let status = await transaction.subscriptionStatus
                         if status?.state == .subscribed {
@@ -59,7 +104,7 @@ extension PurchasesManager {
                         if status?.state == .expired {
                             debugPrint("🏦 updateCustomerProductStatus ❌ Auto-Renewable Subscription \(transaction.productID) is expired, skip.")
                         }
-                        debugPrint("🏦 updateCustomerProductStatus ✅ Transaction purchaseDate \(transaction.purchaseDate), Transaction expirationDate \(transaction.expirationDate)")
+                        debugPrint("🏦 updateCustomerProductStatus ✅ Transaction purchaseDate \(transaction.purchaseDate), Transaction expirationDate \(String(describing: transaction.expirationDate))")
                         
                     } else {
                         if subscriptions.isEmpty {
@@ -84,6 +129,7 @@ extension PurchasesManager {
         self.purchasedNonConsumables = purchasedNonConsumables
         self.purchasedNonRenewables = purchasedNonRenewableSubscriptions
         self.purchasedSubscriptions = purchasedSubscriptions
+        self.purchasedAllProducts = purchasedAllProducts
 
         debugPrint("🏦 updateCustomerProductStatus ✅ Updated Purchased arrays.")
     }
