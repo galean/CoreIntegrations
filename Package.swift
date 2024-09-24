@@ -33,6 +33,7 @@ let package = Package(
                     "FirebaseIntegration",
                     "PurchasesIntegration",
                     "AttributionServerIntegration",
+                    "AttestationIntegration",
                 ],
                 linkerSettings: [
                   .linkedFramework("UIKit", .when(platforms: [.iOS])),
@@ -85,6 +86,12 @@ let package = Package(
         ),
         .target(name: "AttributionServerIntegration",
                 path: "Sources/AttributionServerIntegration",
+                linkerSettings: [
+                    .linkedFramework("UIKit", .when(platforms: [.iOS])),
+                ]
+        ),
+        .target(name: "AttestationIntegration",
+                path: "Sources/AttestationIntegration",
                 linkerSettings: [
                     .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]
