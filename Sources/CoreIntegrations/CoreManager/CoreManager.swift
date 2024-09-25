@@ -20,6 +20,8 @@ public class CoreManager {
     public static var shared: CoreManagerProtocol = internalShared
     static var internalShared = CoreManager()
     
+    public static var attestationManager: AttestationManagerProtocol = AttestationManager.shared
+    
     public static var uniqueUserID: String? {
         return AttributionServerManager.shared.uniqueUserID
     }
@@ -49,7 +51,7 @@ public class CoreManager {
         self.configuration = configuration
         
         Task {
-            try await AttestationManager.shared.createAssertion()
+            try await CoreManager.attestationManager.createAssertion()
         }
         
         analyticsManager = AnalyticsManager.shared

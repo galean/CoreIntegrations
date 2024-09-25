@@ -4,7 +4,7 @@ import DeviceCheck
 import UIKit
 
 public actor AttestationManager: AttestationManagerProtocol {
-    static public let shared = AttestationManager()
+    public static let shared = AttestationManager()
     
     private var endpoint = "https://backend-boilerplate-app-attest.fly.dev/api"
     private var attest_key_id = "CoreAttestationKeyId"
@@ -96,8 +96,8 @@ public actor AttestationManager: AttestationManagerProtocol {
         return AttestationManagerResult(assertion: assertion, keyId: keyId)
     }
     
-    private func validateStoredKey() async throws -> Bool {
-        var keyId = await attestKeyId
+    public func validateStoredKey() async throws -> Bool {
+        let keyId = await attestKeyId
         
         var request = URLRequest(url: url("/app-attest/register-device"))
         request.httpMethod = "POST"
@@ -113,7 +113,7 @@ public actor AttestationManager: AttestationManagerProtocol {
         let (_, response) = try await URLSession.shared.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
-            print("DeviceCheck_attestKey \(httpResponse)")
+            print("DeviceCheck_validateStoredKey \(httpResponse)")
             
             switch httpResponse.statusCode {
             case 200, 204:

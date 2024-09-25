@@ -7,11 +7,13 @@ import AppsflyerIntegration
 import AttributionServerIntegration
 import AnalyticsIntegration
 import FirebaseIntegration
+import AttestationIntegration
 #endif
 import AppTrackingTransparency
 
 public protocol CoreManagerProtocol {
     static var shared: CoreManagerProtocol { get }
+    static var attestationManager: AttestationManagerProtocol { get }
     static var uniqueUserID: String? { get }
 
     func application(_ application: UIApplication,
