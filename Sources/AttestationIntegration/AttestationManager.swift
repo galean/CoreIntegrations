@@ -6,7 +6,12 @@ protocol AttestationManagerProtocol {
     var isSupported: Bool { get async }
     var attestKeyId: String? { get async }
     func generateKey() async throws -> String
-    func createAssertion() async throws -> String
+    func createAssertion() async throws -> AttestationManagerResult
+}
+
+struct AttestationManagerResult {
+    var assertion: String
+    var keyId: String?
 }
 
 public actor AttestationManager: AttestationManagerProtocol {
@@ -76,7 +81,7 @@ public actor AttestationManager: AttestationManagerProtocol {
         throw AttestationError.attestNotSupported
     }
     
-    func createAssertion(/*_ payload: Data*/) async throws -> String {
+    func createAssertion() async throws -> AttestationManagerResult {
         var keyId = await attestKeyId
         let idfv = "idfv"
         
@@ -84,19 +89,12 @@ public actor AttestationManager: AttestationManagerProtocol {
             keyId = try await generateKey()
         }
         
-//        let hash = Data(SHA256.hash(data: payload))
-//        let service = DCAppAttestService.shared
-//        let assertion = try await service.generateAssertion(keyId!, clientDataHash: hash)
-//        
-//        return try JSONEncoder().encode([
-//            "keyId": keyId,
-//            "assertion": assertion.base64EncodedString(),
-//        ]).base64EncodedString()
-        
-        return try JSONEncoder().encode([
+        let assertion = try JSONEncoder().encode([
             "keyId": keyId,
             "idfv": idfv,
         ]).base64EncodedString()
+        
+        return AttestationManagerResult(assertion: assertion, keyId: keyId)
     }
     
     
@@ -125,8 +123,7 @@ public actor ApiManager {
             "some_payload" : "some_payload"
         ])
         
-        let assertion = try await AttestationManager.shared.createAssertion()
-        let keyId = await AttestationManager.shared.attestKeyId
+        let result = try await AttestationManager.shared.createAssertion()
         
         var request = URLRequest(url: url("/send-message"))
         request.httpMethod = "POST"
@@ -139,12 +136,12 @@ public actor ApiManager {
         )
         
         request.setValue(
-            assertion,
+            result.assertion,
             forHTTPHeaderField: "x-app-attest-assertion"
         )
         
         request.setValue(
-            keyId,
+            result.keyId,
             forHTTPHeaderField: "xx-app-attest-key-id"
         )
         
