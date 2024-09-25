@@ -7,6 +7,7 @@ import AttributionServerIntegration
 import PurchasesIntegration
 import AnalyticsIntegration
 import FirebaseIntegration
+import AttestationIntegration
 #endif
 import AppTrackingTransparency
 import Foundation
@@ -46,6 +47,10 @@ public class CoreManager {
         isConfigured = true
         
         self.configuration = configuration
+        
+        Task {
+            try await AttestationManager.shared.createAssertion()
+        }
         
         analyticsManager = AnalyticsManager.shared
         

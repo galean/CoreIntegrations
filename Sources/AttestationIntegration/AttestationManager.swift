@@ -1,24 +1,20 @@
 import Foundation
 import CryptoKit
 import DeviceCheck
-
-protocol AttestationManagerProtocol {
-    var isSupported: Bool { get async }
-    var attestKeyId: String? { get async }
-    func generateKey() async throws -> String
-    func createAssertion() async throws -> AttestationManagerResult
-}
-
-struct AttestationManagerResult {
-    var assertion: String
-    var keyId: String?
-}
+import UIKit
 
 public actor AttestationManager: AttestationManagerProtocol {
-    static let shared = AttestationManager()
+    static public let shared = AttestationManager()
     
     private var endpoint = "https://backend-boilerplate-app-attest.fly.dev/api"
     private var attest_key_id = "CoreAttestationKeyId"
+    
+    @MainActor
+    private var uuid: String {
+        let idfv = UIDevice.current.identifierForVendor?.uuidString ?? ""
+        let range = idfv.index(idfv.startIndex, offsetBy: 14)
+        return idfv.replacingCharacters(in: range...range, with: "F")
+    }
     
     public var isSupported: Bool {
         get async {
@@ -26,27 +22,27 @@ public actor AttestationManager: AttestationManagerProtocol {
         }
     }
     
-    var attestKeyId: String? {
+    public var attestKeyId: String? {
         get async {
             UserDefaults.standard.string(forKey: attest_key_id)
         }
     }
     
-    func generateKey() async throws -> String {
+    public func generateKey() async throws -> String {
         let service = DCAppAttestService.shared
+        
         if service.isSupported {
-            let idfv = "idfv"
             let keyId = try await service.generateKey()
-            let clientDataHash = Data(SHA256.hash(data: idfv.data(using: .utf8)!))
+            let clientDataHash = await Data(SHA256.hash(data: uuid.data(using: .utf8)!))
             let attestation = try await service.attestKey(keyId, clientDataHash: clientDataHash)
             
             var request = URLRequest(url: url("/app-attest/register-device"))
             request.httpMethod = "POST"
-            request.httpBody = try JSONEncoder().encode(
+            request.httpBody = try await JSONEncoder().encode(
                 [
                     "keyId": keyId,
-                    "challenge": idfv,
-                    "idfv": idfv,
+                    "challenge": uuid,
+                    "idfv": uuid,
                     "attestation": attestation.base64EncodedString(),
                 ]
             )
@@ -81,82 +77,57 @@ public actor AttestationManager: AttestationManagerProtocol {
         throw AttestationError.attestNotSupported
     }
     
-    func createAssertion() async throws -> AttestationManagerResult {
+    public func createAssertion() async throws -> AttestationManagerResult {
         var keyId = await attestKeyId
-        let idfv = "idfv"
         
         if keyId == nil {
             keyId = try await generateKey()
+        }else{
+            let isValidKey = try await validateStoredKey()
+            if !isValidKey {
+                keyId = try await generateKey()
+            }
         }
         
-        let assertion = try JSONEncoder().encode([
-            "keyId": keyId,
-            "idfv": idfv,
-        ]).base64EncodedString()
+        let assertion = try await JSONEncoder().encode(
+            ["keyId": keyId, "idfv": uuid]
+        ).base64EncodedString()
         
         return AttestationManagerResult(assertion: assertion, keyId: keyId)
     }
     
-    
-    
-    private func url(_ target: String) -> URL {
-        return URL(string: "\(endpoint)\(target)")!
-    }
-}
-
-enum AttestationError: Error {
-    case attestVerificationFailed
-    case attestNotSupported
-    case assertionFailed
-    
-    case keyIdRequired
-    case invalidAttestationOrBypassKey
-    case unknownError
-}
-
-//test, to be deleted
-public actor ApiManager {
-    public func testCallToAPI() async throws {
-
-        let idfv = "idfv"
-        let payload = try JSONEncoder().encode([
-            "some_payload" : "some_payload"
-        ])
+    private func validateStoredKey() async throws -> Bool {
+        var keyId = await attestKeyId
         
-        let result = try await AttestationManager.shared.createAssertion()
-        
-        var request = URLRequest(url: url("/send-message"))
+        var request = URLRequest(url: url("/app-attest/register-device"))
         request.httpMethod = "POST"
-        
-        request.httpBody = payload
+        request.httpBody = try await JSONEncoder().encode(
+            ["keyId": keyId, "idfv": uuid]
+        )
         
         request.setValue(
             "application/json",
             forHTTPHeaderField: "Content-Type"
         )
         
-        request.setValue(
-            result.assertion,
-            forHTTPHeaderField: "x-app-attest-assertion"
-        )
-        
-        request.setValue(
-            result.keyId,
-            forHTTPHeaderField: "xx-app-attest-key-id"
-        )
-        
         let (_, response) = try await URLSession.shared.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
-            print("DeviceCheck_message \(httpResponse)")
-            if httpResponse.statusCode == 401 {
-                //UserDefaults.standard.removeObject(forKey: attest_key_id)
-                throw AttestationError.assertionFailed
+            print("DeviceCheck_attestKey \(httpResponse)")
+            
+            switch httpResponse.statusCode {
+            case 200, 204:
+                return true
+            default:
+                UserDefaults.standard.removeObject(forKey: attest_key_id)
+                return false
             }
         }
+        UserDefaults.standard.removeObject(forKey: attest_key_id)
+        return false
     }
     
     private func url(_ target: String) -> URL {
-        return URL(string: "https://werwer.com\(target)")!
+        return URL(string: "\(endpoint)\(target)")!
     }
 }
