@@ -5,4 +5,5 @@ public protocol AttestationManagerProtocol {
     func generateKey() async throws -> String
     func createAssertion() async throws -> AttestationManagerResult
     func validateStoredKey() async throws -> Bool
+    func bypass(_ bypassKey: String) async throws -> Bool
 }

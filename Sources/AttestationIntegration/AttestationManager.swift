@@ -35,10 +35,7 @@ public actor AttestationManager: AttestationManagerProtocol {
             let keyId = try await service.generateKey()
             let clientDataHash = await Data(SHA256.hash(data: uuid.data(using: .utf8)!))
             let attestation = try await service.attestKey(keyId, clientDataHash: clientDataHash)
-            
-            var request = URLRequest(url: url("/app-attest/register-device"))
-            request.httpMethod = "POST"
-            request.httpBody = try await JSONEncoder().encode(
+            let data = try await JSONEncoder().encode(
                 [
                     "keyId": keyId,
                     "challenge": uuid,
@@ -47,10 +44,7 @@ public actor AttestationManager: AttestationManagerProtocol {
                 ]
             )
             
-            request.setValue(
-                "application/json",
-                forHTTPHeaderField: "Content-Type"
-            )
+            let request = URLRequest.post(to: url("/app-attest/register-device"), with: data)
             
             let (_, response) = try await URLSession.shared.data(for: request)
             
@@ -98,17 +92,10 @@ public actor AttestationManager: AttestationManagerProtocol {
     
     public func validateStoredKey() async throws -> Bool {
         let keyId = await attestKeyId
-        
-        var request = URLRequest(url: url("/app-attest/register-device"))
-        request.httpMethod = "POST"
-        request.httpBody = try await JSONEncoder().encode(
+        let data = try await JSONEncoder().encode(
             ["keyId": keyId, "idfv": uuid]
         )
-        
-        request.setValue(
-            "application/json",
-            forHTTPHeaderField: "Content-Type"
-        )
+        let request = URLRequest.post(to: url("/app-attest/register-device"), with: data)
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
@@ -127,7 +114,41 @@ public actor AttestationManager: AttestationManagerProtocol {
         return false
     }
     
+    public func bypass(_ bypassKey: String) async throws -> Bool {
+        let data = try await JSONEncoder().encode(
+            ["idfv": uuid, "bypassKey" : bypassKey]
+        )
+        let request = URLRequest.post(to: url("/app-attest/verify"), with: data)
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            print("DeviceCheck_bypass \(httpResponse)")
+            
+            switch httpResponse.statusCode {
+            case 200, 204:
+                return true
+            default:
+                return false
+            }
+        }
+        return false
+    }
+    
     private func url(_ target: String) -> URL {
         return URL(string: "\(endpoint)\(target)")!
+    }
+}
+
+extension URLRequest {
+    static func post(to url: URL, with body: Data) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.httpBody = body
+        request.setValue(
+            "application/json",
+            forHTTPHeaderField: "Content-Type"
+        )
+        return request
     }
 }
