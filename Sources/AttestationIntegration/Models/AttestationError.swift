@@ -7,4 +7,7 @@ enum AttestationError: Error {
     case keyIdRequired
     case invalidAttestationOrBypassKey
     case unknownError
+    
+    case unenforcedBypass
+    case bypassError
 }

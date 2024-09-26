@@ -19,13 +19,11 @@ import StoreKit
 public class CoreManager {
     public static var shared: CoreManagerProtocol = internalShared
     static var internalShared = CoreManager()
-    
-    public static var attestationManager: AttestationManagerProtocol = AttestationManager.shared
-    
+        
     public static var uniqueUserID: String? {
         return AttributionServerManager.shared.uniqueUserID
     }
-        
+            
     var attAnswered: Bool = false
     var isConfigured: Bool = false
     
@@ -49,9 +47,11 @@ public class CoreManager {
         isConfigured = true
         
         self.configuration = configuration
-        
+                
         Task {
-            try await CoreManager.attestationManager.createAssertion()
+            await AttestationManager.shared.configure(endpoint: configuration.attestDataSource.serverPath, bypassKey: configuration.attestDataSource.bypassKey)
+            //let assertion = try await AttestationManager.shared.createAssertion()
+            //use assertion for attribution server etc
         }
         
         analyticsManager = AnalyticsManager.shared

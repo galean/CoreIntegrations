@@ -13,7 +13,7 @@ import AppTrackingTransparency
 
 public protocol CoreManagerProtocol {
     static var shared: CoreManagerProtocol { get }
-    static var attestationManager: AttestationManagerProtocol { get }
+        
     static var uniqueUserID: String? { get }
 
     func application(_ application: UIApplication,
@@ -43,4 +43,16 @@ public protocol CoreManagerProtocol {
     func restore() async -> PurchasesRestoreResult
     
     func restoreAll() async -> PurchasesRestoreResult
+    
+    var attest_isSupported: Bool { get async }
+    
+    var attest_KeyId: String? { get async }
+    
+    func attest_generateKey() async throws -> String
+    
+    func attest_createAssertion() async throws -> AttestationManagerResult
+    
+    func attest_validateStoredKey() async throws -> Bool
+    
+    func attest_bypass() async throws -> Bool
 }

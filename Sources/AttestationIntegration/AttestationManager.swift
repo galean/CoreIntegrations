@@ -3,10 +3,12 @@ import CryptoKit
 import DeviceCheck
 import UIKit
 
-public actor AttestationManager: AttestationManagerProtocol {
-    public static let shared = AttestationManager()
+public actor AttestationManager:AttestationManagerProtocol {
+    static public let shared = AttestationManager()
     
-    private var endpoint = "https://backend-boilerplate-app-attest.fly.dev/api"
+    public var endpoint: String = ""
+    public var bypassKey: String = ""
+    
     private var attest_key_id = "CoreAttestationKeyId"
     
     @MainActor
@@ -26,6 +28,11 @@ public actor AttestationManager: AttestationManagerProtocol {
         get async {
             UserDefaults.standard.string(forKey: attest_key_id)
         }
+    }
+    
+    public func configure(endpoint: String, bypassKey: String) {
+        self.endpoint = endpoint
+        self.bypassKey = bypassKey
     }
     
     public func generateKey() async throws -> String {
@@ -67,8 +74,14 @@ public actor AttestationManager: AttestationManagerProtocol {
             }
             
             throw AttestationError.attestVerificationFailed
+        }else{
+            let bypass = try await bypass()
+            if bypass {
+                throw AttestationError.unenforcedBypass
+            }else{
+                throw AttestationError.bypassError
+            }
         }
-        throw AttestationError.attestNotSupported
     }
     
     public func createAssertion() async throws -> AttestationManagerResult {
@@ -114,7 +127,7 @@ public actor AttestationManager: AttestationManagerProtocol {
         return false
     }
     
-    public func bypass(_ bypassKey: String) async throws -> Bool {
+    public func bypass() async throws -> Bool {
         let data = try await JSONEncoder().encode(
             ["idfv": uuid, "bypassKey" : bypassKey]
         )
