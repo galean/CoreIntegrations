@@ -100,6 +100,8 @@ public actor AttestationManager:AttestationManagerProtocol {
                 let result = try await generateKey()
                 keyId = result.key
                 warning = result.warning
+            }else{
+                warning = validationResult.warning
             }
         }
         
