@@ -17,8 +17,8 @@ extension CoreManager {
             await AttestationManager.shared.attestKeyId
         }
     }
-    
-    public func attest_generateKey() async throws -> String {
+ 
+    public func attest_generateKey() async throws -> AttestKeyGenerationResult {
        return try await AttestationManager.shared.generateKey()
     }
     
@@ -26,11 +26,11 @@ extension CoreManager {
         return try await AttestationManager.shared.createAssertion()
     }
     
-    public func attest_validateStoredKey() async throws -> (result: Bool, warning: String?) {
+    public func attest_validateStoredKey() async throws -> AttestValidationResult {
         return try await AttestationManager.shared.validateStoredKey()
     }
     
-    public func attest_bypass() async throws -> (result: Bool, warning: String?) {
+    public func attest_bypass() async throws -> AttestBypassResult {
         return try await AttestationManager.shared.bypass()
     }
     

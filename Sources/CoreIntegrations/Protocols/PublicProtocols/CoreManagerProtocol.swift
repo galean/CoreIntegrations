@@ -48,11 +48,11 @@ public protocol CoreManagerProtocol {
     
     var attest_KeyId: String? { get async }
     
-    func attest_generateKey() async throws -> String
+    func attest_generateKey() async throws -> AttestKeyGenerationResult
     
     func attest_createAssertion() async throws -> AttestationManagerResult
     
-    func attest_validateStoredKey() async throws -> (result: Bool, warning: String?)
+    func attest_validateStoredKey() async throws -> AttestValidationResult
     
-    func attest_bypass() async throws -> (result: Bool, warning: String?)
+    func attest_bypass() async throws -> AttestBypassResult
 }

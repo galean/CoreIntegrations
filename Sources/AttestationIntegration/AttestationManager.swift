@@ -35,7 +35,7 @@ public actor AttestationManager:AttestationManagerProtocol {
         self.bypassKey = bypassKey
     }
     
-    public func generateKey() async throws -> String {
+    public func generateKey() async throws -> AttestKeyGenerationResult {
         let service = DCAppAttestService.shared
         
         if service.isSupported {
@@ -58,26 +58,27 @@ public actor AttestationManager:AttestationManagerProtocol {
             if let httpResponse = response as? HTTPURLResponse {
                 print("DeviceCheck_attestKey \(httpResponse)")
                 let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
+                let warningDict = convertToDict(attestWarning)
                 
                 switch httpResponse.statusCode {
                 case 200, 204:
                     UserDefaults.standard.set(keyId, forKey: attest_key_id)
-                    return keyId
+                    return AttestKeyGenerationResult(key: keyId, warning: warningDict)
                 case 400:
-                    throw AttestationError.keyIdRequired(attestWarning)
+                    throw AttestationError.keyIdRequired(warningDict)
                 case 401:
-                    throw AttestationError.invalidAttestationOrBypassKey(attestWarning)
+                    throw AttestationError.invalidAttestationOrBypassKey(warningDict)
                 case 500:
-                    throw AttestationError.unknownError(attestWarning)
+                    throw AttestationError.unknownError(warningDict)
                 default:
-                    throw AttestationError.unknownError(attestWarning)
+                    throw AttestationError.unknownError(warningDict)
                 }
             }
             
             throw AttestationError.attestVerificationFailed(nil)
         }else{
             let bypass = try await bypass()
-            if bypass.result {
+            if bypass.success {
                 throw AttestationError.unenforcedBypass(bypass.warning)
             }else{
                 throw AttestationError.bypassError(bypass.warning)
@@ -87,13 +88,18 @@ public actor AttestationManager:AttestationManagerProtocol {
     
     public func createAssertion() async throws -> AttestationManagerResult {
         var keyId = await attestKeyId
+        var warning: [String: Any]?
         
         if keyId == nil {
-            keyId = try await generateKey()
+            let result = try await generateKey()
+            keyId = result.key
+            warning = result.warning
         }else{
-            let isValidKey = try await validateStoredKey()
-            if !isValidKey.result {
-                keyId = try await generateKey()
+            let validationResult = try await validateStoredKey()
+            if !validationResult.success {
+                let result = try await generateKey()
+                keyId = result.key
+                warning = result.warning
             }
         }
         
@@ -101,10 +107,10 @@ public actor AttestationManager:AttestationManagerProtocol {
             ["keyId": keyId, "idfv": uuid]
         ).base64EncodedString()
         
-        return AttestationManagerResult(assertion: assertion, keyId: keyId)
+        return AttestationManagerResult(assertion: assertion, keyId: keyId, warning: warning)
     }
     
-    public func validateStoredKey() async throws -> (result: Bool, warning: String?) {
+    public func validateStoredKey() async throws -> AttestValidationResult {
         let keyId = await attestKeyId
         let data = try await JSONEncoder().encode(
             ["keyId": keyId, "idfv": uuid]
@@ -116,20 +122,21 @@ public actor AttestationManager:AttestationManagerProtocol {
         if let httpResponse = response as? HTTPURLResponse {
             print("DeviceCheck_validateStoredKey \(httpResponse)")
             let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
+            let warningDict = convertToDict(attestWarning)
             
             switch httpResponse.statusCode {
             case 200, 204:
-                return (true, attestWarning)
+                return AttestValidationResult(success: true, warning: warningDict)
             default:
                 UserDefaults.standard.removeObject(forKey: attest_key_id)
-                return (false, attestWarning)
+                return AttestValidationResult(success: false, warning: warningDict)
             }
         }
         UserDefaults.standard.removeObject(forKey: attest_key_id)
-        return (false, nil)
+        return AttestValidationResult(success: true)
     }
     
-    public func bypass() async throws -> (result: Bool, warning: String?) {
+    public func bypass() async throws -> AttestBypassResult {
         let data = try await JSONEncoder().encode(
             ["idfv": uuid, "bypassKey" : bypassKey]
         )
@@ -140,19 +147,31 @@ public actor AttestationManager:AttestationManagerProtocol {
         if let httpResponse = response as? HTTPURLResponse {
             print("DeviceCheck_bypass \(httpResponse)")
             let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
+            let warningDict = convertToDict(attestWarning)
             
             switch httpResponse.statusCode {
             case 200, 204:
-                return (true, attestWarning)
+                return AttestBypassResult(success: true, warning: warningDict)
             default:
-                return (false, attestWarning)
+                return AttestBypassResult(success: false, warning: warningDict)
             }
         }
-        return (true, nil)
+        return AttestBypassResult(success: false)
     }
     
     private func url(_ target: String) -> URL {
         return URL(string: "\(endpoint)\(target)")!
+    }
+    
+    private func convertToDict( _ string: String?) -> [String: Any]? {
+        if let data = string?.data(using: .utf8) {
+            do {
+                return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+        return nil
     }
 }
 
