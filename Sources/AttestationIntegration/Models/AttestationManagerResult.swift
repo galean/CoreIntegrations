@@ -1,5 +1,5 @@
 
 public struct AttestationManagerResult {
-    var assertion: String
-    var keyId: String?
+    public var assertion: String
+    public var keyId: String?
 }
