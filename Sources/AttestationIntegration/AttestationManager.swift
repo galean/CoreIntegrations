@@ -57,29 +57,30 @@ public actor AttestationManager:AttestationManagerProtocol {
             
             if let httpResponse = response as? HTTPURLResponse {
                 print("DeviceCheck_attestKey \(httpResponse)")
+                let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
                 
                 switch httpResponse.statusCode {
                 case 200, 204:
                     UserDefaults.standard.set(keyId, forKey: attest_key_id)
                     return keyId
                 case 400:
-                    throw AttestationError.keyIdRequired
+                    throw AttestationError.keyIdRequired(attestWarning)
                 case 401:
-                    throw AttestationError.invalidAttestationOrBypassKey
+                    throw AttestationError.invalidAttestationOrBypassKey(attestWarning)
                 case 500:
-                    throw AttestationError.unknownError
+                    throw AttestationError.unknownError(attestWarning)
                 default:
-                    throw AttestationError.unknownError
+                    throw AttestationError.unknownError(attestWarning)
                 }
             }
             
-            throw AttestationError.attestVerificationFailed
+            throw AttestationError.attestVerificationFailed(nil)
         }else{
             let bypass = try await bypass()
-            if bypass {
-                throw AttestationError.unenforcedBypass
+            if bypass.result {
+                throw AttestationError.unenforcedBypass(bypass.warning)
             }else{
-                throw AttestationError.bypassError
+                throw AttestationError.bypassError(bypass.warning)
             }
         }
     }
@@ -91,7 +92,7 @@ public actor AttestationManager:AttestationManagerProtocol {
             keyId = try await generateKey()
         }else{
             let isValidKey = try await validateStoredKey()
-            if !isValidKey {
+            if !isValidKey.result {
                 keyId = try await generateKey()
             }
         }
@@ -103,7 +104,7 @@ public actor AttestationManager:AttestationManagerProtocol {
         return AttestationManagerResult(assertion: assertion, keyId: keyId)
     }
     
-    public func validateStoredKey() async throws -> Bool {
+    public func validateStoredKey() async throws -> (result: Bool, warning: String?) {
         let keyId = await attestKeyId
         let data = try await JSONEncoder().encode(
             ["keyId": keyId, "idfv": uuid]
@@ -114,20 +115,21 @@ public actor AttestationManager:AttestationManagerProtocol {
         
         if let httpResponse = response as? HTTPURLResponse {
             print("DeviceCheck_validateStoredKey \(httpResponse)")
+            let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
             
             switch httpResponse.statusCode {
             case 200, 204:
-                return true
+                return (true, attestWarning)
             default:
                 UserDefaults.standard.removeObject(forKey: attest_key_id)
-                return false
+                return (false, attestWarning)
             }
         }
         UserDefaults.standard.removeObject(forKey: attest_key_id)
-        return false
+        return (false, nil)
     }
     
-    public func bypass() async throws -> Bool {
+    public func bypass() async throws -> (result: Bool, warning: String?) {
         let data = try await JSONEncoder().encode(
             ["idfv": uuid, "bypassKey" : bypassKey]
         )
@@ -137,15 +139,16 @@ public actor AttestationManager:AttestationManagerProtocol {
         
         if let httpResponse = response as? HTTPURLResponse {
             print("DeviceCheck_bypass \(httpResponse)")
+            let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
             
             switch httpResponse.statusCode {
             case 200, 204:
-                return true
+                return (true, attestWarning)
             default:
-                return false
+                return (false, attestWarning)
             }
         }
-        return false
+        return (true, nil)
     }
     
     private func url(_ target: String) -> URL {
