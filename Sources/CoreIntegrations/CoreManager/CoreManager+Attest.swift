@@ -26,11 +26,11 @@ extension CoreManager {
         return try await AttestationManager.shared.createAssertion()
     }
     
-    public func attest_validateStoredKey() async throws -> Bool {
+    public func attest_validateStoredKey() async throws -> (result: Bool, warning: String?) {
         return try await AttestationManager.shared.validateStoredKey()
     }
     
-    public func attest_bypass() async throws -> Bool {
+    public func attest_bypass() async throws -> (result: Bool, warning: String?) {
         return try await AttestationManager.shared.bypass()
     }
     

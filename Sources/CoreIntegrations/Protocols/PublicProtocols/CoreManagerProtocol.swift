@@ -52,7 +52,7 @@ public protocol CoreManagerProtocol {
     
     func attest_createAssertion() async throws -> AttestationManagerResult
     
-    func attest_validateStoredKey() async throws -> Bool
+    func attest_validateStoredKey() async throws -> (result: Bool, warning: String?)
     
-    func attest_bypass() async throws -> Bool
+    func attest_bypass() async throws -> (result: Bool, warning: String?)
 }
