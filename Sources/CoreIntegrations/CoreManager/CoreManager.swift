@@ -103,23 +103,25 @@ public class CoreManager {
         
         AttributionServerManager.shared.configure(config: attributionConfiguration)
         
-        if configuration.useDefaultATTRequest {
-            configureATT()
-        }
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive),
+                                               name: UIApplication.didBecomeActiveNotification,
+                                               object: nil)
 
         handleConfigurationEndCallback()
         
         handleAttributionInstall()
     }
     
-    func configureATT() {
-        NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive),
-                                               name: UIApplication.didBecomeActiveNotification,
-                                               object: nil)
-    }
-    
     @objc public func applicationDidBecomeActive() {
         configureID()
+        
+        if appsflyerManager?.customerUserID != nil {
+            appsflyerManager?.startAppsflyer()
+        }
+        
+        if configuration?.useDefaultATTRequest == true {
+            requestATT()
+        }
         
         Task {
             await purchaseManager?.updateProductStatus()
@@ -127,11 +129,6 @@ public class CoreManager {
     }
     
     private func configureID() {
-        guard !idConfigured else {
-            return
-        }
-        idConfigured = true
-        
         let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
         let uuid = AttributionServerManager.shared.savedUserUUID
        
@@ -142,10 +139,14 @@ public class CoreManager {
             id = uuid ?? AttributionServerManager.shared.uniqueUserID
         }
         if let id, id != "" {
+            guard !idConfigured else {
+                return
+            }
+            idConfigured = true
+            
             appsflyerManager?.customerUserID = id
-            appsflyerManager?.startAppsflyer()
             purchaseManager?.setUserID(id)
-            self.facebookManager?.userID = id
+            facebookManager?.userID = id
             
             self.remoteConfigManager?.configure(id: id) { [weak self] in
                 guard let self = self else {return}
@@ -159,10 +160,6 @@ public class CoreManager {
             }
             
             self.analyticsManager?.setUserID(id)
-        }
-        
-        if configuration?.useDefaultATTRequest == true {
-            requestATT()
         }
     }
     
@@ -387,7 +384,12 @@ public class CoreManager {
         self.configurationResultManager.asaAttributionResult = asaResult?.asaAttribution
         
         let result = self.configurationResultManager.calculateResult()
-        return result
+        
+        if remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty {
+            return CoreManagerResult.error(data: result)
+        } else {
+            return CoreManagerResult.success(data: result)
+        }
     }
     
     func saveRemoteConfig(attribution: CoreUserSource, allConfigs: [any CoreFirebaseConfigurable],
@@ -413,60 +415,54 @@ class ConfigurationResultManager {
     var asaAttributionResult: [String: String]?
     var deepLinkResult: [String: String]?
     
-    func calculateResult() -> CoreManagerResult {
+    func calculateResult() -> CoreManagerResultData {
         // get appsflyer info
-        
-        let facebookPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_fb.value)
-        let googlePaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_google.value)
-        let asaPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_asa.value)
-        let snapchatPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_snapchat.value)
-        let tiktokPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_tiktok.value)
-        let instagramPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_instagram.value)
-        let bingPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_bing.value)
-        let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_organic.value)
+        var paywallsBySource = [CoreUserSource: String]()
+        InternalRemoteABTests.allCases.forEach { config in
+            let value = config.value
+            let paywall = self.getPaywallNameFromConfig(value)
+            if config.activeForSources.count != 1 {
+                assertionFailure()
+            }
+            if let source = config.activeForSources.first {
+                paywallsBySource[source] = paywall
+            }
+        }
         
         let activePaywallName: String
         var userSourceInfo: [String: String]? = deepLinkResult
         
         if let deepLinkValue: String = deepLinkResult?["deep_link_value"], deepLinkValue != "none", deepLinkValue != "",
            let firebaseValue = CoreManager.internalShared.remoteConfigManager?.internalConfigResult?[deepLinkValue] {
-                activePaywallName = getPaywallNameFromConfig(firebaseValue)
+            activePaywallName = getPaywallNameFromConfig(firebaseValue)
             userSourceInfo = deepLinkResult
-        }else{
+        } else {
+            let organicConfigValue = InternalRemoteABTests.ab_paywall_organic.value
+            let paywall = self.getPaywallNameFromConfig(organicConfigValue)
+            
             switch userSource {
             case .organic, .ipat, .test_premium, .unknown:
-                activePaywallName = organicPaywallName
-            case .asa:
-                activePaywallName = asaPaywallName
-                userSourceInfo = asaAttributionResult
-            case .facebook:
-                activePaywallName = facebookPaywallName
-            case .google:
-                activePaywallName = googlePaywallName
-            case .snapchat:
-                activePaywallName = snapchatPaywallName
-            case .tiktok:
-                activePaywallName = tiktokPaywallName
-            case .instagram:
-                activePaywallName = instagramPaywallName
-            case .bing:
-                activePaywallName = bingPaywallName
+                if let organicPaywall = paywallsBySource[CoreUserSource.organic] {
+                    activePaywallName = organicPaywall
+                } else {
+                    assertionFailure()
+                    activePaywallName = organicConfigValue
+                }
+            default:
+                if let paywallBySource = paywallsBySource[userSource] {
+                    activePaywallName = paywallBySource
+                } else {
+                    assertionFailure()
+                    activePaywallName = organicConfigValue
+                }
             }
         }
         
-        let coreManagerResult = CoreManagerResult(userSource: userSource,
-                                                  userSourceInfo: userSourceInfo,
-                                                  activePaywallName: activePaywallName,
-                                                  organicPaywallName: organicPaywallName,
-                                                  asaPaywallName: asaPaywallName,
-                                                  facebookPaywallName: facebookPaywallName,
-                                                  googlePaywallName: googlePaywallName,
-                                                  snapchatPaywallName: snapchatPaywallName,
-                                                  tiktokPaywallName: tiktokPaywallName,
-                                                  instagramPaywallName: instagramPaywallName,
-                                                  bingPaywallName: bingPaywallName)
-        
-        return coreManagerResult
+        let result = CoreManagerResultData(userSource: userSource,
+                              userSourceInfo: userSourceInfo,
+                              activePaywallName: activePaywallName,
+                              paywallsBySource: paywallsBySource)
+        return result
     }
     
     private func getPaywallNameFromConfig(_ config: String) -> String {
