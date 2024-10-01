@@ -49,7 +49,7 @@ public class CoreManager {
         self.configuration = configuration
                 
         Task {
-            await AttestationManager.shared.configure(endpoint: configuration.attestDataSource.serverPath, bypassKey: configuration.attestDataSource.bypassKey)
+            await AttestationManager.shared.configure(serverURL: configuration.attestDataSource.serverPath, bypassKey: configuration.attestDataSource.bypassKey)
             //let assertion = try await AttestationManager.shared.createAssertion()
             //use assertion for attribution server etc
         }

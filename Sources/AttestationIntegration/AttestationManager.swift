@@ -6,7 +6,7 @@ import UIKit
 public actor AttestationManager:AttestationManagerProtocol {
     static public let shared = AttestationManager()
     
-    public var endpoint: String = ""
+    public var baseURL: String = ""
     public var bypassKey: String = ""
     
     private var attest_key_id = "CoreAttestationKeyId"
@@ -30,8 +30,8 @@ public actor AttestationManager:AttestationManagerProtocol {
         }
     }
     
-    public func configure(endpoint: String, bypassKey: String) {
-        self.endpoint = endpoint
+    public func configure(serverURL: String, bypassKey: String) {
+        self.baseURL = serverURL
         self.bypassKey = bypassKey
     }
     
@@ -42,23 +42,26 @@ public actor AttestationManager:AttestationManagerProtocol {
             let keyId = try await service.generateKey()
             let clientDataHash = await Data(SHA256.hash(data: uuid.data(using: .utf8)!))
             let attestation = try await service.attestKey(keyId, clientDataHash: clientDataHash)
-            let data = try await JSONEncoder().encode(
+            let idfv = await uuid
+            let challenge: String = idfv.base64Encoded() ?? idfv
+            
+            let data = try JSONEncoder().encode(
                 [
                     "keyId": keyId,
-                    "challenge": uuid,
-                    "idfv": uuid,
+                    "challenge": challenge,
+                    "idfv": idfv,
                     "attestation": attestation.base64EncodedString(),
                 ]
             )
             
-            let request = URLRequest.post(to: url("/app-attest/register-device"), with: data)
+            let request = URLRequest.post(to: baseURL.url(endpoint: "/app-attest/register-device"), with: data)
             
             let (_, response) = try await URLSession.shared.data(for: request)
             
             if let httpResponse = response as? HTTPURLResponse {
                 print("DeviceCheck_attestKey \(httpResponse)")
                 let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
-                let warningDict = convertToDict(attestWarning)
+                let warningDict = attestWarning?.toDictionary()
                 
                 switch httpResponse.statusCode {
                 case 200, 204:
@@ -117,14 +120,15 @@ public actor AttestationManager:AttestationManagerProtocol {
         let data = try await JSONEncoder().encode(
             ["keyId": keyId, "idfv": uuid]
         )
-        let request = URLRequest.post(to: url("/app-attest/register-device"), with: data)
+        
+        let request = URLRequest.post(to: baseURL.url(endpoint: "/app-attest/register-device"), with: data)
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
             print("DeviceCheck_validateStoredKey \(httpResponse)")
             let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
-            let warningDict = convertToDict(attestWarning)
+            let warningDict = attestWarning?.toDictionary()
             
             switch httpResponse.statusCode {
             case 200, 204:
@@ -142,14 +146,16 @@ public actor AttestationManager:AttestationManagerProtocol {
         let data = try await JSONEncoder().encode(
             ["idfv": uuid, "bypassKey" : bypassKey]
         )
-        let request = URLRequest.post(to: url("/app-attest/verify"), with: data)
+        
+        
+        let request = URLRequest.post(to: baseURL.url(endpoint: "/app-attest/verify"), with: data)
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
             print("DeviceCheck_bypass \(httpResponse)")
             let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
-            let warningDict = convertToDict(attestWarning)
+            let warningDict = attestWarning?.toDictionary()
             
             switch httpResponse.statusCode {
             case 200, 204:
@@ -161,31 +167,4 @@ public actor AttestationManager:AttestationManagerProtocol {
         return AttestBypassResult(success: false)
     }
     
-    private func url(_ target: String) -> URL {
-        return URL(string: "\(endpoint)\(target)")!
-    }
-    
-    private func convertToDict( _ string: String?) -> [String: Any]? {
-        if let data = string?.data(using: .utf8) {
-            do {
-                return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
-        return nil
-    }
-}
-
-extension URLRequest {
-    static func post(to url: URL, with body: Data) -> URLRequest {
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.httpBody = body
-        request.setValue(
-            "application/json",
-            forHTTPHeaderField: "Content-Type"
-        )
-        return request
-    }
 }
