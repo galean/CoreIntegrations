@@ -2,7 +2,7 @@
 import Foundation
 
 public protocol CoreRemoteABTestable: CaseIterable, CoreFirebaseConfigurable {
-    static var ab_paywall: Self { get }
+    
 }
 
 public extension CoreRemoteABTestable {
