@@ -15,9 +15,6 @@ extension CoreManager: CoreManagerProtocol {
             if purchase.purchaseGroup.isPro {
                 self.sendSubscriptionTypeUserProperty(identifier: details.productId)
             }
-            
-            self.sendPurchaseToFacebook(details)
-            self.sendPurchaseToAppsflyer(details)
             return .success(details: details)
         case .pending:
             return .pending

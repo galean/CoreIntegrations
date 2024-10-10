@@ -137,33 +137,6 @@ public class CoreManager {
         facebookManager?.configureATT(isAuthorized: status == .authorized)
     }
     
-    func sendPurchaseToFacebook(_ purchase: PurchaseDetails) {
-        guard facebookManager != nil else {
-            return
-        }
-       
-        let isTrial = purchase.product.subscription?.introductoryOffer != nil
-        let trialPrice = CGFloat(NSDecimalNumber(decimal: purchase.product.subscription?.introductoryOffer?.price ?? 0).floatValue)//introductoryPrice?.price.doubleValue ?? 0
-        let price = CGFloat(NSDecimalNumber(decimal: purchase.product.price).floatValue)
-        let currencyCode = purchase.product.priceFormatStyle.currencyCode
-        let analData = FacebookPurchaseData(isTrial: isTrial,
-                                            subcriptionID: purchase.product.id,
-                                            trialPrice: trialPrice, price: price,
-                                            currencyCode: currencyCode)
-        self.facebookManager?.sendPurchaseAnalytics(analData)
-    }
-    
-    func sendPurchaseToAppsflyer(_ purchase: PurchaseDetails) {
-        guard appsflyerManager != nil else {
-            return
-        }
-        
-        let isTrial = purchase.product.subscription?.introductoryOffer != nil
-        if isTrial {
-            self.appsflyerManager?.logTrialPurchase()
-        }
-    }
-    
     func handleConfigurationEndCallback() {
         guard let configurationManager = AppConfigurationManager.shared else {
             assertionFailure()
