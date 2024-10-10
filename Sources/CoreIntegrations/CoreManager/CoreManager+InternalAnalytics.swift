@@ -23,13 +23,10 @@ extension CoreManager {
         InternalUserProperty.att_status.identify(parameter: "\(answer)")
     }
     
-    func sendABTestsUserProperties(abTests: [any CoreRemoteABTestable], userSource: CoreUserSource) { // +
+    func sendABTestsUserProperties(abTests: [any CoreRemoteABTestable]) { // +
         let userProperties = abTests.reduce(into: [String:String]()) { partialResult, abtest in
-            let shouldSend: Bool = abtest.activeForSources.contains(userSource)
             var value = abtest.value
-            if !shouldSend {
-                value = "none"
-            } else if value.contains("none_") {
+            if value.contains("none_") {
                 value = "none"
             }
             partialResult[abtest.key] = value
@@ -37,14 +34,10 @@ extension CoreManager {
         InternalUserProperty.identify(userProperties)
     }
     
-    func sendTestDistributionEvent(abTests: [any CoreRemoteABTestable],
-                                   userSource: CoreUserSource) { // +
+    func sendTestDistributionEvent(abTests: [any CoreRemoteABTestable]) {
         var parameters = abTests.reduce(into: [String:String]()) { partialResult, abtest in
-            let shouldSend: Bool = abtest.activeForSources.contains(userSource)
             var value = abtest.value
-            if !shouldSend {
-                value = "none"
-            } else if value.contains("none_") {
+            if value.contains("none_") {
                 value = "none"
             }
             partialResult[abtest.key] = value

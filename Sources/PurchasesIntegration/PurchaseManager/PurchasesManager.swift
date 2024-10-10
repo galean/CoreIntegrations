@@ -9,7 +9,6 @@ public class PurchasesManager: NSObject, PurchasesManagerProtocol {
     // MARK: Variables
     static let identifier: String = "🏦"
     static public let shared: PurchasesManagerProtocol = internalShared
-    public var userId: String = ""
     static var internalShared = PurchasesManager()
     // A transaction listener to listen to transactions on init and through out the apps use.
     private var updateListenerTask: Task<Void, Error>?
@@ -57,11 +56,6 @@ public class PurchasesManager: NSObject, PurchasesManagerProtocol {
         updateListenerTask?.cancel()
         debugPrint("🏦 deinit ✅ Deinitialized")
     }
-    
-    public func setUserID(_ id: String) {
-        self.userId = id
-    }
-    
 }
 
 

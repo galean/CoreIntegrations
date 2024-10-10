@@ -16,7 +16,6 @@ extension CoreManager: CoreManagerProtocol {
                 self.sendSubscriptionTypeUserProperty(identifier: details.productId)
             }
             
-            self.sendPurchaseToAttributionServer(details)
             self.sendPurchaseToFacebook(details)
             self.sendPurchaseToAppsflyer(details)
             return .success(details: details)
@@ -30,33 +29,6 @@ extension CoreManager: CoreManagerProtocol {
             return .unknown
         }
     }
-    
-    //may be implemented in future
-//    public func purchase(_ purchase: Purchase, promoOffer: PromoOffer) async -> PurchasesPurchaseResult {
-//        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
-//        let result = try? await purchaseManager.purchase(purchase.product, promoOffer: promoOffer)
-//
-//        switch result {
-//        case .success(let purchaseInfo):
-//            let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: purchaseInfo.transaction, jws: purchaseInfo.jwsRepresentation, originalTransactionID: purchaseInfo.originalID, decodedTransaction: purchaseInfo.jsonRepresentation)
-//            
-//            // check if premium group
-//            self.sendSubscriptionTypeUserProperty(identifier: details.productId)
-//            
-//            self.sendPurchaseToAttributionServer(details)
-//            self.sendPurchaseToFacebook(details)
-//            self.sendPurchaseToAppsflyer(details)
-//            return .success(details: details)
-//        case .pending:
-//            return .pending
-//        case .userCancelled:
-//            return .userCancelled
-//        case .unknown:
-//            return .unknown
-//        case .none:
-//            return .unknown
-//        }
-//    }
     
     private func groupFor(_ productId: String) -> any CorePurchaseGroup {
         let group = CoreManager.internalShared.configuration?.paywallDataSource.allPurchaseIdentifiers.first(where: {$0.id == productId})?.purchaseGroup

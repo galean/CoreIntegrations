@@ -10,16 +10,10 @@ public protocol CoreSettingsProtocol: AnyObject {
     var amplitudeSecret: String { get }
     
     var launchCount: Int { get set }
-    
-    var paywallSourceForRestricted: CoreUserSource? { get }
 }
 
 public extension CoreSettingsProtocol {
     var isFirstLaunch: Bool {
         launchCount == 1
-    }
-    
-    var paywallSourceForRestricted: CoreUserSource? {
-        return nil
     }
 }

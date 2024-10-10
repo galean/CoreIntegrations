@@ -3,7 +3,6 @@ import UIKit
 #if !COCOAPODS
 import AppsflyerIntegration
 import FacebookIntegration
-import AttributionServerIntegration
 import PurchasesIntegration
 import AnalyticsIntegration
 import FirebaseIntegration
@@ -16,24 +15,8 @@ import StoreKit
     I think it would be good to split CoreManager into different manager parts - for default configuration, for additional configurations like analytics, test_distribution etc, and for purchases and purchases attribution part
  */
 public class CoreManager {
-    
-    struct AmplitudeCountry {
-        //alpha2code - UK, ES, CN
-        static let regionCode = Locale.current.regionCode ?? ""
-        //alpha3code - UKR, ESP, CHN
-        static let countryCode = SKPaymentQueue.default().storefront?.countryCode ?? ""
-        
-        static var cnCheck: Bool {
-            return regionCode == "CN" || countryCode == "CHN"
-        }
-    }
-    
     public static var shared: CoreManagerProtocol = internalShared
     static var internalShared = CoreManager()
-    
-    public static var uniqueUserID: String? {
-        return AttributionServerManager.shared.uniqueUserID
-    }
     
     var attAnswered: Bool = false
     var isConfigured: Bool = false
@@ -58,9 +41,7 @@ public class CoreManager {
         
         analyticsManager = AnalyticsManager.shared
         
-        let amplitudeCustomURL = configuration.amplitudeDataSource.customServerURL
-        let cnCheck = AmplitudeCountry.cnCheck
-        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret, cnConfig: cnCheck, customURL: amplitudeCustomURL)
+        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret)
         
         sendStoreCountryUserProperty()
         configuration.appSettings.launchCount += 1
@@ -75,43 +56,19 @@ public class CoreManager {
         
         appsflyerManager = AppfslyerManager(config: configuration.appsflyerConfig)
         
-        
         facebookManager = FacebookManager()
         
         purchaseManager = PurchasesManager.shared
-        
-        let attributionToken = configuration.appSettings.attributionServerSecret
-        let facebookData = AttributionFacebookModel(fbUserId: facebookManager?.userID ?? "",
-                                                    fbUserData: facebookManager?.userData ?? "",
-                                                    fbAnonId: facebookManager?.anonUserID ?? "")
-        let appsflyerToken = appsflyerManager?.appsflyerID
-        
+                
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
 
         remoteConfigManager = CoreRemoteConfigManager()
-        
-        let installPath = "/install-application"
-        let purchasePath = "/subscribe"
-        let installURLPath = configuration.attributionServerDataSource.installPath
-        let purchaseURLPath = configuration.attributionServerDataSource.purchasePath
-        
-        let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
-                                                                 installServerURLPath: installURLPath,
-                                                                 purchaseServerURLPath: purchaseURLPath,
-                                                                 installPath: installPath,
-                                                                 purchasePath: purchasePath,
-                                                                 appsflyerID: appsflyerToken,
-                                                                 facebookData: facebookData)
-        
-        AttributionServerManager.shared.configure(config: attributionConfiguration)
         
         if configuration.useDefaultATTRequest {
             configureATT()
         }
 
         handleConfigurationEndCallback()
-        
-        handleAttributionInstall()
     }
     
     func configureATT() {
@@ -121,31 +78,6 @@ public class CoreManager {
     }
     
     @objc public func applicationDidBecomeActive() {
-        let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
-        let uuid = AttributionServerManager.shared.savedUserUUID
-       
-        let id: String?
-        if savedIDFV != nil {
-            id = AttributionServerManager.shared.uniqueUserID
-        } else {
-            id = uuid ?? AttributionServerManager.shared.uniqueUserID
-        }
-        if let id, id != "" {
-            appsflyerManager?.customerUserID = id
-            appsflyerManager?.startAppsflyer()
-            purchaseManager?.setUserID(id)
-            self.facebookManager?.userID = id
-            
-            self.remoteConfigManager?.configure(id: id) { [weak self] in
-                guard let self = self else {return}
-                remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
-                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
-                }
-            }
-            
-            self.analyticsManager?.setUserID(id)
-        }
-        
         if configuration?.useDefaultATTRequest == true {
             requestATT()
         }
@@ -205,56 +137,6 @@ public class CoreManager {
         facebookManager?.configureATT(isAuthorized: status == .authorized)
     }
     
-    func handleAttributionInstall() {
-        guard let configurationManager = AppConfigurationManager.shared else {
-            assertionFailure()
-            return
-        }
-    
-        configurationManager.signForAttAndConfigLoaded {
-            let enabled = CoreManager.internalShared.remoteConfigManager?.config_on ?? false
-            self.appsflyerManager?.enabled = enabled
-            self.appsflyerManager?.enableDelegate()
-            
-            let installPath = "/install-application"
-            let purchasePath = "/subscribe"
-            
-            if let installURLPath = self.remoteConfigManager?.install_server_path,
-               let purchaseURLPath = self.remoteConfigManager?.purchase_server_path,
-               installURLPath != "",
-               purchaseURLPath != "" {
-                let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
-                                                                     purchaseServerURLPath: purchaseURLPath,
-                                                                     installPath: installPath,
-                                                                     purchasePath: purchasePath)
-                
-                AttributionServerManager.shared.configureURLs(config: attributionConfiguration, isOn: enabled)
-            }else{
-                if let serverDataSource = self.configuration?.attributionServerDataSource {
-                    let installURLPath = serverDataSource.installPath
-                    let purchaseURLPath = serverDataSource.purchasePath
-                    
-                    let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
-                                                                         purchaseServerURLPath: purchaseURLPath,
-                                                                         installPath: installPath,
-                                                                         purchasePath: purchasePath)
-                    
-                    AttributionServerManager.shared.configureURLs(config: attributionConfiguration, isOn: enabled)
-                }
-            }
-            
-            AttributionServerManager.shared.syncOnAppStart { result in
-                InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
-            }
-        }
-
-    }
-    
-    func sendPurchaseToAttributionServer(_ details: PurchaseDetails) {
-        let tlmamDetals = AttributionPurchaseModel(details)
-        AttributionServerManager.shared.syncPurchase(data: tlmamDetals)
-    }
-    
     func sendPurchaseToFacebook(_ purchase: PurchaseDetails) {
         guard facebookManager != nil else {
             return
@@ -289,49 +171,26 @@ public class CoreManager {
         }
         
         configurationManager.signForConfigurationEnd { configurationResult in
-            let result = self.getConfigurationResult(isFirstConfiguration: true)
-            self.delegate?.coreConfigurationFinished(result: result)
+            self.getConfigurationResult()
+            self.delegate?.coreConfigurationFinished()
         }
     }
     
-    func getConfigurationResult(isFirstConfiguration: Bool) -> CoreManagerResult {
-        let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
+    func getConfigurationResult() {
+        let abTests = self.configuration?.remoteConfigDataSource.allABTests
         let remoteResult = self.remoteConfigManager?.remoteConfigResult ?? [:]
-        let asaResult = AttributionServerManager.shared.installResultData
-        let isIPAT = asaResult?.isIPAT ?? false
-        let isASA = (asaResult?.asaAttribution["campaignName"] as? String != nil) ||
-        (asaResult?.asaAttribution["campaign_name"] as? String != nil)
         
-        var isRedirect = false
-        var networkSource: CoreUserSource = .unknown
+        let allConfigs = self.configuration?.remoteConfigDataSource.allConfigurables ?? []
+        self.saveRemoteConfig(allConfigs: allConfigs, remoteResult: remoteResult)
         
-        var userSource: CoreUserSource
-        
-        if isIPAT {
-            userSource = .ipat
-        } else if isASA {
-            userSource = .asa
-        } else {
-            userSource = .organic
+        guard let abTests else {
+            return
         }
-        
-        if isFirstConfiguration {
-            let allConfigs = self.configuration?.remoteConfigDataSource.allConfigurables ?? []
-            self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
-                        
-            self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
-            self.sendTestDistributionEvent(abTests: abTests, userSource: userSource)
-        } else {
-            let allConfigs = InternalRemoteABTests.allCases
-            self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
-            self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
-        }
-        
-        let result = CoreManagerResult(userSource: userSource, userSourceInfo: asaResult?.asaAttribution)
-        return result
+        self.sendABTestsUserProperties(abTests: abTests)
+        self.sendTestDistributionEvent(abTests: abTests)
     }
     
-    func saveRemoteConfig(attribution: CoreUserSource, allConfigs: [any CoreFirebaseConfigurable],
+    func saveRemoteConfig(allConfigs: [any CoreFirebaseConfigurable],
                           remoteResult: [String: String]) {
         allConfigs.forEach { config in
             let remoteValue = remoteResult[config.key]
@@ -340,11 +199,8 @@ public class CoreManager {
                 return
             }
             
-            let value: String
-            if config.activeForSources.contains(attribution) {
-                value = remoteValue
-                config.updateValue(value)
-            }
+            let value = remoteValue
+            config.updateValue(value)
         }
     }
 }

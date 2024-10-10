@@ -67,14 +67,6 @@ class AppConfigurationManager {
         waitingCallbacks.append(callback)
     }
     
-    public func signForAttAndConfigLoaded(_ callback: @escaping () -> Void) {
-        guard !configurationAttFinishHandled else {
-            callback()
-            return
-        }
-        attributionCallback = callback
-    }
-    
     private func checkATTConfiguration() {
         guard configurationAttAndConfigFinished else {
             return
