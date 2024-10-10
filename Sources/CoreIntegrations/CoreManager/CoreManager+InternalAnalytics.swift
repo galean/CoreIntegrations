@@ -23,11 +23,6 @@ extension CoreManager {
         InternalUserProperty.att_status.identify(parameter: "\(answer)")
     }
     
-    func sendDeepLinkUserProperties(deepLinkResult: [String: String]) {
-        let userProperties = deepLinkResult
-        InternalUserProperty.identify(userProperties)
-    }
-    
     func sendABTestsUserProperties(abTests: [any CoreRemoteABTestable], userSource: CoreUserSource) { // +
         let userProperties = abTests.reduce(into: [String:String]()) { partialResult, abtest in
             let shouldSend: Bool = abtest.activeForSources.contains(userSource)
@@ -42,7 +37,7 @@ extension CoreManager {
         InternalUserProperty.identify(userProperties)
     }
     
-    func sendTestDistributionEvent(abTests: [any CoreRemoteABTestable], deepLinkResult: [String: String],
+    func sendTestDistributionEvent(abTests: [any CoreRemoteABTestable],
                                    userSource: CoreUserSource) { // +
         var parameters = abTests.reduce(into: [String:String]()) { partialResult, abtest in
             let shouldSend: Bool = abtest.activeForSources.contains(userSource)
@@ -54,9 +49,7 @@ extension CoreManager {
             }
             partialResult[abtest.key] = value
         }
-        
-        parameters = parameters + deepLinkResult
-        
+                
         InternalAnalyticsEvent.test_distribution.log(parameters: parameters)
         analyticsManager?.forceEventsUpload()
     }

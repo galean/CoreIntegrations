@@ -3,22 +3,9 @@ import AppsFlyerLib
 
 public class AppfslyerManager: NSObject {
     public var delegate: AppsflyerManagerDelegate?
-    public var deeplinkResult: [String: String]? {
-        get {
-            return UserDefaults.standard.object(forKey: deepLinkResultUDKey) as? [String: String]
-        }
-        set {
-            guard deeplinkResult == nil, newValue != nil else {
-                return
-            }
-            
-            UserDefaults.standard.set(newValue, forKey: deepLinkResultUDKey)
-        }
-    }
+
     public var enabled: Bool = true
-    
-    private var deepLinkResultUDKey = "coreintegrations_appsflyer_deeplinkResult"
-    
+        
     public init(config: AppsflyerConfigData) {
         super.init()
         AppsFlyerLib.shared().appsFlyerDevKey = config.appsFlyerDevKey
@@ -108,13 +95,6 @@ extension AppfslyerManager: AppfslyerManagerProtocol {
 extension AppfslyerManager: AppsFlyerLibDelegate {
     public func onConversionDataSuccess(_ conversionInfo: [AnyHashable : Any]) {
         delegate?.coreConfiguration(didReceive: conversionInfo)
-        guard enabled else {
-            delegate?.handledDeeplink([:])
-            return
-        }
-        let deepLinkInfo = parseDeepLink(conversionInfo)
-        deeplinkResult = deepLinkInfo
-        delegate?.handledDeeplink(deepLinkInfo)
     }
     
     public func onConversionDataFail(_ error: Error) {

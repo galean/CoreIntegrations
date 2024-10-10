@@ -4,14 +4,13 @@ import Foundation
 enum InternalConfigurationEvent: String, ConfigurationEvent {
     case attConcentGiven = "attConcentGiven"
     case remoteConfigLoaded = "remoteConfigLoaded"
-    case appsflyerWeb2AppHandled = "appsflyerWeb2AppHandled"
     case attributionServerHandled = "attributionServerHandled"
 
     var isFirstStartOnly: Bool {
         switch self {
         case .remoteConfigLoaded:
             return false
-        case .attConcentGiven, .appsflyerWeb2AppHandled, .attributionServerHandled:
+        case .attConcentGiven, .attributionServerHandled:
             return true
         }
     }

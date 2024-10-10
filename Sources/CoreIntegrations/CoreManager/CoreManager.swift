@@ -47,9 +47,7 @@ public class CoreManager {
     var analyticsManager: AnalyticsManager?
     
     var delegate: CoreManagerDelegate?
-    
-    var configurationResultManager = ConfigurationResultManager()
-    
+        
     func configureAll(configuration: CoreConfigurationProtocol) {
         guard isConfigured == false else {
             return
@@ -296,65 +294,21 @@ public class CoreManager {
         }
     }
     
-    func handleConfigurationUpdate() {
-        guard let configurationManager = AppConfigurationManager.shared else {
-            assertionFailure()
-            return
-        }
-        
-        if configurationManager.configurationFinishHandled {
-            let result = getConfigurationResult(isFirstConfiguration: false)
-            self.delegate?.coreConfigurationUpdated(newResult: result)
-        }
-    }
-    
     func getConfigurationResult(isFirstConfiguration: Bool) -> CoreManagerResult {
         let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
         let remoteResult = self.remoteConfigManager?.remoteConfigResult ?? [:]
         let asaResult = AttributionServerManager.shared.installResultData
         let isIPAT = asaResult?.isIPAT ?? false
-        let deepLinkResult = self.appsflyerManager?.deeplinkResult ?? [:]
         let isASA = (asaResult?.asaAttribution["campaignName"] as? String != nil) ||
         (asaResult?.asaAttribution["campaign_name"] as? String != nil)
         
         var isRedirect = false
         var networkSource: CoreUserSource = .unknown
         
-        let enabled = CoreManager.internalShared.remoteConfigManager?.config_on ?? false
-        if enabled {
-            if let networkValue = deepLinkResult["network"] {
-                if networkValue.contains("web2app_fb") {
-                    networkSource = .facebook
-                } else if networkValue.contains("Google_StoreRedirect") {
-                    networkSource = .google
-                } else if networkValue.contains("tiktok") {
-                    networkSource = .tiktok
-                } else if networkValue.contains("instagram") {
-                    networkSource = .instagram
-                } else if networkValue.contains("snapchat") {
-                    networkSource = .snapchat
-                } else if networkValue.lowercased().contains("bing") {
-                    networkSource = .bing
-                } else if networkValue == "Full_Access" {
-                    networkSource = .test_premium
-                } else if networkValue == "restricted" {
-                    if let fixedSource = self.configuration?.appSettings.paywallSourceForRestricted {
-                        networkSource = fixedSource
-                    }
-                } else {
-                    networkSource = .unknown
-                }
-                
-                isRedirect = true
-            }
-        }
-        
         var userSource: CoreUserSource
         
         if isIPAT {
             userSource = .ipat
-        } else if enabled && isRedirect {
-            userSource = networkSource
         } else if isASA {
             userSource = .asa
         } else {
@@ -366,18 +320,14 @@ public class CoreManager {
             self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
                         
             self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
-            self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
+            self.sendTestDistributionEvent(abTests: abTests, userSource: userSource)
         } else {
             let allConfigs = InternalRemoteABTests.allCases
             self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
             self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
         }
         
-        self.configurationResultManager.userSource = userSource
-        self.configurationResultManager.deepLinkResult = deepLinkResult
-        self.configurationResultManager.asaAttributionResult = asaResult?.asaAttribution
-        
-        let result = self.configurationResultManager.calculateResult()
+        let result = CoreManagerResult(userSource: userSource, userSourceInfo: asaResult?.asaAttribution)
         return result
     }
     
@@ -396,45 +346,6 @@ public class CoreManager {
                 config.updateValue(value)
             }
         }
-    }
-}
-
-class ConfigurationResultManager {
-    var userSource: CoreUserSource = .organic
-    var asaAttributionResult: [String: String]?
-    var deepLinkResult: [String: String]?
-    
-    func calculateResult() -> CoreManagerResult {
-        // get appsflyer info
-        let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall.value)
-        
-        let activePaywallName: String
-        var userSourceInfo: [String: String]? = deepLinkResult
-        
-        if let deepLinkValue: String = deepLinkResult?["deep_link_value"], deepLinkValue != "none", deepLinkValue != "",
-           let firebaseValue = CoreManager.internalShared.remoteConfigManager?.internalConfigResult?[deepLinkValue] {
-                activePaywallName = getPaywallNameFromConfig(firebaseValue)
-            userSourceInfo = deepLinkResult
-        }else{
-            activePaywallName = organicPaywallName
-        }
-        
-        let coreManagerResult = CoreManagerResult(userSource: userSource,
-                                                  userSourceInfo: userSourceInfo,
-                                                  activePaywallName: activePaywallName)
-        
-        return coreManagerResult
-    }
-    
-    private func getPaywallNameFromConfig(_ config: String) -> String {
-        let paywallName: String
-        let value = config
-        if value.hasPrefix("none_") {
-            paywallName = String(value.dropFirst("none_".count))
-        } else {
-            paywallName = value
-        }
-        return paywallName
     }
 }
 

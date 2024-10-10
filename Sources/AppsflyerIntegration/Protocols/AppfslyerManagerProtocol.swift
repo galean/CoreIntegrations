@@ -3,7 +3,6 @@ import UIKit
 public protocol AppfslyerManagerProtocol {
     var appsflyerID: String { get }
     var customerUserID: String? { get set }
-    var deeplinkResult: [String: String]? { get }
     var delegate: AppsflyerManagerDelegate? { get set }
     var enabled: Bool { get set }
     
