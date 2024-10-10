@@ -19,14 +19,13 @@ public class CoreRemoteConfigManager {
         
     }
     
-    public func configure(id:String, completion: @escaping () -> Void) {
+    public func configure(completion: @escaping () -> Void) {
         guard !isConfigured else {
             return
         }
         
         firebaseManager.configure() { [weak self] in
             completion()
-            self?.firebaseManager.setUserID(id)
             self?.isConfigured = true
         }
     }

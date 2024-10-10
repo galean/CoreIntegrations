@@ -78,6 +78,15 @@ public class CoreManager {
     }
     
     @objc public func applicationDidBecomeActive() {
+        appsflyerManager?.startAppsflyer()
+        
+        self.remoteConfigManager?.configure() { [weak self] in
+            guard let self = self else {return}
+            remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
+                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
+            }
+        }
+        
         if configuration?.useDefaultATTRequest == true {
             requestATT()
         }
