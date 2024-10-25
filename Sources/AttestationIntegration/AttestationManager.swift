@@ -6,6 +6,7 @@ import UIKit
 public actor AttestationManager:AttestationManagerProtocol {
     static public let shared = AttestationManager()
         
+    //to be replaced with UUID()
     @MainActor
     private var uuid: String {
         let idfv = UIDevice.current.identifierForVendor?.uuidString ?? ""
@@ -118,11 +119,11 @@ public actor AttestationManager:AttestationManagerProtocol {
                 return AttestValidationResult(success: true, warning: warningDict)
             default:
                 UserDefaults.standard.removeObject(forKey: serverURL)
-                return AttestValidationResult(success: false, warning: warningDict)
+                return AttestValidationResult(success: false, warning: warningDict ?? ["error":"\(httpResponse)"])
             }
         }
-      //  UserDefaults.standard.removeObject(forKey: serverURL)
-        return AttestValidationResult(success: true)
+        UserDefaults.standard.removeObject(forKey: serverURL)
+        return AttestValidationResult(success: false,  warning: ["error":"\(response)"])
     }
     
     public func bypass(serverURL: String, key: String) async throws -> AttestBypassResult {
@@ -143,10 +144,10 @@ public actor AttestationManager:AttestationManagerProtocol {
             case 200, 204:
                 return AttestBypassResult(success: true, warning: warningDict)
             default:
-                return AttestBypassResult(success: false, warning: warningDict)
+                return AttestBypassResult(success: false, warning: warningDict ?? ["error":"\(httpResponse)"])
             }
         }
-        return AttestBypassResult(success: false)
+        return AttestBypassResult(success: false, warning: ["error":"\(response)"])
     }
     
 }
