@@ -44,15 +44,4 @@ public protocol CoreManagerProtocol {
     
     func restoreAll() async -> PurchasesRestoreResult
     
-    var attest_isSupported: Bool { get async }
-    
-    var attest_KeyId: String? { get async }
-    
-    func attest_generateKey() async throws -> AttestKeyGenerationResult
-    
-    func attest_createAssertion() async throws -> AttestationManagerResult
-    
-    func attest_validateStoredKey() async throws -> AttestValidationResult
-    
-    func attest_bypass() async throws -> AttestBypassResult
 }

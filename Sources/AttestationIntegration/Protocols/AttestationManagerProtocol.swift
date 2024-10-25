@@ -1,9 +1,9 @@
 
 public protocol AttestationManagerProtocol {
     var isSupported: Bool { get async }
-    var attestKeyId: String? { get async }
-    func generateKey() async throws -> AttestKeyGenerationResult
-    func createAssertion() async throws -> AttestationManagerResult
-    func validateStoredKey() async throws -> AttestValidationResult
-    func bypass() async throws -> AttestBypassResult
+    func attestKeyId(for serverURL: String) async -> String?
+    func generateKey(for serverURL: String) async throws -> AttestKeyGenerationResult
+    func createAssertion(for serverURL: String) async throws -> AttestationManagerResult
+    func validateStoredKey(for serverURL: String) async throws -> AttestValidationResult
+    func bypass(serverURL: String, key: String) async throws -> AttestBypassResult
 }

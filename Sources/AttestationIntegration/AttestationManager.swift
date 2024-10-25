@@ -5,12 +5,7 @@ import UIKit
 
 public actor AttestationManager:AttestationManagerProtocol {
     static public let shared = AttestationManager()
-    
-    public var baseURL: String = ""
-    public var bypassKey: String = ""
-    
-    private var attest_key_id = "CoreAttestationKeyId"
-    
+        
     @MainActor
     private var uuid: String {
         let idfv = UIDevice.current.identifierForVendor?.uuidString ?? ""
@@ -24,18 +19,11 @@ public actor AttestationManager:AttestationManagerProtocol {
         }
     }
     
-    public var attestKeyId: String? {
-        get async {
-            UserDefaults.standard.string(forKey: attest_key_id)
-        }
+    public func attestKeyId(for serverURL: String) async -> String? {
+        return UserDefaults.standard.string(forKey: serverURL)
     }
     
-    public func configure(serverURL: String, bypassKey: String) {
-        self.baseURL = serverURL
-        self.bypassKey = bypassKey
-    }
-    
-    public func generateKey() async throws -> AttestKeyGenerationResult {
+    public func generateKey(for serverURL: String) async throws -> AttestKeyGenerationResult {
         let service = DCAppAttestService.shared
         
         if service.isSupported {
@@ -54,7 +42,7 @@ public actor AttestationManager:AttestationManagerProtocol {
                 ]
             )
             
-            let request = URLRequest.post(to: baseURL.url(endpoint: "/app-attest/register-device"), with: data)
+            let request = URLRequest.post(to: serverURL.url(endpoint: "/app-attest/register-device"), with: data)
             
             let (_, response) = try await URLSession.shared.data(for: request)
             
@@ -65,7 +53,7 @@ public actor AttestationManager:AttestationManagerProtocol {
                 
                 switch httpResponse.statusCode {
                 case 200, 204:
-                    UserDefaults.standard.set(keyId, forKey: attest_key_id)
+                    UserDefaults.standard.set(keyId, forKey: serverURL)
                     return AttestKeyGenerationResult(key: keyId, warning: warningDict)
                 case 400:
                     throw AttestationError.keyIdRequired(warningDict)
@@ -80,27 +68,22 @@ public actor AttestationManager:AttestationManagerProtocol {
             
             throw AttestationError.attestVerificationFailed(nil)
         }else{
-            let bypass = try await bypass()
-            if bypass.success {
-                throw AttestationError.unenforcedBypass(bypass.warning)
-            }else{
-                throw AttestationError.bypassError(bypass.warning)
-            }
+            throw AttestationError.attestNotSupported(["error":"Attestation is not supported on this device. Please call the *bypass(serverURL: String, key: String)* function."])
         }
     }
     
-    public func createAssertion() async throws -> AttestationManagerResult {
-        var keyId = await attestKeyId
+    public func createAssertion(for serverURL: String) async throws -> AttestationManagerResult {
+        var keyId = await attestKeyId(for: serverURL)
         var warning: [String: Any]?
         
         if keyId == nil {
-            let result = try await generateKey()
+            let result = try await generateKey(for: serverURL)
             keyId = result.key
             warning = result.warning
         }else{
-            let validationResult = try await validateStoredKey()
+            let validationResult = try await validateStoredKey(for: serverURL)
             if !validationResult.success {
-                let result = try await generateKey()
+                let result = try await generateKey(for: serverURL)
                 keyId = result.key
                 warning = result.warning
             }else{
@@ -115,13 +98,13 @@ public actor AttestationManager:AttestationManagerProtocol {
         return AttestationManagerResult(assertion: assertion, keyId: keyId, warning: warning)
     }
     
-    public func validateStoredKey() async throws -> AttestValidationResult {
-        let keyId = await attestKeyId
+    public func validateStoredKey(for serverURL: String) async throws -> AttestValidationResult {
+        let keyId = await attestKeyId(for: serverURL)
         let data = try await JSONEncoder().encode(
             ["keyId": keyId, "idfv": uuid]
         )
         
-        let request = URLRequest.post(to: baseURL.url(endpoint: "/app-attest/register-device"), with: data)
+        let request = URLRequest.post(to: serverURL.url(endpoint: "/app-attest/register-device"), with: data)
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
@@ -134,21 +117,20 @@ public actor AttestationManager:AttestationManagerProtocol {
             case 200, 204:
                 return AttestValidationResult(success: true, warning: warningDict)
             default:
-                UserDefaults.standard.removeObject(forKey: attest_key_id)
+                UserDefaults.standard.removeObject(forKey: serverURL)
                 return AttestValidationResult(success: false, warning: warningDict)
             }
         }
-        UserDefaults.standard.removeObject(forKey: attest_key_id)
+      //  UserDefaults.standard.removeObject(forKey: serverURL)
         return AttestValidationResult(success: true)
     }
     
-    public func bypass() async throws -> AttestBypassResult {
+    public func bypass(serverURL: String, key: String) async throws -> AttestBypassResult {
         let data = try await JSONEncoder().encode(
-            ["idfv": uuid, "bypassKey" : bypassKey]
+            ["idfv": uuid, "bypassKey" : key]
         )
         
-        
-        let request = URLRequest.post(to: baseURL.url(endpoint: "/app-attest/verify"), with: data)
+        let request = URLRequest.post(to: serverURL.url(endpoint: "/app-attest/verify"), with: data)
         
         let (_, response) = try await URLSession.shared.data(for: request)
         

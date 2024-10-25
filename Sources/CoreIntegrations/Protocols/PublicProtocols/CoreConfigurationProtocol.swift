@@ -13,7 +13,6 @@ public protocol CoreConfigurationProtocol {
     var paywallDataSource: any CorePaywallDataSource { get }
     var useDefaultATTRequest: Bool { get }
     var attributionServerDataSource: any AttributionServerDataSource { get }
-    var attestDataSource: any AttestationDataSource { get }
 }
 
 extension CoreConfigurationProtocol {
