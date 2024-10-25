@@ -1,5 +1,5 @@
 
 public struct AttestBypassResult {
-    var success: Bool
-    var warning: [String: Any]?
+    public var success: Bool
+    public var warning: [String: Any]?
 }

@@ -1,5 +1,5 @@
 
 public struct AttestKeyGenerationResult {
-    var key: String
-    var warning: [String: Any]?
+    public var key: String
+    public var warning: [String: Any]?
 }
