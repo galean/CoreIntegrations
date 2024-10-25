@@ -6,7 +6,11 @@ extension PurchasesManager {
     public func purchase(_ product: Product) async throws -> SKPurchaseResult {
         debugPrint("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
 
-        let result = try await product.purchase()
+        var options:Set<Product.PurchaseOption> = []
+        if let userId = UUID(uuidString: self.userId) {
+            options = [.appAccountToken(userId)]
+        }
+        let result = try await product.purchase(options: options)
 
         switch result {
         case .success(let verification):

@@ -3,6 +3,7 @@ import UIKit
 #if !COCOAPODS
 import AppsflyerIntegration
 import FacebookIntegration
+import AttributionServerIntegration
 import PurchasesIntegration
 import AnalyticsIntegration
 import FirebaseIntegration
@@ -64,6 +65,27 @@ public class CoreManager {
 
         remoteConfigManager = CoreRemoteConfigManager()
         
+        let attributionToken = configuration.appSettings.attributionServerSecret
+        let facebookData = AttributionFacebookModel(fbUserId: facebookManager?.userID ?? "",
+                                                    fbUserData: facebookManager?.userData ?? "",
+                                                    fbAnonId: facebookManager?.anonUserID ?? "")
+        let appsflyerToken = appsflyerManager?.appsflyerID
+        
+        let installPath = "/install-application"
+        let purchasePath = "/subscribe"
+        let installURLPath = configuration.attributionServerDataSource.installPath
+        let purchaseURLPath = configuration.attributionServerDataSource.purchasePath
+        
+        let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
+                                                                 installServerURLPath: installURLPath,
+                                                                 purchaseServerURLPath: purchaseURLPath,
+                                                                 installPath: installPath,
+                                                                 purchasePath: purchasePath,
+                                                                 appsflyerID: appsflyerToken,
+                                                                 facebookData: facebookData)
+        
+        AttributionServerManager.shared.configure(config: attributionConfiguration)
+        
         if configuration.useDefaultATTRequest {
             configureATT()
         }
@@ -78,6 +100,11 @@ public class CoreManager {
     }
     
     @objc public func applicationDidBecomeActive() {
+        let id = AttributionServerManager.shared.userToken
+        appsflyerManager?.customerUserID = id
+        appsflyerManager?.startAppsflyer()
+        purchaseManager?.setUserID(id)
+        self.facebookManager?.userID = id
         appsflyerManager?.startAppsflyer()
         
         self.remoteConfigManager?.configure() { [weak self] in
@@ -144,6 +171,52 @@ public class CoreManager {
             assertionFailure()
         }
         facebookManager?.configureATT(isAuthorized: status == .authorized)
+    }
+    
+    func handleAttributionInstall() {
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+    
+        configurationManager.signForAttAndConfigLoaded {
+            let installPath = "/install-application"
+            let purchasePath = "/subscribe"
+            
+            if let installURLPath = self.remoteConfigManager?.install_server_path,
+               let purchaseURLPath = self.remoteConfigManager?.purchase_server_path,
+               installURLPath != "",
+               purchaseURLPath != "" {
+                let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
+                                                                     purchaseServerURLPath: purchaseURLPath,
+                                                                     installPath: installPath,
+                                                                     purchasePath: purchasePath)
+                
+                AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
+            }else{
+                if let serverDataSource = self.configuration?.attributionServerDataSource {
+                    let installURLPath = serverDataSource.installPath
+                    let purchaseURLPath = serverDataSource.purchasePath
+                    
+                    let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
+                                                                         purchaseServerURLPath: purchaseURLPath,
+                                                                         installPath: installPath,
+                                                                         purchasePath: purchasePath)
+                    
+                    AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
+                }
+            }
+            
+            AttributionServerManager.shared.syncOnAppStart { result in
+                InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
+            }
+        }
+
+    }
+    
+    func sendPurchaseToAttributionServer(_ details: PurchaseDetails) {
+        let tlmamDetals = AttributionPurchaseModel(details)
+        AttributionServerManager.shared.syncPurchase(data: tlmamDetals)
     }
     
     func handleConfigurationEndCallback() {
