@@ -11,16 +11,13 @@ public class CoreRemoteConfigManager {
     private let kPurchaseURL = "purchase_server_path"
     
     private let firebaseManager = FirebaseManager()
-    private let growthBookManager = GrowthBookManager()
     private var isConfigured:Bool = false
     private var isConfigFetched:Bool = false
     
     private let cnConfig: Bool
-    private var growthBookKey:String?
     
-    public init(cnConfig: Bool, growthBookClientKey:String?) {
+    public init(cnConfig: Bool) {
         self.cnConfig = cnConfig
-        self.growthBookKey = growthBookClientKey
     }
     
     public func configure(id:String, completion: @escaping () -> Void) {
@@ -28,17 +25,10 @@ public class CoreRemoteConfigManager {
             return
         }
         
-        if cnConfig, let growthBookClientKey = growthBookKey {
-            growthBookManager.configure(id: id, clientKey: growthBookClientKey) { [weak self] in
-                completion()
-                self?.isConfigured = true
-            }
-        }else{
-            firebaseManager.configure() { [weak self] in
-                completion()
-                self?.firebaseManager.setUserID(id)
-                self?.isConfigured = true
-            }
+        firebaseManager.configure() { [weak self] in
+            completion()
+            self?.firebaseManager.setUserID(id)
+            self?.isConfigured = true
         }
     }
     
@@ -47,33 +37,20 @@ public class CoreRemoteConfigManager {
             completion()
             return
         }
-        if cnConfig, let growthBookClientKey = growthBookKey {
-            growthBookManager.fetchRemoteConfig(appConfigurables) { [weak self] in
-                guard let self = self else {return}
-                
-                remoteConfigResult = growthBookManager.remoteConfigResult
-                internalConfigResult = growthBookManager.internalConfigResult
-                
-                install_server_path = growthBookManager.install_server_path
-                purchase_server_path = growthBookManager.purchase_server_path
-                
-                isConfigFetched = true
-                completion()
-            }
-        }else{
-            firebaseManager.fetchRemoteConfig(appConfigurables) { [weak self] in
-                guard let self = self else {return}
-                
-                remoteConfigResult = firebaseManager.remoteConfigResult
-                internalConfigResult = firebaseManager.internalConfigResult
-                
-                install_server_path = firebaseManager.install_server_path
-                purchase_server_path = firebaseManager.purchase_server_path
-                
-                isConfigFetched = true
-                completion()
-            }
+        
+        firebaseManager.fetchRemoteConfig(appConfigurables) { [weak self] in
+            guard let self = self else {return}
+            
+            remoteConfigResult = firebaseManager.remoteConfigResult
+            internalConfigResult = firebaseManager.internalConfigResult
+            
+            install_server_path = firebaseManager.install_server_path
+            purchase_server_path = firebaseManager.purchase_server_path
+            
+            isConfigFetched = true
+            completion()
         }
+        
     }
     
 }

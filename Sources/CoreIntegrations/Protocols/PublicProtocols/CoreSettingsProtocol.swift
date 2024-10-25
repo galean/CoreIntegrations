@@ -5,7 +5,6 @@ public protocol CoreSettingsProtocol: AnyObject {
     var appID: String { get }
     var appsFlyerKey: String { get }
     var attributionServerSecret: String { get }
-    var growthBookClientKey: String? { get }
     var subscriptionsSecret: String { get }
     
     var amplitudeSecret: String { get }
@@ -18,9 +17,6 @@ public protocol CoreSettingsProtocol: AnyObject {
 public extension CoreSettingsProtocol {
     var isFirstLaunch: Bool {
         launchCount == 1
-    }
-    var growthBookClientKey: String? {
-        return nil
     }
     
     var paywallSourceForRestricted: CoreUserSource? {

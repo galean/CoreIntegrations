@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CoreIntegrations'
-  s.version          = '2.4.7'
+  s.version          = '2.4.8'
   s.summary          = 'CoreIntegrations framework'
 
   s.description      = 'Description'
@@ -32,7 +32,5 @@ Pod::Spec.new do |s|
   s.dependency 'Amplitude'
   s.dependency 'AnalyticsConnector'
   s.dependency 'SwiftyStoreKit'
-  s.dependency 'GrowthBook-IOS'
-
   
 end
