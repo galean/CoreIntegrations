@@ -7,7 +7,7 @@ class AttributionUserDefaultsWorker: AttributionUserDefaultsWorkerProtocol {
     fileprivate let installDataKey = "ANALYTICS_DATA_TO_SAVE"
     fileprivate let serverUserIDKey = "ANALYTICS_USER_ID"
     fileprivate let purchaseDataKey = "ANALYTICS_PURCHASE_DATA"
-    fileprivate let generatedTokenKey = "ANALYTICS_GENERATED_TOKEN"
+    fileprivate let userTokenKey = "ANALYTICS_USER_TOKEN"
     fileprivate let installResult = "ANALYTICS_INSTALL_RESULT"
     
     func getInstallData() -> AttributionInstallRequestModel? {
@@ -42,12 +42,12 @@ class AttributionUserDefaultsWorker: AttributionUserDefaultsWorkerProtocol {
         userDefaults.synchronize()
     }
     
-    func getGeneratedToken() -> String? {
-        return userDefaults.string(forKey: generatedTokenKey)
+    func getUserToken() -> String? {
+        return userDefaults.string(forKey: userTokenKey)
     }
     
-    func saveGeneratedToken(_ token: String) {
-        userDefaults.set(token, forKey: generatedTokenKey)
+    func saveUserToken(_ token: String) {
+        userDefaults.set(token, forKey: userTokenKey)
         userDefaults.synchronize()
     }
     

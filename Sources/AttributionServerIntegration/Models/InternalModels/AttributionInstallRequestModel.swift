@@ -4,7 +4,6 @@ import Foundation
 internal struct AttributionInstallRequestModel: Codable {
     let userId: String
     let idfa: String?
-    let idfv: String?
     let sdkVersion: String
     let osVersion: String
     let appVersion: String

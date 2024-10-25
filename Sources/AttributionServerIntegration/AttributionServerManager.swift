@@ -4,10 +4,6 @@ import AdServices
 import AppTrackingTransparency
 
 extension AttributionServerManager: AttributionServerManagerProtocol {
-    public var savedUserUUID: String? {
-        return udefWorker.getServerUserID()
-    }
-    
     public var installResultData: AttributionManagerResult? {
         return udefWorker.getInstallResult()
     }
@@ -67,10 +63,18 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
 
 open class AttributionServerManager {
     public static var shared: AttributionServerManager = AttributionServerManager()
-    public var uniqueUserID: String? {
-        return dataWorker.uuid
+    public var userToken: String {
+        let id: String
+        if let savedID = udefWorker.getUserToken() {
+            id = savedID
+        } else {
+            let token = UUID().uuidString
+            udefWorker.saveUserToken(token)
+            id = token
+        }
+        return id
     }
-    
+
     var serverWorker: AttributionServerWorkerProtocol?
     let udefWorker: AttributionUserDefaultsWorkerProtocol = AttributionUserDefaultsWorker()
     let dataWorker: AttributionDataWorkerProtocol = AttributionDataWorker()
@@ -100,9 +104,8 @@ open class AttributionServerManager {
         let osVersion = dataWorker.osVersion
         let appVersion = dataWorker.appVersion
         let isTrackingEnabled = dataWorker.isAdTrackingEnabled
-        let uuid = dataWorker.uuid
+        let uuid = userToken
         let idfa = dataWorker.idfa
-        let idfv = dataWorker.idfv
         let storeCountry = dataWorker.storeCountry
         
         var saFields: AttributionInstallRequestModel.SAFields?
@@ -131,7 +134,6 @@ open class AttributionServerManager {
         
         let parameters = AttributionInstallRequestModel(userId: uuid,
                                                         idfa: idfa,
-                                                        idfv: idfv,
                                                         sdkVersion: sdkVersion,
                                                         osVersion: osVersion,
                                                         appVersion: appVersion,
@@ -180,7 +182,7 @@ open class AttributionServerManager {
         let jws = details.jws
         let originalTransactionID = details.originalTransactionID
         let decodedTransaction = details.decodedTransaction
-        let uuid = dataWorker.uuid
+        let uuid = userToken
         
         let introPrice = introductoryPrice ?? 0
         
@@ -219,9 +221,7 @@ open class AttributionServerManager {
                 attributionToSend = [String: String]()
             }
             
-            let idfv = result["idfv"] as? String
-            let result = AttributionManagerResult(userUUID: uuid, idfv: idfv,
-                                                  asaAttribution: attributionToSend, isIPAT: isAB)
+            let result = AttributionManagerResult(userUUID: uuid, asaAttribution: attributionToSend, isIPAT: isAB)
             udefWorker.saveInstallResult(result)
             completion(result)
             udefWorker.saveServerUserID(uuid)
@@ -240,32 +240,5 @@ open class AttributionServerManager {
         } else {
             udefWorker.savePurchaseData(details)
         }
-    }
-    
-    fileprivate func getCorrectUUID() -> String {
-        let result: String
-        if #available(iOS 14, *) {
-            let status = ATTrackingManager.trackingAuthorizationStatus
-            if status == .authorized {
-                let idfaOrNil = dataWorker.idfa
-                let uuid = dataWorker.uuid
-                result = idfaOrNil ?? uuid
-            } else {
-                if let savedGeneratedUUID = udefWorker.getGeneratedToken() {
-                    result = savedGeneratedUUID
-                } else {
-                    let generatedUUID = dataWorker.generateUniqueToken()
-                    udefWorker.saveGeneratedToken(generatedUUID)
-                    
-                    result = generatedUUID
-                }
-            }
-        } else {
-            let idfaOrNil = dataWorker.idfa
-            let uuid = dataWorker.uuid
-            result = idfaOrNil ?? uuid
-        }
-        
-        return result
     }
 }

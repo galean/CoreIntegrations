@@ -20,7 +20,7 @@ public class CoreManager {
     static var internalShared = CoreManager()
     
     public static var uniqueUserID: String? {
-        return AttributionServerManager.shared.uniqueUserID
+        return AttributionServerManager.shared.userToken
     }
         
     var attAnswered: Bool = false
@@ -115,30 +115,20 @@ public class CoreManager {
     }
     
     @objc public func applicationDidBecomeActive() {
-        let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
-        let uuid = AttributionServerManager.shared.savedUserUUID
-       
-        let id: String?
-        if savedIDFV != nil {
-            id = AttributionServerManager.shared.uniqueUserID
-        } else {
-            id = uuid ?? AttributionServerManager.shared.uniqueUserID
-        }
-        if let id, id != "" {
-            appsflyerManager?.customerUserID = id
-            appsflyerManager?.startAppsflyer()
-            purchaseManager?.setUserID(id)
-            self.facebookManager?.userID = id
-            
-            self.remoteConfigManager?.configure(id: id) { [weak self] in
-                guard let self = self else {return}
-                remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
-                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
-                }
+        let id = AttributionServerManager.shared.userToken
+        appsflyerManager?.customerUserID = id
+        appsflyerManager?.startAppsflyer()
+        purchaseManager?.setUserID(id)
+        self.facebookManager?.userID = id
+        
+        self.remoteConfigManager?.configure(id: id) { [weak self] in
+            guard let self = self else {return}
+            remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
+                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
             }
-            
-            self.analyticsManager?.setUserID(id)
         }
+        
+        self.analyticsManager?.setUserID(id)
         
         if configuration?.useDefaultATTRequest == true {
             requestATT()
