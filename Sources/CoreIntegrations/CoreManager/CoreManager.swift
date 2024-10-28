@@ -101,12 +101,10 @@ public class CoreManager {
     
     @objc public func applicationDidBecomeActive() {
         let id = AttributionServerManager.shared.userToken
-        appsflyerManager?.customerUserID = id
-        appsflyerManager?.startAppsflyer()
         purchaseManager?.setUserID(id)
         self.facebookManager?.userID = id
         analyticsManager?.setUserID(id)
-
+        appsflyerManager?.startAppsflyer()
         
         self.remoteConfigManager?.configure(token: id) { [weak self] in
             guard let self = self else {return}
