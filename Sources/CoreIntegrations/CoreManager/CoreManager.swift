@@ -105,9 +105,10 @@ public class CoreManager {
         appsflyerManager?.startAppsflyer()
         purchaseManager?.setUserID(id)
         self.facebookManager?.userID = id
-        appsflyerManager?.startAppsflyer()
+        analyticsManager?.setUserID(id)
+
         
-        self.remoteConfigManager?.configure() { [weak self] in
+        self.remoteConfigManager?.configure(token: id) { [weak self] in
             guard let self = self else {return}
             remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
                 InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()

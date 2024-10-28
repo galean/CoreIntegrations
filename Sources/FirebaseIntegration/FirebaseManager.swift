@@ -19,6 +19,7 @@ public class FirebaseManager {
     
     public func configure(completion: @escaping () -> Void) {
         FirebaseApp.configure()
+        
         Analytics.logEvent("Firebase Init", parameters: nil)
         
         completion()
