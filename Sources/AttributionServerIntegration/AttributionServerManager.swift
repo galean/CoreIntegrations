@@ -11,6 +11,9 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
     public func configure(config: AttributionConfigData) {
         self.facebookData = config.facebookData
         self.appsflyerID = config.appsflyerID
+        if let token = config.appsflyerID {
+            udefWorker.saveUserToken(token)
+        }
         authorizationToken = config.authToken
         
         serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
@@ -68,9 +71,15 @@ open class AttributionServerManager {
         if let savedID = udefWorker.getUserToken() {
             id = savedID
         } else {
-            let token = UUID().uuidString
-            udefWorker.saveUserToken(token)
-            id = token
+            assertionFailure()
+            if let token = appsflyerID {
+                udefWorker.saveUserToken(token)
+                id = token
+            } else {
+                let token = UUID().uuidString
+                udefWorker.saveUserToken(token)
+                id = token
+            }
         }
         return id
     }
