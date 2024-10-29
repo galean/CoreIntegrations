@@ -91,6 +91,8 @@ public class CoreManager {
         }
 
         handleConfigurationEndCallback()
+        
+        handleAttributionInstall()
     }
     
     func configureATT() {
