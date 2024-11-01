@@ -438,7 +438,7 @@ class ConfigurationResultManager {
     
     func calculateResult() -> CoreManagerResultData {
         // get appsflyer info
-        var paywallsBySource = [CoreUserSource: String]()
+        var paywallsBySource = [CoreUserSource: PaywallInfo]()
         InternalRemoteABTests.allCases.forEach { config in
             let value = config.value
             let paywall = self.getPaywallNameFromConfig(value)
@@ -451,50 +451,70 @@ class ConfigurationResultManager {
         }
         
         let activePaywallName: String
+        let activePaywallIsDefault: Bool
         var userSourceInfo: [String: String]? = deepLinkResult
         
         if let deepLinkValue: String = deepLinkResult?["deep_link_value"], deepLinkValue != "none", deepLinkValue != "",
            let firebaseValue = CoreManager.internalShared.remoteConfigManager?.internalConfigResult?[deepLinkValue] {
-            activePaywallName = getPaywallNameFromConfig(firebaseValue)
+            let activePaywallInfo = getPaywallNameFromConfig(firebaseValue)
+            activePaywallName = activePaywallInfo.name
+            activePaywallIsDefault = activePaywallInfo.isDefault
             userSourceInfo = deepLinkResult
         } else {
             let organicConfigValue = InternalRemoteABTests.ab_paywall_organic.value
-            let paywall = self.getPaywallNameFromConfig(organicConfigValue)
+            let paywallInfo = self.getPaywallNameFromConfig(organicConfigValue)
             
             switch userSource {
             case .organic, .ipat, .test_premium, .unknown:
                 if let organicPaywall = paywallsBySource[CoreUserSource.organic] {
-                    activePaywallName = organicPaywall
+                    activePaywallName = organicPaywall.name
+                    activePaywallIsDefault = organicPaywall.isDefault
                 } else {
                     assertionFailure()
                     activePaywallName = organicConfigValue
+                    activePaywallIsDefault = true
                 }
             default:
                 if let paywallBySource = paywallsBySource[userSource] {
-                    activePaywallName = paywallBySource
+                    activePaywallName = paywallBySource.name
+                    activePaywallIsDefault = paywallBySource.isDefault
                 } else {
                     assertionFailure()
                     activePaywallName = organicConfigValue
+                    activePaywallIsDefault = true
                 }
             }
         }
         
+        var paywallNamesBySource = paywallsBySource.reduce(into: [CoreUserSource: String]()) { partialResult, paywallInfo in
+            partialResult[paywallInfo.key] = paywallInfo.value.name
+        }
+        
         let result = CoreManagerResultData(userSource: userSource,
-                              userSourceInfo: userSourceInfo,
-                              activePaywallName: activePaywallName,
-                              paywallsBySource: paywallsBySource)
+                                           userSourceInfo: userSourceInfo,
+                                           activePaywallName: activePaywallName,
+                                           isActivePaywallDefault: activePaywallIsDefault,
+                                           paywallsBySource: paywallNamesBySource)
         return result
     }
     
-    private func getPaywallNameFromConfig(_ config: String) -> String {
+    private func getPaywallNameFromConfig(_ config: String) -> PaywallInfo {
         let paywallName: String
+        let isDefault: Bool
         let value = config
         if value.hasPrefix("none_") {
             paywallName = String(value.dropFirst("none_".count))
+            isDefault = true
         } else {
             paywallName = value
+            isDefault = false
         }
-        return paywallName
+        return PaywallInfo(name: paywallName, isDefault: isDefault)
+    }
+    
+    struct PaywallInfo {
+        let name: String
+        let isDefault: Bool
     }
 }
 
