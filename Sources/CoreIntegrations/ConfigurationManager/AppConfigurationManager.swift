@@ -12,6 +12,7 @@ class AppConfigurationManager {
     private var currentSecond = 0
     private var waitingCallbacks = [(ConfigurationResult) -> Void]()
     private var attributionCallback: (() -> Void)?
+    private var isTimerStarted = false
     private var isTimerFinished = false
     var configurationFinishHandled = false
     private var configurationAttFinishHandled = false
@@ -37,10 +38,27 @@ class AppConfigurationManager {
         self.isFirstStart = isFirstStart
     }
     
+    public func reset() {
+        completedEvents.removeAll()
+        isTimerFinished = false
+        configurationFinishHandled = false
+        configurationAttFinishHandled = false
+        attributionCallback = nil
+        waitingCallbacks.removeAll()
+        currentSecond = 0
+        isTimerStarted = false
+    }
+    
     public func startTimoutTimer() {
         guard self.isConfigurationFinished == false else {
             return
         }
+        
+        guard isTimerStarted == false else {
+            return
+        }
+        
+        isTimerStarted = true
         
         DispatchQueue.global().asyncAfter(deadline: .now() + TimeInterval(timout)) {
             guard self.isConfigurationFinished == false else {

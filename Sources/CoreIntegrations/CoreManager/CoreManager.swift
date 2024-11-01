@@ -141,6 +141,15 @@ public class CoreManager {
         }
         if let id, id != "" {
             guard !idConfigured else {
+                if self.remoteConfigManager?.remoteConfigResult == nil {
+                    remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
+                        if self.remoteConfigManager?.amplitudeOn == true {
+                            self.sendAmplitudeAssigned(configs: self.remoteConfigManager?.internalConfigResult ?? [:])
+                            self.handleConfigurationUpdate()
+                        }
+                        InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
+                    }
+                }
                 return
             }
             idConfigured = true
@@ -204,13 +213,7 @@ public class CoreManager {
     
     func handleATTAnswered(_ status: ATTrackingManager.AuthorizationStatus) {
         AppConfigurationManager.shared?.startTimoutTimer()
-        
         InternalConfigurationEvent.attConcentGiven.markAsCompleted()
-        if let configurationManager = AppConfigurationManager.shared {
-            configurationManager.startTimoutTimer()
-        } else {
-            assertionFailure()
-        }
         facebookManager?.configureATT(isAuthorized: status == .authorized)
     }
     
@@ -346,6 +349,9 @@ public class CoreManager {
         
         if checkIsNoInternetHandledOrIgnored() == false {
             guard remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty else {
+                AppConfigurationManager.shared?.reset()
+                handleAttributionInstall()
+                handleConfigurationEndCallback()
                 let result = self.configurationResultManager.calculateResult()
                 return CoreManagerResult.error(data: result)
             }
