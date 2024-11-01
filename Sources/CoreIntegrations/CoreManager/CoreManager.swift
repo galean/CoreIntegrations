@@ -25,6 +25,7 @@ public class CoreManager {
         
     var attAnswered: Bool = false
     var isConfigured: Bool = false
+    var handledNoInternetAlert: Bool = false
     
     var configuration: CoreConfigurationProtocol?
     var appsflyerManager: AppfslyerManagerProtocol?
@@ -317,6 +318,23 @@ public class CoreManager {
         }
     }
     
+    func checkIsNoInternetHandledOrIgnored() -> Bool {
+        guard AppEnvironment.isChina else {
+            return true
+        }
+        
+        guard configuration?.appSettings.isFirstLaunch == true else {
+            return true
+        }
+        
+        let noInternetCanBeShown = !handledNoInternetAlert
+        guard noInternetCanBeShown else {
+            return true
+        }
+        
+        return false
+    }
+    
     func getConfigurationResult(isFirstConfiguration: Bool) -> CoreManagerResult {
         let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
         let remoteResult = self.remoteConfigManager?.remoteConfigResult ?? [:]
@@ -325,6 +343,13 @@ public class CoreManager {
         let deepLinkResult = self.appsflyerManager?.deeplinkResult ?? [:]
         let isASA = (asaResult?.asaAttribution["campaignName"] as? String != nil) ||
         (asaResult?.asaAttribution["campaign_name"] as? String != nil)
+        
+        if checkIsNoInternetHandledOrIgnored() == false {
+            guard remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty else {
+                let result = self.configurationResultManager.calculateResult()
+                return CoreManagerResult.error(data: result)
+            }
+        }
         
         var isRedirect = false
         var networkSource: CoreUserSource = .unknown
@@ -384,12 +409,8 @@ public class CoreManager {
         self.configurationResultManager.asaAttributionResult = asaResult?.asaAttribution
         
         let result = self.configurationResultManager.calculateResult()
-        
-        if remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty {
-            return CoreManagerResult.error(data: result)
-        } else {
-            return CoreManagerResult.success(data: result)
-        }
+           
+        return CoreManagerResult.success(data: result)
     }
     
     func saveRemoteConfig(attribution: CoreUserSource, allConfigs: [any CoreFirebaseConfigurable],

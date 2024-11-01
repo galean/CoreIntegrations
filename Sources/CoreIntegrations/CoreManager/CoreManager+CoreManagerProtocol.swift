@@ -158,4 +158,7 @@ extension CoreManager: CoreManagerProtocol {
         InternalConfigurationEvent.attConcentGiven.markAsCompleted()
     }
     
+    public func handleNoInternetAlertWasShown() {
+        handledNoInternetAlert = true
+    }
 }

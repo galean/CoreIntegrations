@@ -29,6 +29,7 @@ public protocol CoreManagerProtocol {
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
     
     func handleATTPermission(_ status: ATTrackingManager.AuthorizationStatus)
+    func handleNoInternetAlertWasShown()
 
     func purchase(_ purchase: Purchase) async -> PurchasesPurchaseResult
     
