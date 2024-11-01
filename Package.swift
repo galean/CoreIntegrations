@@ -68,7 +68,6 @@ let package = Package(
         .target(name: "FirebaseIntegration",
                 dependencies: [
                     .product(name: "FirebaseRemoteConfig", package: "firebase-ios-sdk"),
-                    .product(name: "FirebaseRemoteConfigSwift", package: "firebase-ios-sdk"),
                     .product(name: "FirebaseAnalytics", package: "firebase-ios-sdk"),
                     .product(name: "Experiment", package: "experiment-ios-client"),
                 ],
