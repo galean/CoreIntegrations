@@ -350,6 +350,7 @@ public class CoreManager {
         if checkIsNoInternetHandledOrIgnored() == false {
             guard remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty else {
                 AppConfigurationManager.shared?.reset()
+                attAnswered = false
                 handleAttributionInstall()
                 handleConfigurationEndCallback()
                 let result = self.configurationResultManager.calculateResult()
