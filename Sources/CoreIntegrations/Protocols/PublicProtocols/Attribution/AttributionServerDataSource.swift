@@ -3,6 +3,8 @@ import Foundation
 
 public protocol AttributionServerDataSource {
     associatedtype AttributionEndpoints: AttributionServerEndpointsProtocol
+    
+    var isRemoteConfigurable: Bool { get }
 }
 
 extension AttributionServerDataSource {

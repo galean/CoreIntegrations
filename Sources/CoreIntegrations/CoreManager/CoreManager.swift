@@ -180,6 +180,8 @@ public class CoreManager {
             return
         }
     
+        let remoteConfigurable = self.configuration?.attributionServerDataSource.isRemoteConfigurable ?? true
+        
         configurationManager.signForAttAndConfigLoaded {
             let installPath = "/install-application"
             let purchasePath = "/subscribe"
@@ -187,7 +189,8 @@ public class CoreManager {
             if let installURLPath = self.remoteConfigManager?.install_server_path,
                let purchaseURLPath = self.remoteConfigManager?.purchase_server_path,
                installURLPath != "",
-               purchaseURLPath != "" {
+               purchaseURLPath != "",
+               remoteConfigurable {
                 let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
                                                                      purchaseServerURLPath: purchaseURLPath,
                                                                      installPath: installPath,
