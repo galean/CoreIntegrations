@@ -218,12 +218,12 @@ open class AttributionServerManager {
     fileprivate func handleSendInstallResponse(_ response: [String: String]?,
                                                parameters: AttributionInstallRequestModel,
                                                completion: @escaping (AttributionManagerResult?) -> Void) {
-        if let result = response, let uuid = result["uuid"] as? String {
+        if let result = response, let uuid = result["userId"] as? String {
             var attributionToSend: [String: String]
             var isAB = false
             if let attribution = result as? [String: String] {
                 attributionToSend = attribution
-                attributionToSend.removeValue(forKey: "uuid")
+                attributionToSend.removeValue(forKey: "userId")
                 attributionToSend.removeValue(forKey: "isAB")
                 isAB = ((attribution["isAB"] ?? "0") as NSString).boolValue
             } else {
