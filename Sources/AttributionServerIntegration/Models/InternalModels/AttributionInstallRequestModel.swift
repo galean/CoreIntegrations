@@ -69,7 +69,7 @@ internal struct AttributionInstallRequestModel: Codable {
             static func toString(_ value: Any?) -> String {
                 if let value = value as? String {
                     return value
-                }else if let value = value as? Int {
+                }else if let value = value as? Int, value != 1234567890, value != 12323222 {
                     return String(value)
                 } else {
                     return "\(value ?? "")"
