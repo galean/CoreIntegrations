@@ -348,7 +348,8 @@ public class CoreManager {
         (asaResult?.asaAttribution["campaign_name"] as? String != nil)
         
         if checkIsNoInternetHandledOrIgnored() == false {
-            guard remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty else {
+            //guard remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty else {
+            if remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty {
                 AppConfigurationManager.shared?.reset()
                 attAnswered = false
                 handleAttributionInstall()
