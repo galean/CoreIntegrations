@@ -84,6 +84,7 @@ extension AppfslyerManager: AppfslyerManagerProtocol {
     }
     
     public func startAppsflyer() {
+        enableDelegate()
         AppsFlyerLib.shared().start()
     }
     
