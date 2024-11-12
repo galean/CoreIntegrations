@@ -106,6 +106,7 @@ public class CoreManager {
         purchaseManager?.setUserID(id)
         self.facebookManager?.userID = id
         analyticsManager?.setUserID(id)
+        appsflyerManager?.customerUserID = id
         appsflyerManager?.startAppsflyer()
         
         self.remoteConfigManager?.configure(token: id) { [weak self] in
