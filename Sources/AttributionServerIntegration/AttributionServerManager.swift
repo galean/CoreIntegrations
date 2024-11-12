@@ -81,7 +81,7 @@ open class AttributionServerManager {
                 id = token
             }
         }
-        return id
+        return id.lowercased()
     }
 
     var serverWorker: AttributionServerWorkerProtocol?

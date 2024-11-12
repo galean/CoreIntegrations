@@ -7,8 +7,10 @@ extension PurchasesManager {
         debugPrint("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
 
         var options:Set<Product.PurchaseOption> = []
-        if let userId = UUID(uuidString: self.userId) {
-            options = [.appAccountToken(userId)]
+        
+        if let uuid_v5 = UUID.uuidV5(namespace: .oid, name: self.userId) {
+//        if let userId = UUID(uuidString: self.userId) {
+            options = [.appAccountToken(uuid_v5)]
         }
         let result = try await product.purchase(options: options)
 

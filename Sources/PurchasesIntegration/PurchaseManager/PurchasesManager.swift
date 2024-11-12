@@ -62,5 +62,3 @@ public class PurchasesManager: NSObject, PurchasesManagerProtocol {
         self.userId = id
     }
 }
-
-
