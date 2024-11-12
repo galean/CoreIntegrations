@@ -8,9 +8,9 @@ extension PurchasesManager {
 
         var options:Set<Product.PurchaseOption> = []
         
-        if let uuid_v5 = UUID.uuidV5(namespace: .oid, name: self.userId) {
-//        if let userId = UUID(uuidString: self.userId) {
-            options = [.appAccountToken(uuid_v5)]
+//        if let uuid_v5 = UUID.uuidV5(namespace: .oid, name: self.userId) {
+        if let userId = UUID(uuidString: self.userId) {
+            options = [.appAccountToken(userId)]
         }
         let result = try await product.purchase(options: options)
 
