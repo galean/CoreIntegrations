@@ -45,6 +45,17 @@ public class CoreManager {
         }
         isConfigured = true
         
+        let environmentVariables = ProcessInfo.processInfo.environment
+        if let xc_skip_config = environmentVariables["xctest_skip_config"] {
+            
+            let xc_network = environmentVariables["xctest_network"] ?? "organic"
+            let xc_activePaywallName = environmentVariables["xctest_activePaywallName"] ?? "none"
+            
+            let result = CoreManagerResult(userSource: CoreUserSource(rawValue: xc_network), activePaywallName: xc_activePaywallName, organicPaywallName: xc_activePaywallName, asaPaywallName: xc_activePaywallName, facebookPaywallName: xc_activePaywallName, googlePaywallName: xc_activePaywallName, snapchatPaywallName: xc_activePaywallName, tiktokPaywallName: xc_activePaywallName, instagramPaywallName: xc_activePaywallName, bingPaywallName: xc_activePaywallName)
+            self.delegate?.coreConfigurationFinished(result: result)
+            return
+        }
+        
         self.configuration = configuration
         
         analyticsManager = AnalyticsManager.shared
