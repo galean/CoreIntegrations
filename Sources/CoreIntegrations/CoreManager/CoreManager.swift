@@ -53,14 +53,16 @@ public class CoreManager {
         
         self.configuration = configuration
         
-        let sentryConfig = SentryConfigData(dsn: configuration.sentryConfigDataSource.dsn,
-                                            debug: configuration.sentryConfigDataSource.debug,
-                                            tracesSampleRate: configuration.sentryConfigDataSource.tracesSampleRate,
-                                            profilesSampleRate: configuration.sentryConfigDataSource.profilesSampleRate,
-                                            shouldCaptureHttpRequests: configuration.sentryConfigDataSource.shouldCaptureHttpRequests,
-                                            httpCodesRange: configuration.sentryConfigDataSource.httpCodesRange,
-                                            handledDomains: configuration.sentryConfigDataSource.handledDomains)
-        sentryManager.configure(sentryConfig)
+        if let sentryDataSource = configuration.sentryConfigDataSource {
+            let sentryConfig = SentryConfigData(dsn: sentryDataSource.dsn,
+                                                debug: sentryDataSource.debug,
+                                                tracesSampleRate: sentryDataSource.tracesSampleRate,
+                                                profilesSampleRate: sentryDataSource.profilesSampleRate,
+                                                shouldCaptureHttpRequests: sentryDataSource.shouldCaptureHttpRequests,
+                                                httpCodesRange: sentryDataSource.httpCodesRange,
+                                                handledDomains: sentryDataSource.handledDomains)
+            sentryManager.configure(sentryConfig)
+        }
 
         analyticsManager = AnalyticsManager.shared
         
