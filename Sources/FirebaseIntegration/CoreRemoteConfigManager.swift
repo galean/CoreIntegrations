@@ -35,6 +35,8 @@ public class CoreRemoteConfigManager: RemoteConfigManager {
         remoteConfigManager.configure(id: userID) { [weak self] in
             self?.isConfigured = true
             completion()
+            self?.firebaseManager.setUserID(id)
+            self?.isConfigured = true
         }
     }
     
@@ -56,6 +58,7 @@ public class CoreRemoteConfigManager: RemoteConfigManager {
             isConfigFetched = true
             completion()
         }
+        
     }
     
     public func getValue(forConfig config: FirebaseConfigurable) -> String? {

@@ -7,6 +7,7 @@ import AttributionServerIntegration
 import PurchasesIntegration
 import AnalyticsIntegration
 import FirebaseIntegration
+import SentryIntegration
 #endif
 import AppTrackingTransparency
 import Foundation
@@ -22,7 +23,11 @@ public class CoreManager {
     public static var uniqueUserID: String? {
         return AttributionServerManager.shared.uniqueUserID
     }
-        
+    
+    public static var sentry:PublicSentryManagerProtocol {
+        return SentryManager.shared
+    }
+    
     var attAnswered: Bool = false
     var isConfigured: Bool = false
     var handledNoInternetAlert: Bool = false
@@ -34,6 +39,7 @@ public class CoreManager {
     
     var remoteConfigManager: RemoteConfigManager?
     var analyticsManager: AnalyticsManager?
+    var sentryManager: InternalSentryManagerProtocol = SentryManager.shared
     
     var delegate: CoreManagerDelegate?
     
@@ -51,6 +57,17 @@ public class CoreManager {
         
         self.configuration = configuration
         
+        if let sentryDataSource = configuration.sentryConfigDataSource {
+            let sentryConfig = SentryConfigData(dsn: sentryDataSource.dsn,
+                                                debug: sentryDataSource.debug,
+                                                tracesSampleRate: sentryDataSource.tracesSampleRate,
+                                                profilesSampleRate: sentryDataSource.profilesSampleRate,
+                                                shouldCaptureHttpRequests: sentryDataSource.shouldCaptureHttpRequests,
+                                                httpCodesRange: sentryDataSource.httpCodesRange,
+                                                handledDomains: sentryDataSource.handledDomains)
+            sentryManager.configure(sentryConfig)
+        }
+
         analyticsManager = AnalyticsManager.shared
         
         let amplitudeCustomURL = configuration.amplitudeDataSource.customServerURL
@@ -156,7 +173,8 @@ public class CoreManager {
             
             appsflyerManager?.customerUserID = id
             purchaseManager?.setUserID(id)
-            facebookManager?.userID = id
+            self.facebookManager?.userID = id
+            sentryManager.setUserID(id)
             
             self.remoteConfigManager?.configure(id: id) { [weak self] in
                 guard let self = self else {return}
