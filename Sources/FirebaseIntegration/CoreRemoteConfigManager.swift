@@ -35,7 +35,6 @@ public class CoreRemoteConfigManager: RemoteConfigManager {
         remoteConfigManager.configure(id: userID) { [weak self] in
             self?.isConfigured = true
             completion()
-            self?.firebaseManager.setUserID(id)
             self?.isConfigured = true
         }
     }
