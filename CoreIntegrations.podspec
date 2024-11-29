@@ -32,5 +32,7 @@ Pod::Spec.new do |s|
   s.dependency 'Amplitude'
   s.dependency 'AnalyticsConnector'
   s.dependency 'SwiftyStoreKit'
+  s.dependency 'Sentry'
+
   
 end

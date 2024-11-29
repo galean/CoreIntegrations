@@ -14,6 +14,7 @@ public protocol CoreConfigurationProtocol {
     var useDefaultATTRequest: Bool { get }
     var attributionServerDataSource: any AttributionServerDataSource { get }
     var mockConfiguration: (any MockConfigurationProtocol)? { get }
+    var sentryConfigDataSource: (any SentryDataSourceProtocol)? { get }
 }
 
 extension CoreConfigurationProtocol {
