@@ -1,3 +1,3 @@
 # CoreIntegrations
 
-Framework version - 2.5.0amplstand
+Framework version - 2.6.0amplonly

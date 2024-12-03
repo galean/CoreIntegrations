@@ -6,7 +6,7 @@ import FacebookIntegration
 import AttributionServerIntegration
 import PurchasesIntegration
 import AnalyticsIntegration
-import FirebaseIntegration
+import RemoteTestingIntegration
 #endif
 import AppTrackingTransparency
 import Foundation
@@ -86,8 +86,7 @@ public class CoreManager {
         
         purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
 
-        remoteConfigManager = CoreRemoteConfigManager(cnConfig: AppEnvironment.isChina,
-                                                      deploymentKey: configuration.appSettings.amplitudeDeploymentKey)
+        remoteConfigManager = CoreRemoteConfigManager(deploymentKey: configuration.appSettings.amplitudeDeploymentKey)
         
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
@@ -141,14 +140,10 @@ public class CoreManager {
         }
         if let id, id != "" {
             guard !idConfigured else {
-                if self.remoteConfigManager?.remoteConfigResult == nil {
-                    remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
-                        if self.remoteConfigManager?.amplitudeOn == true {
-                            self.sendAmplitudeAssigned(configs: self.remoteConfigManager?.internalConfigResult ?? [:])
-                            self.handleConfigurationUpdate()
-                        }
-                        InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
-                    }
+                remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
+                    self.sendAmplitudeAssigned(configs: self.remoteConfigManager?.allRemoteValues ?? [:])
+                    self.handleConfigurationUpdate()
+                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
                 }
                 return
             }
@@ -161,10 +156,8 @@ public class CoreManager {
             self.remoteConfigManager?.configure(id: id) { [weak self] in
                 guard let self = self else {return}
                 remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
-                    if self.remoteConfigManager?.amplitudeOn == true {
-                        self.sendAmplitudeAssigned(configs: self.remoteConfigManager?.internalConfigResult ?? [:])
-                        self.handleConfigurationUpdate()
-                    }
+                    self.sendAmplitudeAssigned(configs: self.remoteConfigManager?.allRemoteValues ?? [:])
+                    self.handleConfigurationUpdate()
                     InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
                 }
             }
@@ -227,17 +220,16 @@ public class CoreManager {
             let installPath = "/install-application"
             let purchasePath = "/subscribe"
             
-            if let installURLPath = self.remoteConfigManager?.install_server_path,
-               let purchaseURLPath = self.remoteConfigManager?.purchase_server_path,
-               installURLPath != "",
-               purchaseURLPath != "" {
+            let installURLPath = InternalRemoteConfig.install_server_path.value
+            let purchaseURLPath = InternalRemoteConfig.purchase_server_path.value
+            if installURLPath != "" && purchaseURLPath != "" {
                 let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
                                                                      purchaseServerURLPath: purchaseURLPath,
                                                                      installPath: installPath,
                                                                      purchasePath: purchasePath)
                 
                 AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
-            }else{
+            } else {
                 if let serverDataSource = self.configuration?.attributionServerDataSource {
                     let installURLPath = serverDataSource.installPath
                     let purchaseURLPath = serverDataSource.purchasePath
@@ -248,6 +240,8 @@ public class CoreManager {
                                                                          purchasePath: purchasePath)
                     
                     AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
+                } else {
+                    assertionFailure()
                 }
             }
             
@@ -340,7 +334,7 @@ public class CoreManager {
     
     func getConfigurationResult(isFirstConfiguration: Bool) -> CoreManagerResult {
         let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
-        let remoteResult = self.remoteConfigManager?.remoteConfigResult ?? [:]
+        let remoteResult = self.remoteConfigManager?.allRemoteValues ?? [:]
         let asaResult = AttributionServerManager.shared.installResultData
         let isIPAT = asaResult?.isIPAT ?? false
         let deepLinkResult = self.appsflyerManager?.deeplinkResult ?? [:]
@@ -401,14 +395,9 @@ public class CoreManager {
         }
         
         if isFirstConfiguration {
-            let allConfigs = self.configuration?.remoteConfigDataSource.allConfigurables ?? []
-            self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
-                        
             self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
             self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
         } else {
-            let allConfigs = InternalRemoteABTests.allCases
-            self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
             self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
         }
         
@@ -419,23 +408,6 @@ public class CoreManager {
         let result = self.configurationResultManager.calculateResult()
            
         return CoreManagerResult.success(data: result)
-    }
-    
-    func saveRemoteConfig(attribution: CoreUserSource, allConfigs: [any CoreFirebaseConfigurable],
-                          remoteResult: [String: String]) {
-        allConfigs.forEach { config in
-            let remoteValue = remoteResult[config.key]
-            
-            guard let remoteValue else {
-                return
-            }
-            
-            let value: String
-            if config.activeForSources.contains(attribution) {
-                value = remoteValue
-                remoteConfigManager?.updateValue(forConfig: config, newValue: value)
-            }
-        }
     }
 }
 
@@ -463,14 +435,13 @@ class ConfigurationResultManager {
         var userSourceInfo: [String: String]? = deepLinkResult
         
         if let deepLinkValue: String = deepLinkResult?["deep_link_value"], deepLinkValue != "none", deepLinkValue != "",
-           let firebaseValue = CoreManager.internalShared.remoteConfigManager?.internalConfigResult?[deepLinkValue] {
+           let firebaseValue = CoreManager.internalShared.remoteConfigManager?.allRemoteValues[deepLinkValue] {
             let activePaywallInfo = getPaywallNameFromConfig(firebaseValue)
             activePaywallName = activePaywallInfo.name
             activePaywallIsDefault = activePaywallInfo.isDefault
             userSourceInfo = deepLinkResult
         } else {
             let organicConfigValue = InternalRemoteABTests.ab_paywall_organic.value
-            let paywallInfo = self.getPaywallNameFromConfig(organicConfigValue)
             
             switch userSource {
             case .organic, .ipat, .test_premium, .unknown:
@@ -494,7 +465,7 @@ class ConfigurationResultManager {
             }
         }
         
-        var paywallNamesBySource = paywallsBySource.reduce(into: [CoreUserSource: String]()) { partialResult, paywallInfo in
+        let paywallNamesBySource = paywallsBySource.reduce(into: [CoreUserSource: String]()) { partialResult, paywallInfo in
             partialResult[paywallInfo.key] = paywallInfo.value.name
         }
         

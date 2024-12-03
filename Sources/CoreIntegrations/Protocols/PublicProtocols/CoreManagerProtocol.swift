@@ -6,7 +6,6 @@ import PurchasesIntegration
 import AppsflyerIntegration
 import AttributionServerIntegration
 import AnalyticsIntegration
-import FirebaseIntegration
 #endif
 import AppTrackingTransparency
 

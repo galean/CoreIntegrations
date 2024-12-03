@@ -1,7 +1,7 @@
 
 import Foundation
 
-public protocol FirebaseConfigurable {
+public protocol RemoteConfigurable {
     var key: String { get }
     var defaultValue: String { get }
     var value: String { get }

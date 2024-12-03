@@ -1,7 +1,6 @@
 
 import Foundation
 #if !COCOAPODS
-import FirebaseIntegration
 import AnalyticsIntegration
 import AppsflyerIntegration
 #endif
@@ -14,27 +13,27 @@ enum AppConfiguration: String {
 }
 
 struct Config {
-  // This is private because the use of 'appConfiguration' is preferred.
-  private static let isTestFlight = Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt" || Bundle.main.appStoreReceiptURL == nil
-  
-  // This can be used to add debug statements.
-  static var isDebug: Bool {
+    // This is private because the use of 'appConfiguration' is preferred.
+    private static let isTestFlight = Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt" || Bundle.main.appStoreReceiptURL == nil
+    
+    // This can be used to add debug statements.
+    static var isDebug: Bool {
     #if DEBUG
-      return true
+        return true
     #else
-      return false
+        return false
     #endif
-  }
-
-  static var appConfiguration: AppConfiguration {
-    if isDebug {
-      return .Debug
-    } else if isTestFlight {
-      return .Testing
-    } else {
-      return .AppStore
     }
-  }
+    
+    static var appConfiguration: AppConfiguration {
+        if isDebug {
+            return .Debug
+        } else if isTestFlight {
+            return .Testing
+        } else {
+            return .AppStore
+        }
+    }
 }
 
 extension CoreManager {
@@ -68,11 +67,8 @@ extension CoreManager {
     
     func sendABTestsUserProperties(abTests: [any CoreRemoteABTestable], userSource: CoreUserSource) { // +
         let userProperties = abTests.reduce(into: [String:String]()) { partialResult, abtest in
-            let shouldSend: Bool = abtest.activeForSources.contains(userSource)
             var value = abtest.value
-            if !shouldSend {
-                value = "none"
-            } else if value.contains("none_") {
+            if value.contains("none_") {
                 value = "none"
             }
             partialResult[abtest.key] = value
@@ -83,11 +79,8 @@ extension CoreManager {
     func sendTestDistributionEvent(abTests: [any CoreRemoteABTestable], deepLinkResult: [String: String],
                                    userSource: CoreUserSource) { // +
         var parameters = abTests.reduce(into: [String:String]()) { partialResult, abtest in
-            let shouldSend: Bool = abtest.activeForSources.contains(userSource)
             var value = abtest.value
-            if !shouldSend {
-                value = "none"
-            } else if value.contains("none_") {
+            if value.contains("none_") {
                 value = "none"
             }
             partialResult[abtest.key] = value

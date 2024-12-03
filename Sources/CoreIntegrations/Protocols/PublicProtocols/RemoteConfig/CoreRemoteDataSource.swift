@@ -1,7 +1,8 @@
 
 import Foundation
+
 #if !COCOAPODS
-import FirebaseIntegration
+import RemoteTestingIntegration
 #endif
 
 public protocol CoreRemoteDataSource {
@@ -12,7 +13,7 @@ public protocol CoreRemoteDataSource {
     var allABTests: [CoreRemoteABTests] { get }
     
     var allRemoteKeys: [String] { get }
-    var allConfigurables: [any CoreFirebaseConfigurable] { get }
+    var allConfigurables: [any CoreRemoteConfigurable] { get }
 }
 
 public extension CoreRemoteDataSource {
@@ -31,8 +32,8 @@ public extension CoreRemoteDataSource {
         return allRemoteKeys
     }
     
-    var allConfigurables: [any CoreFirebaseConfigurable] {
-        let allConfigurables: [any CoreFirebaseConfigurable] = allConfigs + allABTests
+    var allConfigurables: [any ExtendedRemoteConfigurable] {
+        let allConfigurables: [any ExtendedRemoteConfigurable] = allConfigs + allABTests
         return allConfigurables
     }
 }

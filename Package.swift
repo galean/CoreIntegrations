@@ -30,7 +30,7 @@ let package = Package(
                     "AppsflyerIntegration",
                     "FacebookIntegration",
                     "AnalyticsIntegration",
-                    "FirebaseIntegration",
+                    "RemoteTestingIntegration",
                     "PurchasesIntegration",
                     "AttributionServerIntegration",
                 ],
@@ -65,13 +65,11 @@ let package = Package(
                   .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]
         ),
-        .target(name: "FirebaseIntegration",
+        .target(name: "RemoteTestingIntegration",
                 dependencies: [
-                    .product(name: "FirebaseRemoteConfig", package: "firebase-ios-sdk"),
-                    .product(name: "FirebaseAnalytics", package: "firebase-ios-sdk"),
                     .product(name: "Experiment", package: "experiment-ios-client"),
                 ],
-                path: "Sources/FirebaseIntegration",
+                path: "Sources/RemoteTestingIntegration",
                 linkerSettings: [
                   .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]
@@ -88,5 +86,14 @@ let package = Package(
                     .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]
         ),
+        .target(name: "FirebaseIntegration",
+                dependencies: [
+                    .product(name: "FirebaseAnalytics", package: "firebase-ios-sdk"),
+                ],
+                path: "Sources/FirebaseIntegration",
+                linkerSettings: [
+                    .linkedFramework("UIKit", .when(platforms: [.iOS])),
+                ]
+               ),
     ]
 )
