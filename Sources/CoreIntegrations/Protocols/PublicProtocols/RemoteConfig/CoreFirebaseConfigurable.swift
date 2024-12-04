@@ -20,16 +20,25 @@ public extension CoreFirebaseConfigurable {
                 return defaultValue
             }
             
-            return configManager.getValue(forConfig: self) ?? defaultValue
+            return reassignedValue ?? configManager.getValue(forConfig: self) ?? defaultValue
 //            CoreManager.internalShared.remoteConfigManager.
 //            let savedValue = UserDefaults.standard.object(forKey: key) as? String
 //            return savedValue ?? defaultValue
         }
     }
     
-//    func updateValue(_ newValue: String) {
-//        UserDefaults.standard.setValue(newValue, forKey: key)
-//    }
+    private func manualReassignValue(with newValue: String) {
+        UserDefaults.standard.setValue(newValue, forKey: key)
+    }
+    
+    private var reassignedValue: String? {
+        let savedValue = UserDefaults.standard.object(forKey: key) as? String
+        return savedValue
+    }
+    
+    func updateValue(_ newValue: String) {
+        manualReassignValue(with: newValue)
+    }
     
     var boolValue: Bool {
         get {
