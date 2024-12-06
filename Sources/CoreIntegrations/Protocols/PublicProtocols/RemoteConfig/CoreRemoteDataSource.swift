@@ -13,7 +13,7 @@ public protocol CoreRemoteDataSource {
     var allABTests: [CoreRemoteABTests] { get }
     
     var allRemoteKeys: [String] { get }
-    var allConfigurables: [any CoreRemoteConfigurable] { get }
+    var allConfigurables: [any ExtendedRemoteConfigurable] { get }
 }
 
 public extension CoreRemoteDataSource {
