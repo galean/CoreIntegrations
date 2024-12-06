@@ -6,12 +6,14 @@ import PurchasesIntegration
 import AppsflyerIntegration
 import AttributionServerIntegration
 import AnalyticsIntegration
+import SentryIntegration
 #endif
 import AppTrackingTransparency
 
 public protocol CoreManagerProtocol {
     static var shared: CoreManagerProtocol { get }
     static var uniqueUserID: String? { get }
+    static var sentry:PublicSentryManagerProtocol { get }
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?,
@@ -31,9 +33,7 @@ public protocol CoreManagerProtocol {
     func handleNoInternetAlertWasShown()
 
     func purchase(_ purchase: Purchase) async -> PurchasesPurchaseResult
-    
-//    func purchase(_ purchase: Purchase, promoOffer: PromoOffer) async -> PurchasesPurchaseResult
-    
+        
     func verifyPremium() async -> PurchasesVerifyPremiumResult
     
     func verifyAll() async -> PurchaseVerifyAllResult

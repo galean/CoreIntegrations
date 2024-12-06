@@ -21,6 +21,7 @@ let package = Package(
         .package(url: "https://github.com/amplitude/analytics-connector-ios.git", from: "1.0.0"),
         .package(url: "https://github.com/amplitude/Amplitude-iOS", from: "8.0.0"),
         .package(url: "https://github.com/amplitude/experiment-ios-client", from: "1.13.5"),
+        .package(url: "https://github.com/getsentry/sentry-cocoa.git", from: "8.35.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -33,6 +34,7 @@ let package = Package(
                     "RemoteTestingIntegration",
                     "PurchasesIntegration",
                     "AttributionServerIntegration",
+                    "SentryIntegration",
                 ],
                 linkerSettings: [
                   .linkedFramework("UIKit", .when(platforms: [.iOS])),
@@ -86,14 +88,14 @@ let package = Package(
                     .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]
         ),
-        .target(name: "FirebaseIntegration",
+        .target(name: "SentryIntegration",
                 dependencies: [
-                    .product(name: "FirebaseAnalytics", package: "firebase-ios-sdk"),
+                    .product(name: "Sentry", package: "sentry-cocoa")
                 ],
-                path: "Sources/FirebaseIntegration",
+                path: "Sources/SentryIntegration",
                 linkerSettings: [
-                    .linkedFramework("UIKit", .when(platforms: [.iOS])),
+                  .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]
-               ),
+        ),
     ]
 )
