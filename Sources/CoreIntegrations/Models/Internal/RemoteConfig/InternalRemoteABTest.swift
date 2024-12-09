@@ -32,7 +32,6 @@ enum InternalRemoteABTests: String, CoreRemoteABTestable {
     case ab_paywall_instagram
     case ab_paywall_bing
     case ab_paywall_organic
-    case ab_paywall
     
     var key: String { return rawValue }
     
@@ -58,8 +57,6 @@ enum InternalRemoteABTests: String, CoreRemoteABTestable {
             return [.instagram]
         case .ab_paywall_bing:
             return [.bing]
-        case .ab_paywall:
-            return CoreUserSource.allCases
         }
     }
 }
