@@ -16,6 +16,7 @@ public protocol CoreRemoteConfigurable: CaseIterable, ExtendedRemoteConfigurable
 
 public protocol ExtendedRemoteConfigurable: RemoteConfigurable {
     var boolValue: Bool { get }
+    var activeForSources: [CoreUserSource] { get }
 }
 
 public extension ExtendedRemoteConfigurable {

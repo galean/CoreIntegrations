@@ -67,8 +67,11 @@ extension CoreManager {
     
     func sendABTestsUserProperties(abTests: [any CoreRemoteABTestable], userSource: CoreUserSource) { // +
         let userProperties = abTests.reduce(into: [String:String]()) { partialResult, abtest in
+            let shouldSend: Bool = abtest.activeForSources.contains(userSource)
             var value = abtest.value
-            if value.contains("none_") {
+            if !shouldSend {
+                value = "none"
+            } else if value.contains("none_") {
                 value = "none"
             }
             partialResult[abtest.key] = value
@@ -79,8 +82,11 @@ extension CoreManager {
     func sendTestDistributionEvent(abTests: [any CoreRemoteABTestable], deepLinkResult: [String: String],
                                    userSource: CoreUserSource) { // +
         var parameters = abTests.reduce(into: [String:String]()) { partialResult, abtest in
+            let shouldSend: Bool = abtest.activeForSources.contains(userSource)
             var value = abtest.value
-            if value.contains("none_") {
+            if !shouldSend {
+                value = "none"
+            } else if value.contains("none_") {
                 value = "none"
             }
             partialResult[abtest.key] = value
