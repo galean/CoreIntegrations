@@ -1,3 +1,3 @@
 # CoreIntegrations
 
-Framework version - 2.6.4amplonly
+Framework version - 2.6.5amplonly

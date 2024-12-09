@@ -62,6 +62,10 @@ public class CoreRemoteConfigManager: RemoteConfigManager {
         return remoteConfigManager.getValue(forConfig: config)
     }
     
+    public func exposure(forConfig config: RemoteConfigurable) {
+        remoteConfigManager.exposure(forConfig: config)
+    }
+    
 //    public func updateValue(forConfig config: RemoteConfigurable, newValue: String?) {
 //        remoteConfigManager.updateValue(forConfig: config, newValue: newValue)
 //    }

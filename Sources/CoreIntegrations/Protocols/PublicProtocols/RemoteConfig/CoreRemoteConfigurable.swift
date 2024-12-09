@@ -17,6 +17,8 @@ public protocol CoreRemoteConfigurable: CaseIterable, ExtendedRemoteConfigurable
 public protocol ExtendedRemoteConfigurable: RemoteConfigurable {
     var boolValue: Bool { get }
     var activeForSources: [CoreUserSource] { get }
+    
+    func exposure()
 }
 
 public extension ExtendedRemoteConfigurable {
@@ -31,6 +33,14 @@ public extension ExtendedRemoteConfigurable {
 //            let savedValue = UserDefaults.standard.object(forKey: key) as? String
 //            return savedValue ?? defaultValue
         }
+    }
+    
+    func exposure() {
+        guard let configManager = CoreManager.internalShared.remoteConfigManager else {
+            return
+        }
+        
+        configManager.exposure(forConfig: self)
     }
     
 //    func updateValue(_ newValue: String) {

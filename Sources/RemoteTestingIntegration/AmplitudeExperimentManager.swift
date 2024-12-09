@@ -101,6 +101,10 @@ extension AmplitudeExperimentManager: RemoteConfigManager {
         return payloadValue ?? value
     }
     
+    public func exposure(forConfig config: RemoteConfigurable) {
+        client.exposure(key: config.key)
+    }
+    
 //    public func updateValue(forConfig config: RemoteConfigurable, newValue: String?) {
         //nothing to do here
 //    }

@@ -30,6 +30,7 @@ public protocol RemoteConfigManager {
     func fetchRemoteConfig(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void)
     
     func getValue(forConfig config: any RemoteConfigurable) -> String?
+    func exposure(forConfig config: RemoteConfigurable)
 //    func updateValue(forConfig config: any RemoteConfigurable, newValue: String?)
 }
 
