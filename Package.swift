@@ -93,7 +93,7 @@ let package = Package(
                 dependencies: [
                     .product(name: "Sentry", package: "sentry-cocoa")
                 ],
-                path: "Sources/SentryIntegration",
+                path: "Sources/SentryIntegration"),
         .target(name: "AttestationIntegration",
                 path: "Sources/AttestationIntegration",
                 linkerSettings: [
