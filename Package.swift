@@ -93,12 +93,15 @@ let package = Package(
                 dependencies: [
                     .product(name: "Sentry", package: "sentry-cocoa")
                 ],
-                path: "Sources/SentryIntegration"),
+                path: "Sources/SentryIntegration",
+                linkerSettings: [
+                    .linkedFramework("UIKit", .when(platforms: [.iOS])),
+                ]
+               ),
         .target(name: "AttestationIntegration",
                 path: "Sources/AttestationIntegration",
                 linkerSettings: [
                   .linkedFramework("UIKit", .when(platforms: [.iOS])),
-                    .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]
         ),
     ]
