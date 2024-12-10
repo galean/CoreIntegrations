@@ -20,6 +20,7 @@ let package = Package(
         .package(url: "https://github.com/AppsFlyerSDK/AppsFlyerFramework-Dynamic", from: "6.0.0"),
         .package(url: "https://github.com/amplitude/analytics-connector-ios.git", from: "1.0.0"),
         .package(url: "https://github.com/amplitude/Amplitude-iOS", from: "8.0.0"),
+        .package(url: "https://github.com/getsentry/sentry-cocoa.git", from: "8.35.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -32,6 +33,7 @@ let package = Package(
                     "FirebaseIntegration",
                     "PurchasesIntegration",
                     "AttributionServerIntegration",
+                    "SentryIntegration",
                     "AttestationIntegration",
                 ],
                 linkerSettings: [
@@ -87,9 +89,15 @@ let package = Package(
                     .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]
         ),
+        .target(name: "SentryIntegration",
+                dependencies: [
+                    .product(name: "Sentry", package: "sentry-cocoa")
+                ],
+                path: "Sources/SentryIntegration",
         .target(name: "AttestationIntegration",
                 path: "Sources/AttestationIntegration",
                 linkerSettings: [
+                  .linkedFramework("UIKit", .when(platforms: [.iOS])),
                     .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]
         ),

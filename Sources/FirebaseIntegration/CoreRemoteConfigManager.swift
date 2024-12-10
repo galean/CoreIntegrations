@@ -25,6 +25,12 @@ public class CoreRemoteConfigManager {
             return
         }
         
+//        if cnConfig {
+//           
+//        }else{
+//            
+//        }
+        
         firebaseManager.configure() { [weak self] in
             completion()
             self?.firebaseManager.setUserID(id)
