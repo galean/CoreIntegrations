@@ -26,4 +26,8 @@ extension String {
         return URL(string: "\(self)\(endpoint)")!
     }
     
+    func url() -> URL {
+        return URL(string: self)!
+    }
+    
 }

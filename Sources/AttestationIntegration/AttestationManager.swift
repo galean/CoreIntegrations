@@ -42,8 +42,8 @@ public actor AttestationManager:AttestationManagerProtocol {
                     "attestation": attestation.base64EncodedString(),
                 ]
             )
-            
-            let request = URLRequest.post(to: serverURL.url(endpoint: "/app-attest/register-device"), with: data)
+            //endpoint: "/app-attest/register-device"
+            let request = URLRequest.post(to: serverURL.url(), with: data)
             
             let (_, response) = try await URLSession.shared.data(for: request)
             
@@ -104,8 +104,8 @@ public actor AttestationManager:AttestationManagerProtocol {
         let data = try await JSONEncoder().encode(
             ["keyId": keyId, "idfv": uuid]
         )
-        
-        let request = URLRequest.post(to: serverURL.url(endpoint: "/app-attest/register-device"), with: data)
+        //endpoint: "/app-attest/register-device"
+        let request = URLRequest.post(to: serverURL.url(), with: data)
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
@@ -130,8 +130,8 @@ public actor AttestationManager:AttestationManagerProtocol {
         let data = try await JSONEncoder().encode(
             ["idfv": uuid, "bypassKey" : key]
         )
-        
-        let request = URLRequest.post(to: serverURL.url(endpoint: "/app-attest/verify"), with: data)
+        //endpoint: "/app-attest/verify"
+        let request = URLRequest.post(to: serverURL.url(), with: data)
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
