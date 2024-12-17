@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CoreIntegrations'
-  s.version          = '2.6.5amplonly'
+  s.version          = '2.6.6amplonly'
   s.summary          = 'CoreIntegrations framework'
 
   s.description      = 'Description'
@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.homepage         = 'https://github.com/galean/CoreIntegrations.git'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'u-texas' => 'kanarskyi.anatolii@gmail.com' }
-  s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'feature/AmplitudeStandalone' }
+  s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'fix/AmplOnly+ios18.2fix' }
 
   s.ios.deployment_target = '15.0'
   

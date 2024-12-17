@@ -28,6 +28,8 @@ public class CoreManager {
         return SentryManager.shared
     }
     
+    var paywallWindow: UIWindow?
+    
     var attAnswered: Bool = false
     var isConfigured: Bool = false
     var handledNoInternetAlert: Bool = false
