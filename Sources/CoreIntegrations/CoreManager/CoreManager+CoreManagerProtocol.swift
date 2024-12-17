@@ -5,9 +5,22 @@ import AppTrackingTransparency
 
 extension CoreManager: CoreManagerProtocol {
     public func purchase(_ purchase: Purchase) async -> PurchasesPurchaseResult {
+        var keyWindow: UIWindow? = nil
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            keyWindow = windowScene.windows.first(where: { $0.isKeyWindow })
+            let purchaseWindow = UIWindow(windowScene: windowScene)
+            purchaseWindow.isHidden = true
+            purchaseWindow.windowLevel = .normal - 1
+            purchaseWindow.rootViewController = UIViewController()
+            purchaseWindow.makeKeyAndVisible()
+            
+            paywallWindow = purchaseWindow
+        }
+        
+        
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
         let result = try? await purchaseManager.purchase(purchase.product)
-
+        keyWindow?.makeKeyAndVisible()
         switch result {
         case .success(let purchaseInfo):
             let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: purchaseInfo.transaction, jws: purchaseInfo.jwsRepresentation, originalTransactionID: purchaseInfo.originalID, decodedTransaction: purchaseInfo.jsonRepresentation)
