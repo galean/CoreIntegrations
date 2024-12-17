@@ -1,8 +1,10 @@
 
 import Foundation
 import StoreKit
+import UIKit
 
 extension PurchasesManager {
+    @MainActor
     public func purchase(_ product: Product) async throws -> SKPurchaseResult {
         debugPrint("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
 
@@ -10,8 +12,19 @@ extension PurchasesManager {
         if let userId = UUID(uuidString: self.userId) {
             options = [.appAccountToken(userId)]
         }
-        let result = try await product.purchase(options: options)
-
+        
+        var result: Product.PurchaseResult
+        
+        if #available (iOS 18.2, *) {
+            if let topVC = UIApplication.topMostViewController() {
+                 result = try await product.purchase(confirmIn: topVC, options: options)
+            }else{
+                 result = try await product.purchase(options: options)
+            }
+        }else{
+             result = try await product.purchase(options: options)
+        }
+        
         switch result {
         case .success(let verification):
             debugPrint("🏦 purchase ✅ Product Purchased.")
