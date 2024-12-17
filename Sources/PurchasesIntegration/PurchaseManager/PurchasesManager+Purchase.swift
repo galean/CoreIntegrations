@@ -16,7 +16,7 @@ extension PurchasesManager {
         var result: Product.PurchaseResult
         
         if #available (iOS 18.2, *) {
-            if let topVC = UIApplication.topMostViewController() {
+            if let topVC = topMostViewController() {
                  result = try await product.purchase(confirmIn: topVC, options: options)
             }else{
                  result = try await product.purchase(options: options)
