@@ -6,9 +6,9 @@ import AppTrackingTransparency
 extension CoreManager: CoreManagerProtocol {
     
     @MainActor
-    public func purchase(_ purchase: Purchase) async -> PurchasesPurchaseResult {
+    public func purchase(_ purchase: Purchase, activeController: UIViewController?) async -> PurchasesPurchaseResult {
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
-        let result = try? await purchaseManager.purchase(purchase.product)
+        let result = try? await purchaseManager.purchase(purchase.product, activeController: activeController)
 
         switch result {
         case .success(let purchaseInfo):

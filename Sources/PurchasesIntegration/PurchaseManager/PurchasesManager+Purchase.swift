@@ -5,7 +5,7 @@ import UIKit
 
 extension PurchasesManager {
     @MainActor
-    public func purchase(_ product: Product) async throws -> SKPurchaseResult {
+    public func purchase(_ product: Product, activeController: UIViewController?) async throws -> SKPurchaseResult {
         debugPrint("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
 
         var options:Set<Product.PurchaseOption> = []
@@ -16,8 +16,8 @@ extension PurchasesManager {
         var result: Product.PurchaseResult
         
         if #available (iOS 18.2, *) {
-            if let topVC = UIApplication.topMostViewController() {
-                 result = try await product.purchase(confirmIn: topVC, options: options)
+            if let activeController {
+                 result = try await product.purchase(confirmIn: activeController, options: options)
             }else{
                  result = try await product.purchase(options: options)
             }
