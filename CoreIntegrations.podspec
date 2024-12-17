@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.homepage         = 'https://github.com/galean/CoreIntegrations.git'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'galean' => 'galean.pal@gmail.com' }
-  s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'fix/iOS18.2SK2' }
+  s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'main' }
 
   s.ios.deployment_target = '15.0'
   
