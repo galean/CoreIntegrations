@@ -6,17 +6,19 @@ extension CoreManager: CoreManagerProtocol {
     @MainActor
     public func purchase(_ purchase: Purchase) async -> PurchasesPurchaseResult {
         var keyWindow: UIWindow? = nil
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            keyWindow = windowScene.windows.first(where: { $0.isKeyWindow })
-            let purchaseWindow = UIWindow(windowScene: windowScene)
-            purchaseWindow.isHidden = true
-            purchaseWindow.windowLevel = .normal - 1
-            purchaseWindow.rootViewController = UIViewController()
-            purchaseWindow.makeKeyAndVisible()
-            
-            paywallWindow = purchaseWindow
-        }
         
+        if #available (iOS 18.2, *) {
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                keyWindow = windowScene.windows.first(where: { $0.isKeyWindow })
+                let purchaseWindow = UIWindow(windowScene: windowScene)
+                purchaseWindow.isHidden = true
+                purchaseWindow.windowLevel = .normal - 1
+                purchaseWindow.rootViewController = UIViewController()
+                purchaseWindow.makeKeyAndVisible()
+                
+                paywallWindow = purchaseWindow
+            }
+        }
         
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
         let result = try? await purchaseManager.purchase(purchase.product)
