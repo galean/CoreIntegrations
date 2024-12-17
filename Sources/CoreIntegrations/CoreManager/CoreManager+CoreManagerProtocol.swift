@@ -4,6 +4,8 @@ import UIKit
 import AppTrackingTransparency
 
 extension CoreManager: CoreManagerProtocol {
+    
+    @MainActor
     public func purchase(_ purchase: Purchase) async -> PurchasesPurchaseResult {
         var keyWindow: UIWindow? = nil
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
