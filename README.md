@@ -1,3 +1,3 @@
 # CoreIntegrations
 
-Framework version - 2.4.10
+Framework version - 2.4.9
