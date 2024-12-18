@@ -1,17 +1,30 @@
 
 import Foundation
 import StoreKit
+import UIKit
 
 extension PurchasesManager {
-    public func purchase(_ product: Product) async throws -> SKPurchaseResult {
+    @MainActor
+    public func purchase(_ product: Product, activeController: UIViewController?) async throws -> SKPurchaseResult {
         debugPrint("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
 
         var options:Set<Product.PurchaseOption> = []
         if let userId = UUID(uuidString: self.userId) {
             options = [.appAccountToken(userId)]
         }
-        let result = try await product.purchase(options: options)
-
+        
+        var result: Product.PurchaseResult
+        
+        if #available (iOS 18.2, *) {
+            if let activeController {
+                 result = try await product.purchase(confirmIn: activeController, options: options)
+            }else{
+                 result = try await product.purchase(options: options)
+            }
+        }else{
+             result = try await product.purchase(options: options)
+        }
+        
         switch result {
         case .success(let verification):
             debugPrint("🏦 purchase ✅ Product Purchased.")
