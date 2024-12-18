@@ -32,7 +32,7 @@ public protocol CoreManagerProtocol {
     
     func handleATTPermission(_ status: ATTrackingManager.AuthorizationStatus)
 
-    func purchase(_ purchase: Purchase) async -> PurchasesPurchaseResult
+    func purchase(_ purchase: Purchase, activeController: UIViewController?) async -> PurchasesPurchaseResult
         
     func verifyPremium() async -> PurchasesVerifyPremiumResult
     
