@@ -18,6 +18,7 @@ public protocol ExtendedRemoteConfigurable: RemoteConfigurable {
     var boolValue: Bool { get }
     var activeForSources: [CoreUserSource] { get }
     
+    func updateValue(_ newValue: String)
     func exposure()
 }
 
@@ -28,11 +29,21 @@ public extension ExtendedRemoteConfigurable {
                 return defaultValue
             }
             
-            return configManager.getValue(forConfig: self) ?? defaultValue
-//            CoreManager.internalShared.remoteConfigManager.
-//            let savedValue = UserDefaults.standard.object(forKey: key) as? String
-//            return savedValue ?? defaultValue
+            return reassignedValue ?? configManager.getValue(forConfig: self) ?? defaultValue
         }
+    }
+    
+    private func manualReassignValue(with newValue: String) {
+        UserDefaults.standard.setValue(newValue, forKey: key)
+    }
+    
+    private var reassignedValue: String? {
+        let savedValue = UserDefaults.standard.object(forKey: key) as? String
+        return savedValue
+    }
+    
+    func updateValue(_ newValue: String) {
+        manualReassignValue(with: newValue)
     }
     
     func exposure() {
@@ -42,10 +53,6 @@ public extension ExtendedRemoteConfigurable {
         
         configManager.exposure(forConfig: self)
     }
-    
-//    func updateValue(_ newValue: String) {
-//        UserDefaults.standard.setValue(newValue, forKey: key)
-//    }
     
     var boolValue: Bool {
         get {
