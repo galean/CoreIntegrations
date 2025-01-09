@@ -40,7 +40,8 @@ public actor AttestationManager:AttestationManagerProtocol {
                 ]
             )
             //endpoint: "/app-attest/register-device"
-            let request = URLRequest.post(to: serverURL.url(), with: data)
+            var request = URLRequest.post(to: serverURL.url(), with: data)
+            request.addValue(uuid, forHTTPHeaderField: "tag")
             
             let (_, response) = try await URLSession.shared.data(for: request)
             
@@ -102,7 +103,8 @@ public actor AttestationManager:AttestationManagerProtocol {
             ["keyId": keyId, "token": uuid]
         )
         //endpoint: "/app-attest/register-device"
-        let request = URLRequest.post(to: serverURL.url(), with: data)
+        var request = URLRequest.post(to: serverURL.url(), with: data)
+        request.addValue(uuid, forHTTPHeaderField: "tag")
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
@@ -127,8 +129,9 @@ public actor AttestationManager:AttestationManagerProtocol {
         let data = try JSONEncoder().encode(
             ["token": uuid, "bypassKey" : key]
         )
-        //endpoint: "/app-attest/verify"
-        let request = URLRequest.post(to: serverURL.url(), with: data)
+
+        var request = URLRequest.post(to: serverURL.url(), with: data)
+        request.addValue(uuid, forHTTPHeaderField: "tag")
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
