@@ -365,9 +365,10 @@ public class CoreManager {
         let isASA = (asaResult?.asaAttribution["campaignName"] as? String != nil) ||
         (asaResult?.asaAttribution["campaign_name"] as? String != nil)
         
+        let noInternet = remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty
+        
         if checkIsNoInternetHandledOrIgnored() == false {
-            //guard remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty else {
-            if remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty {
+            if noInternet {
                 AppConfigurationManager.shared?.reset()
                 attAnswered = false
                 handleAttributionInstall()
@@ -421,9 +422,11 @@ public class CoreManager {
         if isFirstConfiguration {
             let allConfigs = self.configuration?.remoteConfigDataSource.allConfigurables ?? []
             self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
-                        
             self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
-            self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
+            
+            let isOnline = !noInternet
+            self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult,
+                                           userSource: userSource, isOnline: isOnline)
         } else {
             let allConfigs = InternalRemoteABTests.allCases
             self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
