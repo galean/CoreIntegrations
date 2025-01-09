@@ -32,7 +32,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "26"
             endingLineNumber = "26"
-            landmarkName = "setUserID(_:)"
+            landmarkName = "forceEventsUpload()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -177,6 +177,22 @@
             startingLineNumber = "205"
             endingLineNumber = "205"
             landmarkName = "requestATT()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "D32DB739-D705-4327-9D8F-A69C72DD098D"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Sources/PurchasesIntegration/PurchaseManager/PurchasesManager+Purchase.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "119"
+            endingLineNumber = "119"
+            landmarkName = "verifyPremium()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

@@ -9,9 +9,7 @@ public actor AttestationManager:AttestationManagerProtocol {
     //to be replaced with UUID()
     @MainActor
     private var uuid: String {
-        let idfv = UIDevice.current.identifierForVendor?.uuidString ?? ""
-        let range = idfv.index(idfv.startIndex, offsetBy: 14)
-        return idfv.replacingCharacters(in: range...range, with: "F")
+        return UUID().uuidString
     }
     
     public var isSupported: Bool {
@@ -31,14 +29,14 @@ public actor AttestationManager:AttestationManagerProtocol {
             let keyId = try await service.generateKey()
             let clientDataHash = await Data(SHA256.hash(data: uuid.data(using: .utf8)!))
             let attestation = try await service.attestKey(keyId, clientDataHash: clientDataHash)
-            let idfv = await uuid
-            let challenge: String = idfv.base64Encoded() ?? idfv
+            let uuid = await uuid
+            let challenge: String = uuid.base64Encoded() ?? uuid
             
             let data = try JSONEncoder().encode(
                 [
                     "keyId": keyId,
                     "challenge": challenge,
-                    "idfv": idfv,
+                    "token": uuid,
                     "attestation": attestation.base64EncodedString(),
                 ]
             )
@@ -93,7 +91,7 @@ public actor AttestationManager:AttestationManagerProtocol {
         }
         
         let assertion = try await JSONEncoder().encode(
-            ["keyId": keyId, "idfv": uuid]
+            ["keyId": keyId, "token": uuid]
         ).base64EncodedString()
         
         return AttestationManagerResult(assertion: assertion, keyId: keyId, warning: warning)
@@ -102,7 +100,7 @@ public actor AttestationManager:AttestationManagerProtocol {
     public func validateStoredKey(for serverURL: String) async throws -> AttestValidationResult {
         let keyId = await attestKeyId(for: serverURL)
         let data = try await JSONEncoder().encode(
-            ["keyId": keyId, "idfv": uuid]
+            ["keyId": keyId, "token": uuid]
         )
         //endpoint: "/app-attest/register-device"
         let request = URLRequest.post(to: serverURL.url(), with: data)
@@ -128,7 +126,7 @@ public actor AttestationManager:AttestationManagerProtocol {
     
     public func bypass(serverURL: String, key: String) async throws -> AttestBypassResult {
         let data = try await JSONEncoder().encode(
-            ["idfv": uuid, "bypassKey" : key]
+            ["token": uuid, "bypassKey" : key]
         )
         //endpoint: "/app-attest/verify"
         let request = URLRequest.post(to: serverURL.url(), with: data)
