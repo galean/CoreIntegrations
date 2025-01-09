@@ -10,7 +10,7 @@ public actor AttestationManager:AttestationManagerProtocol {
 //    private var uuid: String {
 //        return UUID().uuidString
 //    }
-    
+        
     public var isSupported: Bool {
         get async {
             DCAppAttestService.shared.isSupported
@@ -51,7 +51,8 @@ public actor AttestationManager:AttestationManagerProtocol {
                 let warningDict = attestWarning?.toDictionary()
                 
                 switch httpResponse.statusCode {
-                case 200, 204:
+                    
+                case 200, 201, 204:
                     UserDefaults.standard.set(keyId, forKey: serverURL)
                     return AttestKeyGenerationResult(key: keyId, warning: warningDict)
                 case 400:
@@ -114,7 +115,7 @@ public actor AttestationManager:AttestationManagerProtocol {
             let warningDict = attestWarning?.toDictionary()
             
             switch httpResponse.statusCode {
-            case 200, 204:
+            case 200, 201, 204:
                 return AttestValidationResult(success: true, warning: warningDict)
             default:
                 UserDefaults.standard.removeObject(forKey: serverURL)
@@ -141,7 +142,7 @@ public actor AttestationManager:AttestationManagerProtocol {
             let warningDict = attestWarning?.toDictionary()
             
             switch httpResponse.statusCode {
-            case 200, 204:
+            case 200, 201, 204:
                 return AttestBypassResult(success: true, warning: warningDict)
             default:
                 return AttestBypassResult(success: false, warning: warningDict ?? ["error":"\(httpResponse)"])
