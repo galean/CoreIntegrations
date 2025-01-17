@@ -94,7 +94,7 @@ open class AttributionServerManager {
     }
     
     fileprivate func collectInstallData() async -> AttributionInstallRequestModel {
-        let attributionDetails = try? await dataWorker.attributionDetails()
+        let attributionDetails:AttributionDetails? = await dataWorker.attributionDetails()
         
         let sdkVersion = dataWorker.sdkVersion
         let osVersion = dataWorker.osVersion
@@ -106,16 +106,12 @@ open class AttributionServerManager {
         let storeCountry = dataWorker.storeCountry
         
         var saFields: AttributionInstallRequestModel.SAFields?
-        if var details = attributionDetails {
-            if #available(iOS 14.3, *) {
-                let aaaToken = (try? AAAttribution.attributionToken()) ?? ""
-                details["token"] = aaaToken
-            }
-            saFields = AttributionInstallRequestModel.SAFields(data: details)
-        } else {
-            if #available(iOS 14.3, *) {
-                let aaaToken = (try? AAAttribution.attributionToken()) ?? ""
-                saFields = AttributionInstallRequestModel.SAFields(token: aaaToken)
+        
+        if let attributionDetails = attributionDetails {
+            if let details = attributionDetails.details {
+                saFields = AttributionInstallRequestModel.SAFields(data: details)
+            }else{
+                saFields = AttributionInstallRequestModel.SAFields(token: attributionDetails.attributionToken )
             }
         }
         
