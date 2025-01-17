@@ -42,7 +42,11 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
                         event.exceptions?.last?.value = description
                     }
                 }
-                                
+                
+                if let exception = event.exceptions?.first, exception.type == "App Hanging" {
+                    event.level = .warning
+                }
+                
                 return event
             }
             
