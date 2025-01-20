@@ -7,10 +7,14 @@ public protocol InternalSentryManagerProtocol {
     func log(_ error: Error)
     func log(_ exception: NSException)
     func log(_ message: String)
+    func pauseAppHangTracking()
+    func resumeAppHangTracking()
 }
 
 public protocol PublicSentryManagerProtocol {
     func log(_ error: Error)
     func log(_ exception: NSException)
     func log(_ message: String)
+    func pauseAppHangTracking()
+    func resumeAppHangTracking()
 }
