@@ -81,7 +81,7 @@ extension CoreManager {
     }
     
     func sendTestDistributionEvent(abTests: [any CoreRemoteABTestable], deepLinkResult: [String: String],
-                                   userSource: CoreUserSource) { // +
+                                   userSource: CoreUserSource, isOnline: Bool) { // +
         var parameters = abTests.reduce(into: [String:String]()) { partialResult, abtest in
             let shouldSend: Bool = abtest.activeForSources.contains(userSource)
             var value = abtest.value
@@ -93,7 +93,7 @@ extension CoreManager {
             partialResult[abtest.key] = value
         }
         
-        parameters = parameters + deepLinkResult
+        parameters = parameters + deepLinkResult + ["isOnline": "\(isOnline)"]
         
         InternalAnalyticsEvent.test_distribution.log(parameters: parameters)
         analyticsManager?.forceEventsUpload()

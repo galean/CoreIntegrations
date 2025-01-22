@@ -27,7 +27,7 @@ public class CoreManager {
     public static var sentry:PublicSentryManagerProtocol {
         return SentryManager.shared
     }
-        
+    
     var attAnswered: Bool = false
     var isConfigured: Bool = false
     var handledNoInternetAlert: Bool = false
@@ -54,6 +54,32 @@ public class CoreManager {
             return
         }
         isConfigured = true
+        
+        let environmentVariables = ProcessInfo.processInfo.environment
+        if let _ = environmentVariables["xctest_skip_config"] {
+            
+            let xc_network = environmentVariables["xctest_network"] ?? "organic"
+            let xc_activePaywallName = environmentVariables["xctest_activePaywallName"] ?? "none"
+            
+            if let xc_screen_style_full = environmentVariables["xc_screen_style_full"] {
+                let screen_style_full = configuration.remoteConfigDataSource.allConfigs.first(where: {$0.key == "subscription_screen_style_full"})
+                screen_style_full?.updateValue(xc_screen_style_full)
+            }
+            
+            if let xc_screen_style_h = environmentVariables["xc_screen_style_h"] {
+                let hardPaywall = configuration.remoteConfigDataSource.allConfigs.first(where: {$0.key == "subscription_screen_style_h"})
+                hardPaywall?.updateValue(xc_screen_style_h)
+            }
+         
+            let data = CoreManagerResultData(userSource: CoreUserSource(rawValue: xc_network), activePaywallName: xc_activePaywallName, isActivePaywallDefault: true, paywallsBySource: [CoreUserSource(rawValue: xc_network):xc_activePaywallName])
+            let result = CoreManagerResult.success(data: data)
+            
+            purchaseManager = PurchasesManager.shared
+            purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
+            
+            self.delegate?.coreConfigurationFinished(result: result)
+            return
+        }
         
         self.configuration = configuration
         
@@ -365,9 +391,10 @@ public class CoreManager {
         let isASA = (asaResult?.asaAttribution["campaignName"] as? String != nil) ||
         (asaResult?.asaAttribution["campaign_name"] as? String != nil)
         
+        let noInternet = remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty
+        
         if checkIsNoInternetHandledOrIgnored() == false {
-            //guard remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty else {
-            if remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty {
+            if noInternet {
                 AppConfigurationManager.shared?.reset()
                 attAnswered = false
                 handleAttributionInstall()
@@ -421,9 +448,11 @@ public class CoreManager {
         if isFirstConfiguration {
             let allConfigs = self.configuration?.remoteConfigDataSource.allConfigurables ?? []
             self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
-                        
             self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
-            self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
+            
+            let isOnline = !noInternet
+            self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult,
+                                           userSource: userSource, isOnline: isOnline)
         } else {
             let allConfigs = InternalRemoteABTests.allCases
             self.saveRemoteConfig(attribution: userSource, allConfigs: allConfigs, remoteResult: remoteResult)
