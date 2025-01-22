@@ -13,7 +13,8 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
             
             options.dsn = data.dsn
             options.debug = data.debug
-            
+            options.appHangTimeoutInterval = data.appHangTimeoutInterval
+            options.enableAppHangTracking = data.enableAppHangTracking
 #if DEBUG
             options.environment = "debug"
 #else
@@ -42,7 +43,11 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
                         event.exceptions?.last?.value = description
                     }
                 }
-                                
+                
+                if let exception = event.exceptions?.first, exception.type == "App Hanging" {
+                    event.level = .warning
+                }
+                
                 return event
             }
             
@@ -89,6 +94,14 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
     
     public func log(_ message: String) {
         SentrySDK.capture(message: message)
+    }
+    
+    public func pauseAppHangTracking() {
+        SentrySDK.pauseAppHangTracking()
+    }
+    
+    public func resumeAppHangTracking() {
+        SentrySDK.resumeAppHangTracking()
     }
     
     private func makeErrorDescription(_ breadcrumbs: [Breadcrumb]?, domain: String) -> String? {
