@@ -55,6 +55,32 @@ public class CoreManager {
         }
         isConfigured = true
         
+        let environmentVariables = ProcessInfo.processInfo.environment
+        if let _ = environmentVariables["xctest_skip_config"] {
+            
+            let xc_network = environmentVariables["xctest_network"] ?? "organic"
+            let xc_activePaywallName = environmentVariables["xctest_activePaywallName"] ?? "none"
+            
+            if let xc_screen_style_full = environmentVariables["xc_screen_style_full"] {
+                let screen_style_full = configuration.remoteConfigDataSource.allConfigs.first(where: {$0.key == "subscription_screen_style_full"})
+                screen_style_full?.updateValue(xc_screen_style_full)
+            }
+            
+            if let xc_screen_style_h = environmentVariables["xc_screen_style_h"] {
+                let hardPaywall = configuration.remoteConfigDataSource.allConfigs.first(where: {$0.key == "subscription_screen_style_h"})
+                hardPaywall?.updateValue(xc_screen_style_h)
+            }
+         
+            let data = CoreManagerResultData(userSource: CoreUserSource(rawValue: xc_network), activePaywallName: xc_activePaywallName, isActivePaywallDefault: true, paywallsBySource: [CoreUserSource(rawValue: xc_network):xc_activePaywallName])
+            let result = CoreManagerResult.success(data: data)
+            
+            purchaseManager = PurchasesManager.shared
+            purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
+            
+            self.delegate?.coreConfigurationFinished(result: result)
+            return
+        }
+        
         self.configuration = configuration
         
         if let sentryDataSource = configuration.sentryConfigDataSource {
