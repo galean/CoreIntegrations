@@ -48,20 +48,30 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
         return attStatus == .authorized
     }
     
-    func attributionDetails() async throws -> [String: Any]? {
-        if let attToken = try? AAAttribution.attributionToken() {
+    func attributionDetails() async -> AttributionDetails? {
+            guard let attToken = try? AAAttribution.attributionToken() else {
+                print("Failed to retrieve AAAttribution.attributionToken()")
+                return nil
+            }
+            
             let request = NSMutableURLRequest(url: URL(string: "https://api-adservices.apple.com/api/v1/")!)
             request.httpMethod = "POST"
             request.setValue("text/plain", forHTTPHeaderField: "Content-Type")
             request.httpBody = Data(attToken.utf8)
+            var result: [String: Any]?
             
-            let (data, response) = try await URLSession.shared.data(for: request as URLRequest)
-            let result = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [String:Any]
-            return result
-        } else {
-            return nil
+            do {
+                let (data, _) = try await URLSession.shared.data(for: request as URLRequest)
+                if var details = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any] {
+                    details["token"] = attToken
+                    result = details
+                }
+            } catch {
+                print("Failed request to api-adservices.apple.com. Error: \(error.localizedDescription)")
+            }
+            
+            return AttributionDetails(details: result, attributionToken: attToken)
         }
-    }
     
     var storeCountry: String {
         if #available(iOS 13.0, *) {

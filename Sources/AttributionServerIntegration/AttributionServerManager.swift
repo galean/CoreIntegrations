@@ -94,54 +94,50 @@ open class AttributionServerManager {
     }
     
     fileprivate func collectInstallData() async -> AttributionInstallRequestModel {
-        let attributionDetails = try? await dataWorker.attributionDetails()
-        
-        let sdkVersion = dataWorker.sdkVersion
-        let osVersion = dataWorker.osVersion
-        let appVersion = dataWorker.appVersion
-        let isTrackingEnabled = dataWorker.isAdTrackingEnabled
-        let uuid = dataWorker.uuid
-        let idfa = dataWorker.idfa
-        let idfv = dataWorker.idfv
-        let storeCountry = dataWorker.storeCountry
-        
-        var saFields: AttributionInstallRequestModel.SAFields?
-        if var details = attributionDetails {
-            if #available(iOS 14.3, *) {
-                let aaaToken = (try? AAAttribution.attributionToken()) ?? ""
-                details["token"] = aaaToken
+            let attributionDetails:AttributionDetails? = await dataWorker.attributionDetails()
+            
+            let sdkVersion = dataWorker.sdkVersion
+            let osVersion = dataWorker.osVersion
+            let appVersion = dataWorker.appVersion
+            let isTrackingEnabled = dataWorker.isAdTrackingEnabled
+            let uuid = dataWorker.uuid
+            let idfa = dataWorker.idfa
+            let idfv = dataWorker.idfv
+            let storeCountry = dataWorker.storeCountry
+            
+            var saFields: AttributionInstallRequestModel.SAFields?
+            
+            if let attributionDetails = attributionDetails {
+                if let details = attributionDetails.details {
+                    saFields = AttributionInstallRequestModel.SAFields(data: details)
+                }else{
+                    saFields = AttributionInstallRequestModel.SAFields(token: attributionDetails.attributionToken )
+                }
             }
-            saFields = AttributionInstallRequestModel.SAFields(data: details)
-        } else {
-            if #available(iOS 14.3, *) {
-                let aaaToken = (try? AAAttribution.attributionToken()) ?? ""
-                saFields = AttributionInstallRequestModel.SAFields(token: aaaToken)
+            
+            var fbFields: AttributionInstallRequestModel.FBFields? = nil
+            if let data = facebookData {
+                fbFields = AttributionInstallRequestModel.FBFields(userId: data.fbUserId, userData: data.fbUserData, anonymousId: data.fbAnonId)
             }
+            
+            var status: UInt? = nil
+            if #available(iOS 14.3, *) {
+                status = ATTrackingManager.trackingAuthorizationStatus.rawValue
+            }
+            
+            let parameters = AttributionInstallRequestModel(userId: uuid,
+                                                            idfa: idfa,
+                                                            idfv: idfv,
+                                                            sdkVersion: sdkVersion,
+                                                            osVersion: osVersion,
+                                                            appVersion: appVersion,
+                                                            limitAdTracking: !isTrackingEnabled,
+                                                            storeCountry: storeCountry,
+                                                            appsflyerId: appsflyerID,
+                                                            iosATT: status,
+                                                            fb: fbFields, sa: saFields)
+            return parameters
         }
-        
-        var fbFields: AttributionInstallRequestModel.FBFields? = nil
-        if let data = facebookData {
-            fbFields = AttributionInstallRequestModel.FBFields(userId: data.fbUserId, userData: data.fbUserData, anonymousId: data.fbAnonId)
-        }
-        
-        var status: UInt? = nil
-        if #available(iOS 14.3, *) {
-            status = ATTrackingManager.trackingAuthorizationStatus.rawValue
-        }
-        
-        let parameters = AttributionInstallRequestModel(userId: uuid,
-                                                        idfa: idfa,
-                                                        idfv: idfv,
-                                                        sdkVersion: sdkVersion,
-                                                        osVersion: osVersion,
-                                                        appVersion: appVersion,
-                                                        limitAdTracking: !isTrackingEnabled,
-                                                        storeCountry: storeCountry,
-                                                        appsflyerId: appsflyerID,
-                                                        iosATT: status,
-                                                        fb: fbFields, sa: saFields)
-        return parameters
-    }
     
     fileprivate func sendInstallData(_ data: AttributionInstallRequestModel, authToken: AttributionServerToken, completion: @escaping (AttributionManagerResult?) -> Void) {
         serverWorker?.sendInstallAnalytics(parameters: data,
