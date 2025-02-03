@@ -15,8 +15,8 @@ public class AmplitudeExperimentManager {
 //    public private(set) var purchase_server_path: String?
 //    public var amplitudeOn: Bool { return true }
     
-    var configured = false
-    var configurationCompletion: (() -> Void)? = nil
+//    var configured = false
+//    var configurationCompletion: (() -> Void)? = nil
     
     var fetched = false
     var savedConfigurables: [any RemoteConfigurable]? = nil
@@ -35,21 +35,33 @@ public class AmplitudeExperimentManager {
             config: config
         )
         
-        client.start(nil) { error in
-            self.configured = true
-            self.configurationCompletion?()
+        fetch(userProperties: nil)
+    }
+    
+    func fetch(userProperties: [String: Any]?) {
+        var user: ExperimentUser? = nil
+        
+        if let userProperties {
+            let builder = ExperimentUserBuilder()
+            builder.userProperties(userProperties)
+
+            user = builder.build()
+        }
+        
+        client.fetch(user: user) { client, error in
+            self.fetched = true
+            defer {
+                self.fetchCompletion?()
+                self.fetchCompletion = nil
+                self.savedConfigurables = nil
+            }
             
-            self.client.fetch(user: nil) { [weak self] client, error in
-                self?.fetched = true
-                guard error == nil else {
-                    self?.fetchCompletion?()
-                    return
-                }
-                
-                if let fetchCompletion = self?.fetchCompletion, let savedConfigurables = self?.savedConfigurables {
-                    self?.internalUpdateConfig(client: client, appConfigurables: savedConfigurables)
-                    fetchCompletion()
-                }
+            guard error == nil else {
+                return
+            }
+            
+            if let savedConfigurables = self.savedConfigurables {
+                self.internalUpdateConfig(client: client, appConfigurables: savedConfigurables)
             }
         }
     }
@@ -67,29 +79,6 @@ public class AmplitudeExperimentManager {
         }
         
         allRemoteValues = configResult
-        
-//        let installPayload = client.variant(self.kInstallURL).payload as? [String: String]
-//        let installPayloadValue = installPayload?.first?.value
-//        let installValue = client.variant(self.kInstallURL).value
-//        install_server_path = installPayloadValue ?? installValue ?? ""
-//        
-//        let purchasePayload = client.variant(self.kPurchaseURL).payload as? [String: String]
-//        let purchasePayloadValue = purchasePayload?.first?.value
-//        let purchaseValue = client.variant(self.kPurchaseURL).value
-//        purchase_server_path = purchasePayloadValue ?? purchaseValue ?? ""
-        
-//        self.internalConfigResult = client.all().reduce(into: [String:String](), { partialResult, variantWithKey in
-//            let configValue = variantWithKey.value.value ?? ""
-//            let configPayload = variantWithKey.value.payload as? [String: String]
-//            if let configPayload, let payloadValue = configPayload.first?.value {
-//                partialResult[variantWithKey.key] = payloadValue
-//            } else if configValue != "" {
-//                partialResult[variantWithKey.key] = configValue
-//            }
-//            
-//        })
-//        
-//        self.remoteConfigResult = configResult
     }
 }
 
@@ -109,13 +98,13 @@ extension AmplitudeExperimentManager: RemoteConfigManager {
         //nothing to do here
 //    }
     
-    public func configure(id: String, completion: @escaping () -> Void) {
-        if configured {
-            completion()
-        }else {
-            self.configurationCompletion = completion
-        }
-    }
+//    public func configure(id: String, completion: @escaping () -> Void) {
+//        if configured {
+//            completion()
+//        }else {
+//            self.configurationCompletion = completion
+//        }
+//    }
     
     public func fetchRemoteConfig(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void) {
         if fetched {
@@ -126,4 +115,16 @@ extension AmplitudeExperimentManager: RemoteConfigManager {
             self.fetchCompletion = completion
         }
     }
+    
+//    public func updateRemoteConfig(_ appConfigurables: [any RemoteConfigurable], userProperties: [String: Any], completion: @escaping () -> Void) {
+//        let builder = ExperimentUserBuilder()
+//        builder.userProperties(userProperties)
+//
+//        let user = builder.build()
+//        
+//        client.fetch(user: user) { client, error in
+//            self.internalUpdateConfig(client: client, appConfigurables: appConfigurables)
+//            completion()
+//        }
+//    }
 }

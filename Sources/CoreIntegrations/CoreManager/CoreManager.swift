@@ -183,11 +183,6 @@ public class CoreManager {
         }
         if let id, id != "" {
             guard !idConfigured else {
-                remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
-                    self.sendAmplitudeAssigned(configs: self.remoteConfigManager?.allRemoteValues ?? [:])
-                    self.handleConfigurationUpdate()
-                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
-                }
                 return
             }
             idConfigured = true
@@ -196,17 +191,12 @@ public class CoreManager {
             purchaseManager?.setUserID(id)
             self.facebookManager?.userID = id
             sentryManager.setUserID(id)
-            
-            self.remoteConfigManager?.configure(id: id) { [weak self] in
-                guard let self = self else {return}
-                remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
-                    self.sendAmplitudeAssigned(configs: self.remoteConfigManager?.allRemoteValues ?? [:])
-                    self.handleConfigurationUpdate()
-                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
-                }
-            }
-            
             self.analyticsManager?.setUserID(id)
+            
+            remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
+                self.handleConfigurationUpdate()
+                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
+            }
         }
     }
     

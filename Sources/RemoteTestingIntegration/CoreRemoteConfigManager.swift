@@ -16,7 +16,7 @@ public class CoreRemoteConfigManager: RemoteConfigManager {
 
     private var remoteConfigManager: RemoteConfigManager
     
-    private var isConfigured:Bool = false
+//    private var isConfigured:Bool = false
     private var isConfigFetched:Bool = false
     
     public var allRemoteValues: [String: String] {
@@ -27,16 +27,16 @@ public class CoreRemoteConfigManager: RemoteConfigManager {
         remoteConfigManager = AmplitudeExperimentManager(deploymentKey: deploymentKey)
     }
     
-    public func configure(id userID: String, completion: @escaping () -> Void) {
-        guard !isConfigured else {
-            return
-        }
+//    public func configure(id userID: String, completion: @escaping () -> Void) {
+//        guard !isConfigured else {
+//            return
+//        }
         
-        remoteConfigManager.configure(id: userID) { [weak self] in
-            self?.isConfigured = true
-            completion()
-        }
-    }
+//        remoteConfigManager.configure(id: userID) { [weak self] in
+//            self?.isConfigured = true
+//            completion()
+//        }
+//    }
     
     public func fetchRemoteConfig(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void) {
         guard !isConfigFetched else {

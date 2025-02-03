@@ -26,7 +26,7 @@ public protocol RemoteConfigManager {
     
     var allRemoteValues: [String: String] { get }
     
-    func configure(id: String, completion: @escaping () -> Void)
+//    func configure(id: String, completion: @escaping () -> Void)
     func fetchRemoteConfig(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void)
     
     func getValue(forConfig config: any RemoteConfigurable) -> String?
