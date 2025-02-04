@@ -35,6 +35,7 @@ let package = Package(
                     "PurchasesIntegration",
                     "AttributionServerIntegration",
                     "SentryIntegration",
+                    "FirebaseIntegration",
                 ],
                 linkerSettings: [
                   .linkedFramework("UIKit", .when(platforms: [.iOS])),
@@ -54,6 +55,15 @@ let package = Package(
                     .product(name: "FacebookCore", package: "facebook-ios-sdk")
                 ],
                 path: "Sources/FacebookIntegration",
+                linkerSettings: [
+                  .linkedFramework("UIKit", .when(platforms: [.iOS])),
+                ]
+        ),
+        .target(name: "FirebaseIntegration",
+                dependencies: [
+                    .product(name: "FirebaseAnalytics", package: "firebase-ios-sdk"),
+                ],
+                path: "Sources/FirebaseIntegration",
                 linkerSettings: [
                   .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 ]

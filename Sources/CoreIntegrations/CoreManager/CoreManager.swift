@@ -8,6 +8,7 @@ import PurchasesIntegration
 import AnalyticsIntegration
 import RemoteTestingIntegration
 import SentryIntegration
+import FirebaseIntegration
 #endif
 import AppTrackingTransparency
 import Foundation
@@ -40,6 +41,7 @@ public class CoreManager {
     var remoteConfigManager: RemoteConfigManager?
     var analyticsManager: AnalyticsManager?
     var sentryManager: InternalSentryManagerProtocol = SentryManager.shared
+    var firebaseManager: FirebaseManager = FirebaseManager()
     
     var delegate: CoreManagerDelegate?
     
@@ -186,10 +188,10 @@ public class CoreManager {
                 return
             }
             idConfigured = true
-            
             appsflyerManager?.customerUserID = id
             purchaseManager?.setUserID(id)
-            self.facebookManager?.userID = id
+            facebookManager?.userID = id
+            firebaseManager.configure(id: id)
             sentryManager.setUserID(id)
             self.analyticsManager?.setUserID(id)
             
