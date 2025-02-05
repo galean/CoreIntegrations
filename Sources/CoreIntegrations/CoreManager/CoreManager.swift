@@ -369,7 +369,9 @@ public class CoreManager {
     }
     
     func getConfigurationResult(isFirstConfiguration: Bool) -> CoreManagerResult {
+        let configs = self.configuration?.remoteConfigDataSource.allConfigs ?? []
         let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
+        let allConfigs: [any ExtendedRemoteConfigurable] = configs + abTests
         let remoteResult = self.remoteConfigManager?.allRemoteValues ?? [:]
         let asaResult = AttributionServerManager.shared.installResultData
         let isIPAT = asaResult?.isIPAT ?? false
@@ -433,8 +435,10 @@ public class CoreManager {
         if isFirstConfiguration {
             self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
             self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
+            self.saveRemoteConfig(source: userSource, allConfigs: allConfigs)
         } else {
             self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
+            self.saveRemoteConfig(source: userSource, allConfigs: allConfigs)
         }
         
         self.configurationResultManager.userSource = userSource
@@ -444,6 +448,18 @@ public class CoreManager {
         let result = self.configurationResultManager.calculateResult()
            
         return CoreManagerResult.success(data: result)
+    }
+    
+    func saveRemoteConfig(source: CoreUserSource, allConfigs: [any ExtendedRemoteConfigurable]) {
+        allConfigs.forEach { config in
+            let value: String?
+            if config.activeForSources.contains(source) {
+                value = nil
+            } else {
+                value = config.defaultValue
+            }
+            config.updateValue(value)
+        }
     }
 }
 
