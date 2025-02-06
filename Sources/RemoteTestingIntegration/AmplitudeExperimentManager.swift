@@ -94,18 +94,6 @@ extension AmplitudeExperimentManager: RemoteConfigManager {
         client.exposure(key: config.key)
     }
     
-//    public func updateValue(forConfig config: RemoteConfigurable, newValue: String?) {
-        //nothing to do here
-//    }
-    
-//    public func configure(id: String, completion: @escaping () -> Void) {
-//        if configured {
-//            completion()
-//        }else {
-//            self.configurationCompletion = completion
-//        }
-//    }
-    
     public func fetchRemoteConfig(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void) {
         if fetched {
             self.internalUpdateConfig(client: client, appConfigurables: appConfigurables)
@@ -115,16 +103,4 @@ extension AmplitudeExperimentManager: RemoteConfigManager {
             self.fetchCompletion = completion
         }
     }
-    
-//    public func updateRemoteConfig(_ appConfigurables: [any RemoteConfigurable], userProperties: [String: Any], completion: @escaping () -> Void) {
-//        let builder = ExperimentUserBuilder()
-//        builder.userProperties(userProperties)
-//
-//        let user = builder.build()
-//        
-//        client.fetch(user: user) { client, error in
-//            self.internalUpdateConfig(client: client, appConfigurables: appConfigurables)
-//            completion()
-//        }
-//    }
 }

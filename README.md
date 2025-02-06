@@ -1,3 +1,3 @@
 # CoreIntegrations
 
-Framework version - 2.7.2amplremote
+Framework version - 2.7.3amplremote

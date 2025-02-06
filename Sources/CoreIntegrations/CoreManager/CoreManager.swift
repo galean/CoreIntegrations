@@ -458,7 +458,7 @@ public class CoreManager {
             } else {
                 value = config.defaultValue
             }
-            config.updateValue(value)
+            config.updateInternalValue(value)
         }
     }
 }

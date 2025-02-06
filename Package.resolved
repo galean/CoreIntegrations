@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/amplitude/experiment-ios-client",
       "state" : {
-        "revision" : "6a94d70915b3756daae2a989fa57f03c19547c67",
-        "version" : "1.13.5"
+        "revision" : "2c37518705d286d7ba694411364087cd5f16cb46",
+        "version" : "1.16.0"
       }
     },
     {
@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/facebook/facebook-ios-sdk",
       "state" : {
-        "revision" : "619d1772808425faa010d92293b26eeb9bc1d630",
-        "version" : "17.4.0"
+        "revision" : "b02aef326d67cb332d20a0c3f62cc981f8fc3250",
+        "version" : "17.3.0"
       }
     },
     {
