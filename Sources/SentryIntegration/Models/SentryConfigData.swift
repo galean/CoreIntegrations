@@ -11,8 +11,9 @@ public struct SentryConfigData {
     var shouldCaptureHttpRequests: Bool = true
     var httpCodesRange: NSRange = NSMakeRange(202, 599)
     let handledDomains:[String]?
+    var diagnosticLevel: UInt = 0
 
-    public init(dsn: String, debug: Bool, tracesSampleRate: Float = 1.0, profilesSampleRate: Float = 1.0, appHangTimeoutInterval: TimeInterval = 2.0, enableAppHangTracking: Bool = true, shouldCaptureHttpRequests: Bool = true, httpCodesRange: NSRange = NSMakeRange(202, 599), handledDomains: [String]? = nil) {
+    public init(dsn: String, debug: Bool, tracesSampleRate: Float = 1.0, profilesSampleRate: Float = 1.0, appHangTimeoutInterval: TimeInterval = 2.0, enableAppHangTracking: Bool = true, shouldCaptureHttpRequests: Bool = true, httpCodesRange: NSRange = NSMakeRange(202, 599), handledDomains: [String]? = nil, diagnosticLevel: UInt = 0) {
         self.dsn = dsn
         self.debug = debug
         self.tracesSampleRate = tracesSampleRate
@@ -22,5 +23,6 @@ public struct SentryConfigData {
         self.shouldCaptureHttpRequests = shouldCaptureHttpRequests
         self.httpCodesRange = httpCodesRange
         self.handledDomains = handledDomains
+        self.diagnosticLevel = diagnosticLevel
     }
 }
