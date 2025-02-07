@@ -15,6 +15,7 @@ public protocol SentryDataSourceProtocol: AnyObject {
     var shouldCaptureHttpRequests: Bool { get }
     var httpCodesRange: NSRange { get }
     var handledDomains:[String]? { get }
+    var diagnosticLevel: UInt { get }
 }
 
 public extension SentryDataSourceProtocol {
@@ -36,5 +37,9 @@ public extension SentryDataSourceProtocol {
     
     var handledDomains:[String]? {
         return nil
+    }
+    
+    var diagnosticLevel: UInt {
+        return 0
     }
 }
