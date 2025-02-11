@@ -30,7 +30,7 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
     }
     
     var sdkVersion: String {
-        return "2.4.16attest"
+        return "2.4.17attest"
     }
     
     var osVersion: String {

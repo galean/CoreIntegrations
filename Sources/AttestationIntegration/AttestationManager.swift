@@ -92,7 +92,9 @@ public actor AttestationManager:AttestationManagerProtocol {
             }
         }
         
-        let assertion = try await service.generateAssertion(keyId!, clientDataHash: Data()).base64EncodedString()
+        let clientDataHash = Data(SHA256.hash(data: Data()))
+        
+        let assertion = try await service.generateAssertion(keyId!, clientDataHash: clientDataHash).base64EncodedString()
         
 //        let assertion = try JSONEncoder().encode(
 //            ["keyId": keyId, "token": uuid]
