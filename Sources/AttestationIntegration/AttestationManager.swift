@@ -73,6 +73,7 @@ public actor AttestationManager:AttestationManagerProtocol {
     }
     
     public func createAssertion(for serverURL: String, uuid: String) async throws -> AttestationManagerResult {
+        let service = DCAppAttestService.shared
         var keyId = await attestKeyId(for: serverURL)
         var warning: [String: Any]?
         
@@ -91,9 +92,11 @@ public actor AttestationManager:AttestationManagerProtocol {
             }
         }
         
-        let assertion = try JSONEncoder().encode(
-            ["keyId": keyId, "token": uuid]
-        ).base64EncodedString()
+        let assertion = try await service.generateAssertion(keyId!, clientDataHash: Data()).base64EncodedString()
+        
+//        let assertion = try JSONEncoder().encode(
+//            ["keyId": keyId, "token": uuid]
+//        ).base64EncodedString()
         
         return AttestationManagerResult(assertion: assertion, keyId: keyId, warning: warning)
     }
