@@ -81,16 +81,17 @@ public actor AttestationManager:AttestationManagerProtocol {
             let result = try await generateKey(for: serverURL, uuid: uuid)
             keyId = result.key
             warning = result.warning
-        }else{
-            let validationResult = try await validateStoredKey(for: serverURL, uuid: uuid)
-            if !validationResult.success {
-                let result = try await generateKey(for: serverURL, uuid: uuid)
-                keyId = result.key
-                warning = result.warning
-            }else{
-                warning = validationResult.warning
-            }
         }
+//        else{
+//            let validationResult = try await validateStoredKey(for: serverURL, uuid: uuid)
+//            if !validationResult.success {
+//                let result = try await generateKey(for: serverURL, uuid: uuid)
+//                keyId = result.key
+//                warning = result.warning
+//            }else{
+//                warning = validationResult.warning
+//            }
+//        }
         
         let clientDataHash = Data(SHA256.hash(data: payload ?? Data()))
         
