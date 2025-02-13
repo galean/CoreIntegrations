@@ -12,6 +12,7 @@ public enum CoreUserSource: CaseIterable, Hashable, Sendable, RawRepresentable {
     case instagram
     case snapchat
     case bing
+    case moloco
     case unknown
     
     public typealias RawValue = String
@@ -28,6 +29,7 @@ public enum CoreUserSource: CaseIterable, Hashable, Sendable, RawRepresentable {
         case "instagram": self = .instagram
         case "snapchat": self = .snapchat
         case "bing": self = .bing
+        case "moloco": self = .moloco
         default: self = .unknown
         }
     }
@@ -44,6 +46,7 @@ public enum CoreUserSource: CaseIterable, Hashable, Sendable, RawRepresentable {
         case .instagram: return "instagram"
         case .snapchat: return "snapchat"
         case .bing: return "bing"
+        case .moloco: return "moloco"
         case .unknown: return "unknown"
         }
     }

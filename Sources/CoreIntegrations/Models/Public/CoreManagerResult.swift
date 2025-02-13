@@ -13,4 +13,5 @@ public struct CoreManagerResult: Hashable, Sendable {
     public var tiktokPaywallName: String
     public var instagramPaywallName: String
     public var bingPaywallName: String
+    public var molocoPaywallName: String
 }
