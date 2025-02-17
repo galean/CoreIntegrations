@@ -32,9 +32,10 @@ class AppConfigurationManager {
         return isTimerFinished || configurationCompletelyFinished
     }
     
-    init(model: CoreConfigurationModel, isFirstStart: Bool) {
+    init(model: CoreConfigurationModel, isFirstStart: Bool, timeout: Int = 6) {
         self.model = model
         self.isFirstStart = isFirstStart
+        self.timout = timeout
     }
     
     public func startTimoutTimer() {

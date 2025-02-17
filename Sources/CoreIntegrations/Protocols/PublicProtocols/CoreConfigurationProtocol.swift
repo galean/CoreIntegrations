@@ -12,12 +12,17 @@ public protocol CoreConfigurationProtocol {
     var initialConfigurationDataSource: (any ConfigurationEventsDataSource)? { get }
     var paywallDataSource: any CorePaywallDataSource { get }
     var useDefaultATTRequest: Bool { get }
+    var configurationTimeout: Int { get }
     var attributionServerDataSource: any AttributionServerDataSource { get }
     var sentryConfigDataSource: (any SentryDataSourceProtocol)? { get }
 }
 
-extension CoreConfigurationProtocol {
+public extension CoreConfigurationProtocol {
     var useDefaultATTRequest: Bool { return true }
+    
+    var configurationTimeout: Int {
+        return 6
+    }
     
     var appsflyerConfig: AppsflyerConfigData {
         return AppsflyerConfigData(appsFlyerDevKey: appSettings.appsFlyerKey,
