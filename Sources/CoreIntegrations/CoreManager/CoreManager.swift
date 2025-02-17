@@ -114,7 +114,8 @@ public class CoreManager {
         let allConfigurationEvents: [any ConfigurationEvent] = InternalConfigurationEvent.allCases + (configuration.initialConfigurationDataSource?.allEvents ?? [])
         let configurationEventsModel = CoreConfigurationModel(allConfigurationEvents: allConfigurationEvents)
         AppConfigurationManager.shared = AppConfigurationManager(model: configurationEventsModel,
-                                                                 isFirstStart: configuration.appSettings.isFirstLaunch)
+                                                                 isFirstStart: configuration.appSettings.isFirstLaunch,
+                                                                 timeout: configuration.configurationTimeout)
         
         appsflyerManager = AppfslyerManager(config: configuration.appsflyerConfig)
         appsflyerManager?.delegate = self
