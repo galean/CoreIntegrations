@@ -25,6 +25,10 @@ public protocol ExtendedRemoteConfigurable: RemoteConfigurable {
 public extension ExtendedRemoteConfigurable {
     var value: String {
         get {
+            if let _ = ProcessInfo.processInfo.environment["xctest_skip_config"] {
+                return reassignedValue ?? defaultValue
+            }
+            
             guard let configManager = CoreManager.internalShared.remoteConfigManager else {
                 return defaultValue
             }
