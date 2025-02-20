@@ -414,7 +414,10 @@ public class CoreManager {
                 if let fixedSource = self.configuration?.appSettings.paywallSourceForRestricted {
                     networkSource = fixedSource
                 }
-            } else {
+            } else if networkValue.lowercased() == "asa_test" {
+                networkSource = .asa
+            }
+            else {
                 networkSource = .unknown
             }
             
