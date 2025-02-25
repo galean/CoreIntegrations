@@ -67,6 +67,17 @@ extension CoreManager: CoreManagerProtocol {
 
     public func verifyPremium() async -> PurchasesVerifyPremiumResult {
         guard let purchaseManager = purchaseManager else {return .notPremium}
+                
+        let environmentVariables = ProcessInfo.processInfo.environment
+        if let _ = environmentVariables["xctest_skip_config"],
+           let isPremium = environmentVariables["xctest_is_premium"]?.lowercased() {
+            if ["true", "1"].contains(isPremium) {
+                return .premium(purchase: nil)
+            } else {
+                return .notPremium
+            }
+        }
+        
         let result = await purchaseManager.verifyPremium()
         if case .premium(let product) = result {
             self.sendSubscriptionTypeUserProperty(identifier: product.id)

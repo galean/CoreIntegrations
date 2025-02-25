@@ -134,17 +134,6 @@ extension PurchasesManager {
             }
         }
         
-        let environmentVariables = ProcessInfo.processInfo.environment
-        if let _ = environmentVariables["xctest_skip_config"],
-           let isPremium = environmentVariables["xctest_is_premium"]?.lowercased() {
-            if ["true", "1"].contains(isPremium) {
-                //will return random subscription
-                return .premium(purchase: subscriptions.last!)
-            } else {
-                return .notPremium
-            }
-        }
-        
         if let premium = statuses.last(where: {$0.state == .subscribed}) {
             debugPrint("🏦 verifyPremium ✅ return active premium product \(premium.product.id) status \(premium.state), \(premium.state.rawValue)")
             return .premium(purchase: premium.product)
