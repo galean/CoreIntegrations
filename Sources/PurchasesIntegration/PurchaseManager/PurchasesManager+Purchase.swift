@@ -114,6 +114,7 @@ extension PurchasesManager {
     
     public func verifyPremium() async -> SKVerifyPremiumResult {
         debugPrint("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
+        
         await updateProductStatus()
         
         var statuses:[SKVerifyPremiumState] = []
@@ -130,6 +131,17 @@ extension PurchasesManager {
             if proIdentifiers.contains(where: {$0 == product.id}) {
                 let premiumStatus = SKVerifyPremiumState(product: product, state: .subscribed)
                 statuses.append(premiumStatus)
+            }
+        }
+        
+        let environmentVariables = ProcessInfo.processInfo.environment
+        if let _ = environmentVariables["xctest_skip_config"],
+           let isPremium = environmentVariables["xctest_is_premium"]?.lowercased() {
+            if ["true", "1"].contains(isPremium) {
+                //will return random subscription
+                return .premium(purchase: subscriptions.last!)
+            } else {
+                return .notPremium
             }
         }
         
