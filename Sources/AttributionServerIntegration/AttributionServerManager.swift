@@ -15,6 +15,7 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
     public func configure(config: AttributionConfigData) {
         self.facebookData = config.facebookData
         self.appsflyerID = config.appsflyerID
+        self.appEnvironment = config.appEnvironment
         authorizationToken = config.authToken
         
         serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
@@ -78,6 +79,7 @@ open class AttributionServerManager {
     var authorizationToken: AttributionServerToken!
     var facebookData: AttributionFacebookModel? = nil
     var appsflyerID: String? = nil
+    var appEnvironment: String? = nil
         
     fileprivate func validateToken(_ token: AttributionServerToken?) -> Bool {
         guard authorizationToken != nil else {
@@ -135,6 +137,7 @@ open class AttributionServerManager {
                                                         storeCountry: storeCountry,
                                                         appsflyerId: appsflyerID,
                                                         iosATT: status,
+                                                        environment: appEnvironment,
                                                         fb: fbFields, sa: saFields)
         return parameters
     }

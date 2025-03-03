@@ -133,12 +133,13 @@ public class CoreManager {
         let purchaseURLPath = configuration.attributionServerDataSource.purchasePath
         
         let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
-                                                                 installServerURLPath: installURLPath,
-                                                                 purchaseServerURLPath: purchaseURLPath,
-                                                                 installPath: installPath,
-                                                                 purchasePath: purchasePath,
-                                                                 appsflyerID: appsflyerToken,
-                                                                 facebookData: facebookData)
+                                                             installServerURLPath: installURLPath,
+                                                             purchaseServerURLPath: purchaseURLPath,
+                                                             installPath: installPath,
+                                                             purchasePath: purchasePath,
+                                                             appsflyerID: appsflyerToken,
+                                                             appEnvironment: AppEnvironment.current.rawValue,
+                                                             facebookData: facebookData)
         
         AttributionServerManager.shared.configure(config: attributionConfiguration)
         

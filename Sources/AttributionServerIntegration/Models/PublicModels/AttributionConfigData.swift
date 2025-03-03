@@ -8,10 +8,12 @@ public struct AttributionConfigData {
     let installPath: String
     let purchasePath: String
     let appsflyerID: String?
+    let appEnvironment: String?
     let facebookData: AttributionFacebookModel?
     
-    public init(authToken: AttributionServerToken, installServerURLPath: String, purchaseServerURLPath: String, installPath: String, purchasePath: String,
-                appsflyerID: String?, facebookData: AttributionFacebookModel?) {
+    public init(authToken: AttributionServerToken, installServerURLPath: String, purchaseServerURLPath: String, installPath: String,
+                purchasePath: String, appsflyerID: String?, appEnvironment: String?,
+                facebookData: AttributionFacebookModel?) {
         self.authToken = authToken
         self.appsflyerID = appsflyerID
         self.facebookData = facebookData
@@ -19,6 +21,7 @@ public struct AttributionConfigData {
         self.purchaseServerURLPath = purchaseServerURLPath
         self.installPath = installPath
         self.purchasePath = purchasePath
+        self.appEnvironment = appEnvironment
     }
 }
 

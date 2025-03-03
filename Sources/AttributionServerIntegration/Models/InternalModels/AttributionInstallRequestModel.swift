@@ -12,6 +12,7 @@ internal struct AttributionInstallRequestModel: Codable {
     let storeCountry: String?
     let appsflyerId: String?
     let iosATT: UInt?
+    let environment: String?
     let fb: FBFields?
     let sa: SAFields?
     
