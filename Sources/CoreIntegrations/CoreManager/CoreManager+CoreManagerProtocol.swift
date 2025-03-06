@@ -2,6 +2,7 @@
 import Foundation
 import UIKit
 import AppTrackingTransparency
+import PurchasesIntegration
 
 extension CoreManager: CoreManagerProtocol {
     
@@ -33,32 +34,32 @@ extension CoreManager: CoreManagerProtocol {
         }
     }
     
-    //may be implemented in future
-//    public func purchase(_ purchase: Purchase, promoOffer: PromoOffer) async -> PurchasesPurchaseResult {
-//        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
-//        let result = try? await purchaseManager.purchase(purchase.product, promoOffer: promoOffer)
-//
-//        switch result {
-//        case .success(let purchaseInfo):
-//            let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: purchaseInfo.transaction, jws: purchaseInfo.jwsRepresentation, originalTransactionID: purchaseInfo.originalID, decodedTransaction: purchaseInfo.jsonRepresentation)
-//            
-//            // check if premium group
-//            self.sendSubscriptionTypeUserProperty(identifier: details.productId)
-//            
-//            self.sendPurchaseToAttributionServer(details)
-//            self.sendPurchaseToFacebook(details)
-//            self.sendPurchaseToAppsflyer(details)
-//            return .success(details: details)
-//        case .pending:
-//            return .pending
-//        case .userCancelled:
-//            return .userCancelled
-//        case .unknown:
-//            return .unknown
-//        case .none:
-//            return .unknown
-//        }
-//    }
+    public func purchase(_ purchase: Purchase, promoOffer: PromoOffer) async -> PurchasesPurchaseResult {
+        guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
+        let skOffer = SKPromoOffer(offerID: promoOffer.offerID, keyID: promoOffer.keyID, nonce: promoOffer.nonce, signature: promoOffer.signature, timestamp: promoOffer.timestamp)
+        let result = try? await purchaseManager.purchase(purchase.product, promoOffer: skOffer)
+        
+        switch result {
+        case .success(let purchaseInfo):
+            let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: purchaseInfo.transaction, jws: purchaseInfo.jwsRepresentation, originalTransactionID: purchaseInfo.originalID, decodedTransaction: purchaseInfo.jsonRepresentation)
+            
+            // check if premium group
+            self.sendSubscriptionTypeUserProperty(identifier: details.productId)
+            
+            self.sendPurchaseToAttributionServer(details)
+            self.sendPurchaseToFacebook(details)
+            self.sendPurchaseToAppsflyer(details)
+            return .success(details: details)
+        case .pending:
+            return .pending
+        case .userCancelled:
+            return .userCancelled
+        case .unknown:
+            return .unknown
+        case .none:
+            return .unknown
+        }
+    }
     
     private func groupFor(_ productId: String) -> any CorePurchaseGroup {
         let group = CoreManager.internalShared.configuration?.paywallDataSource.allPurchaseIdentifiers.first(where: {$0.id == productId})?.purchaseGroup
