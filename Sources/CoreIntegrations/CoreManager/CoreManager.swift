@@ -67,7 +67,8 @@ public class CoreManager {
                 hardPaywall?.updateValue(xc_screen_style_h)
             }
             
-            let result = CoreManagerResult(userSource: CoreUserSource(rawValue: xc_network), activePaywallName: xc_activePaywallName, organicPaywallName: xc_activePaywallName, asaPaywallName: xc_activePaywallName, facebookPaywallName: xc_activePaywallName, googlePaywallName: xc_activePaywallName, snapchatPaywallName: xc_activePaywallName, tiktokPaywallName: xc_activePaywallName, instagramPaywallName: xc_activePaywallName, bingPaywallName: xc_activePaywallName, molocoPaywallName: xc_activePaywallName)
+            let result = CoreManagerResult(userSource: CoreUserSource(rawValue: xc_network), activePaywallName: xc_activePaywallName, organicPaywallName: xc_activePaywallName, asaPaywallName: xc_activePaywallName, facebookPaywallName: xc_activePaywallName, googlePaywallName: xc_activePaywallName, snapchatPaywallName: xc_activePaywallName, tiktokPaywallName: xc_activePaywallName, instagramPaywallName: xc_activePaywallName, bingPaywallName: xc_activePaywallName, molocoPaywallName: xc_activePaywallName,
+                                           applovinPaywallName: xc_activePaywallName)
             
             purchaseManager = PurchasesManager.shared
             purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
@@ -373,6 +374,8 @@ public class CoreManager {
                 networkSource = .bing
             } else if networkValue.lowercased().contains("moloco_int") {
                 networkSource = .moloco
+            } else if networkValue.lowercased().contains("applovin_int") {
+                networkSource = .applovin
             } else if networkValue == "Full_Access" {
                 networkSource = .test_premium
             } else if networkValue == "restricted" {
@@ -456,7 +459,8 @@ class ConfigurationResultManager {
         let bingPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_bing.value)
         let organicPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_organic.value)
         let molocoPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_moloco.value)
-        
+        let applovinPaywallName = self.getPaywallNameFromConfig(InternalRemoteABTests.ab_paywall_applovin.value)
+
         let activePaywallName: String
         var userSourceInfo: [String: String]? = deepLinkResult
         
@@ -485,6 +489,8 @@ class ConfigurationResultManager {
                 activePaywallName = bingPaywallName
             case .moloco:
                 activePaywallName = molocoPaywallName
+            case .applovin:
+                activePaywallName = applovinPaywallName
             }
         }
         
@@ -499,7 +505,8 @@ class ConfigurationResultManager {
                                                   tiktokPaywallName: tiktokPaywallName,
                                                   instagramPaywallName: instagramPaywallName,
                                                   bingPaywallName: bingPaywallName,
-                                                  molocoPaywallName: molocoPaywallName)
+                                                  molocoPaywallName: molocoPaywallName,
+                                                  applovinPaywallName: applovinPaywallName)
         
         return coreManagerResult
     }
