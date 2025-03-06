@@ -110,8 +110,8 @@
             filePath = "Sources/CoreIntegrations/CoreManager/CoreManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "340"
-            endingLineNumber = "340"
+            startingLineNumber = "339"
+            endingLineNumber = "339"
             landmarkName = "handleConfigurationUpdate()"
             landmarkType = "7">
          </BreakpointContent>
@@ -126,8 +126,8 @@
             filePath = "Sources/CoreIntegrations/CoreManager/CoreManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "325"
-            endingLineNumber = "325"
+            startingLineNumber = "324"
+            endingLineNumber = "324"
             landmarkName = "handleConfigurationEndCallback()"
             landmarkType = "7">
          </BreakpointContent>
@@ -142,9 +142,9 @@
             filePath = "Sources/CoreIntegrations/CoreManager/CoreManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "336"
-            endingLineNumber = "336"
-            landmarkName = "handleConfigurationUpdate()"
+            startingLineNumber = "335"
+            endingLineNumber = "335"
+            landmarkName = "handleConfigurationEndCallback()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -158,10 +158,10 @@
             filePath = "Sources/CoreIntegrations/CoreManager/CoreManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "306"
-            endingLineNumber = "306"
-            landmarkName = "CoreManager"
-            landmarkType = "3">
+            startingLineNumber = "305"
+            endingLineNumber = "305"
+            landmarkName = "sendPurchaseToFacebook(_:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
