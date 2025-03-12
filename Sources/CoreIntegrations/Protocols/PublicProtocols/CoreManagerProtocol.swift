@@ -34,7 +34,7 @@ public protocol CoreManagerProtocol {
 
     func purchase(_ purchase: Purchase, activeController: UIViewController?) async -> PurchasesPurchaseResult
     
-    func purchase(_ purchase: Purchase, promoOffer: PromoOffer) async -> PurchasesPurchaseResult
+    func purchase(_ purchase: Purchase, promoOffer: PromoOffer, activeController: UIViewController?) async -> PurchasesPurchaseResult
         
     func verifyPremium() async -> PurchasesVerifyPremiumResult
     

@@ -2,7 +2,9 @@
 import Foundation
 import UIKit
 import AppTrackingTransparency
+#if !COCOAPODS
 import PurchasesIntegration
+#endif
 
 extension CoreManager: CoreManagerProtocol {
     
@@ -34,17 +36,20 @@ extension CoreManager: CoreManagerProtocol {
         }
     }
     
-    public func purchase(_ purchase: Purchase, promoOffer: PromoOffer) async -> PurchasesPurchaseResult {
+    @MainActor
+    public func purchase(_ purchase: Purchase, promoOffer: PromoOffer, activeController: UIViewController?) async -> PurchasesPurchaseResult {
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
         let skOffer = SKPromoOffer(offerID: promoOffer.offerID, keyID: promoOffer.keyID, nonce: promoOffer.nonce, signature: promoOffer.signature, timestamp: promoOffer.timestamp)
-        let result = try? await purchaseManager.purchase(purchase.product, promoOffer: skOffer)
+        let result = try? await purchaseManager.purchase(purchase.product, promoOffer: skOffer, activeController: activeController)
         
         switch result {
         case .success(let purchaseInfo):
             let details = PurchaseDetails(productId: purchase.product.id, product: purchase.product, transaction: purchaseInfo.transaction, jws: purchaseInfo.jwsRepresentation, originalTransactionID: purchaseInfo.originalID, decodedTransaction: purchaseInfo.jsonRepresentation)
             
             // check if premium group
-            self.sendSubscriptionTypeUserProperty(identifier: details.productId)
+            if purchase.purchaseGroup.isPro {
+                self.sendSubscriptionTypeUserProperty(identifier: details.productId)
+            }
             
             self.sendPurchaseToAttributionServer(details)
             self.sendPurchaseToFacebook(details)

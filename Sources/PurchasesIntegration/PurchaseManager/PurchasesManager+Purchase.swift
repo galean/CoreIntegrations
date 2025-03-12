@@ -51,7 +51,8 @@ extension PurchasesManager {
         }
     }
     
-    public func purchase(_ product: Product, promoOffer:SKPromoOffer) async throws -> SKPurchaseResult {
+    @MainActor
+    public func purchase(_ product: Product, promoOffer:SKPromoOffer, activeController: UIViewController?) async throws -> SKPurchaseResult {
         debugPrint("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
         
         var options:Set<Product.PurchaseOption> = []
@@ -61,7 +62,17 @@ extension PurchasesManager {
             options = [.promotionalOffer(offerID: promoOffer.offerID, keyID: promoOffer.keyID, nonce: promoOffer.nonce, signature: promoOffer.signature, timestamp: promoOffer.timestamp)]
         }
         
-        let result = try await product.purchase(options: options)
+        var result: Product.PurchaseResult
+        
+        if #available (iOS 18.2, *) {
+            if let activeController {
+                 result = try await product.purchase(confirmIn: activeController, options: options)
+            }else{
+                 result = try await product.purchase(options: options)
+            }
+        }else{
+             result = try await product.purchase(options: options)
+        }
         
         switch result {
         case .success(let verification):
