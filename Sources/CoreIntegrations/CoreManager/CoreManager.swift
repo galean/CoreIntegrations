@@ -378,6 +378,9 @@ public class CoreManager {
                 networkSource = .applovin
             } else if networkValue == "Full_Access" {
                 networkSource = .test_premium
+            } else if networkValue.lowercased() == "tiktok_full_access" {
+                let tiktok_config = self.remoteConfigManager?.internalConfigResult?["tiktok_full_access"] == "true"
+                networkSource = tiktok_config ? .tiktok_full_access : .organic
             } else if networkValue == "restricted" {
                 if let fixedSource = self.configuration?.appSettings.paywallSourceForRestricted {
                     networkSource = fixedSource
@@ -470,7 +473,7 @@ class ConfigurationResultManager {
             userSourceInfo = deepLinkResult
         }else{
             switch userSource {
-            case .organic, .ipat, .test_premium, .unknown:
+            case .organic, .ipat, .test_premium, .tiktok_full_access, .unknown:
                 activePaywallName = organicPaywallName
             case .asa:
                 activePaywallName = asaPaywallName
