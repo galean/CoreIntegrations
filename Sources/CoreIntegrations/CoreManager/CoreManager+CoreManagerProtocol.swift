@@ -9,9 +9,9 @@ import PurchasesIntegration
 extension CoreManager: CoreManagerProtocol {
     
     @MainActor
-    public func purchase(_ purchase: Purchase, activeController: UIViewController?) async -> PurchasesPurchaseResult {
+    public func purchase(_ purchase: Purchase, activeController: UIViewController?) async throws -> PurchasesPurchaseResult {
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
-        let result = try? await purchaseManager.purchase(purchase.product, activeController: activeController)
+        let result = try await purchaseManager.purchase(purchase.product, activeController: activeController)
 
         switch result {
         case .success(let purchaseInfo):
@@ -31,16 +31,14 @@ extension CoreManager: CoreManagerProtocol {
             return .userCancelled
         case .unknown:
             return .unknown
-        case .none:
-            return .unknown
         }
     }
     
     @MainActor
-    public func purchase(_ purchase: Purchase, promoOffer: PromoOffer, activeController: UIViewController?) async -> PurchasesPurchaseResult {
+    public func purchase(_ purchase: Purchase, promoOffer: PromoOffer, activeController: UIViewController?) async throws -> PurchasesPurchaseResult {
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
         let skOffer = SKPromoOffer(offerID: promoOffer.offerID, keyID: promoOffer.keyID, nonce: promoOffer.nonce, signature: promoOffer.signature, timestamp: promoOffer.timestamp)
-        let result = try? await purchaseManager.purchase(purchase.product, promoOffer: skOffer, activeController: activeController)
+        let result = try await purchaseManager.purchase(purchase.product, promoOffer: skOffer, activeController: activeController)
         
         switch result {
         case .success(let purchaseInfo):
@@ -60,8 +58,6 @@ extension CoreManager: CoreManagerProtocol {
         case .userCancelled:
             return .userCancelled
         case .unknown:
-            return .unknown
-        case .none:
             return .unknown
         }
     }
