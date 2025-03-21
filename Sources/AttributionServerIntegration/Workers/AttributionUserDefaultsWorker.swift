@@ -1,5 +1,6 @@
 
 import Foundation
+import UIKit
 
 class AttributionUserDefaultsWorker: AttributionUserDefaultsWorkerProtocol {
     let userDefaults = UserDefaults.standard
@@ -9,6 +10,19 @@ class AttributionUserDefaultsWorker: AttributionUserDefaultsWorkerProtocol {
     fileprivate let purchaseDataKey = "ANALYTICS_PURCHASE_DATA"
     fileprivate let generatedTokenKey = "ANALYTICS_GENERATED_TOKEN"
     fileprivate let installResult = "ANALYTICS_INSTALL_RESULT"
+    fileprivate let uuidKey = "STORED_UUID_KEY"
+    
+    var uuid: String {
+        if let storedUUID = userDefaults.string(forKey: uuidKey) {
+            return storedUUID
+        }
+        
+        let idfv = UIDevice.current.identifierForVendor?.uuidString ?? ""
+        let range = idfv.index(idfv.startIndex, offsetBy: 14)
+        let f_mod = idfv.replacingCharacters(in: range...range, with: "F")
+        userDefaults.set(f_mod, forKey: uuidKey)
+        return f_mod
+    }
     
     func getInstallData() -> AttributionInstallRequestModel? {
         let dataOrNil = userDefaults.object(forKey: installDataKey) as? Data
