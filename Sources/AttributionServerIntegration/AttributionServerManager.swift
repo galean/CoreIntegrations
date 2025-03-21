@@ -68,7 +68,7 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
 open class AttributionServerManager {
     public static var shared: AttributionServerManager = AttributionServerManager()
     public var uniqueUserID: String? {
-        return dataWorker.uuid
+        return udefWorker.uuid
     }
     
     var serverWorker: AttributionServerWorkerProtocol?
@@ -100,7 +100,7 @@ open class AttributionServerManager {
             let osVersion = dataWorker.osVersion
             let appVersion = dataWorker.appVersion
             let isTrackingEnabled = dataWorker.isAdTrackingEnabled
-            let uuid = dataWorker.uuid
+            let uuid = udefWorker.uuid
             let idfa = dataWorker.idfa
             let idfv = dataWorker.idfv
             let storeCountry = dataWorker.storeCountry
@@ -176,7 +176,7 @@ open class AttributionServerManager {
         let jws = details.jws
         let originalTransactionID = details.originalTransactionID
         let decodedTransaction = details.decodedTransaction
-        let uuid = dataWorker.uuid
+        let uuid = udefWorker.uuid
         
         let introPrice = introductoryPrice ?? 0
         
@@ -244,7 +244,7 @@ open class AttributionServerManager {
             let status = ATTrackingManager.trackingAuthorizationStatus
             if status == .authorized {
                 let idfaOrNil = dataWorker.idfa
-                let uuid = dataWorker.uuid
+                let uuid = udefWorker.uuid
                 result = idfaOrNil ?? uuid
             } else {
                 if let savedGeneratedUUID = udefWorker.getGeneratedToken() {
@@ -258,7 +258,7 @@ open class AttributionServerManager {
             }
         } else {
             let idfaOrNil = dataWorker.idfa
-            let uuid = dataWorker.uuid
+            let uuid = udefWorker.uuid
             result = idfaOrNil ?? uuid
         }
         

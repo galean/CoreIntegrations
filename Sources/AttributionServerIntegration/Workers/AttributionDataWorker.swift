@@ -23,14 +23,8 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
         return uuid
     }
     
-    var uuid: String {
-        let idfv = UIDevice.current.identifierForVendor?.uuidString ?? ""
-        let range = idfv.index(idfv.startIndex, offsetBy: 14)
-        return idfv.replacingCharacters(in: range...range, with: "F")
-    }
-    
     var sdkVersion: String {
-        return "2.6.11amplonly"
+        return "2.6.12amplonly"
     }
     
     var osVersion: String {
