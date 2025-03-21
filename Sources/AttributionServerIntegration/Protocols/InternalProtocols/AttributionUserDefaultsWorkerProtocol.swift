@@ -2,6 +2,8 @@
 import Foundation
 
 internal protocol AttributionUserDefaultsWorkerProtocol {
+    var uuid: String { get }
+    
     func getInstallData() -> AttributionInstallRequestModel?
     func saveInstallData(_ data: AttributionInstallRequestModel)
     func deleteSavedInstallData()
