@@ -96,7 +96,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "142"
             endingLineNumber = "142"
-            landmarkName = "sendInstallData(_:authToken:completion:)"
+            landmarkName = "collectInstallData()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
