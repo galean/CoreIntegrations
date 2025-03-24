@@ -9,7 +9,7 @@ extension PurchasesManager {
         debugPrint("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
 
         var options:Set<Product.PurchaseOption> = []
-        if let userId = UUID(uuidString: self.userId) {
+        if let userId = await UUID(uuidString: self.userId) {
             options = [.appAccountToken(userId)]
         }
         
@@ -29,7 +29,7 @@ extension PurchasesManager {
         case .success(let verification):
             debugPrint("🏦 purchase ✅ Product Purchased.")
             debugPrint("🏦 purchase ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
-            let transaction = try checkVerified(verification)
+            let transaction = try await checkVerified(verification)
             debugPrint("🏦 purchase ✅ Verified.")
             debugPrint("🏦 purchase ⚈ ⚈ ⚈ Updating Product status... ⚈ ⚈ ⚈")
             await updateProductStatus()
@@ -56,7 +56,7 @@ extension PurchasesManager {
         debugPrint("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
         
         var options:Set<Product.PurchaseOption> = []
-        if let userId = UUID(uuidString: self.userId) {
+        if let userId = await UUID(uuidString: self.userId) {
             options = [.appAccountToken(userId), .promotionalOffer(offerID: promoOffer.offerID, keyID: promoOffer.keyID, nonce: promoOffer.nonce, signature: promoOffer.signature, timestamp: promoOffer.timestamp)]
         }else{
             options = [.promotionalOffer(offerID: promoOffer.offerID, keyID: promoOffer.keyID, nonce: promoOffer.nonce, signature: promoOffer.signature, timestamp: promoOffer.timestamp)]
@@ -78,7 +78,7 @@ extension PurchasesManager {
         case .success(let verification):
             debugPrint("🏦 purchase ✅ Product Purchased.")
             debugPrint("🏦 purchase ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
-            let transaction = try checkVerified(verification)
+            let transaction = try await checkVerified(verification)
             debugPrint("🏦 purchase ✅ Verified.")
             debugPrint("🏦 purchase ⚈ ⚈ ⚈ Updating Product status... ⚈ ⚈ ⚈")
             await updateProductStatus()

@@ -70,8 +70,10 @@ public class CoreManager {
             let result = CoreManagerResult(userSource: CoreUserSource(rawValue: xc_network), activePaywallName: xc_activePaywallName, organicPaywallName: xc_activePaywallName, asaPaywallName: xc_activePaywallName, facebookPaywallName: xc_activePaywallName, googlePaywallName: xc_activePaywallName, snapchatPaywallName: xc_activePaywallName, tiktokPaywallName: xc_activePaywallName, instagramPaywallName: xc_activePaywallName, bingPaywallName: xc_activePaywallName, molocoPaywallName: xc_activePaywallName,
                                            applovinPaywallName: xc_activePaywallName)
             
-            purchaseManager = PurchasesManager.shared
-            purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
+            Task {
+                purchaseManager = PurchasesManager.shared
+                await purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
+            }
             
             self.delegate?.coreConfigurationFinished(result: result)
             return
@@ -116,7 +118,7 @@ public class CoreManager {
         
         facebookManager = FacebookManager()
         
-        purchaseManager = PurchasesManager.shared
+        
         
         let attributionToken = configuration.appSettings.attributionServerSecret
         let facebookData = AttributionFacebookModel(fbUserId: facebookManager?.userID ?? "",
@@ -124,8 +126,11 @@ public class CoreManager {
                                                     fbAnonId: facebookManager?.anonUserID ?? "")
         let appsflyerToken = appsflyerManager?.appsflyerID
         
-        purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
-
+        Task {
+            purchaseManager = PurchasesManager.shared
+            await purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
+        }
+        
         remoteConfigManager = CoreRemoteConfigManager(cnConfig: AppEnvironment.isChina)
         
         let installPath = "/install-application"
@@ -172,7 +177,9 @@ public class CoreManager {
         if let id, id != "" {
             appsflyerManager?.customerUserID = id
             appsflyerManager?.startAppsflyer()
-            purchaseManager?.setUserID(id)
+            Task {
+                await purchaseManager?.setUserID(id)
+            }
             self.facebookManager?.userID = id
             sentryManager.setUserID(id)
             

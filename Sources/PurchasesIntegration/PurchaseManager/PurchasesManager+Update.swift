@@ -44,6 +44,26 @@ extension PurchasesManager {
     }
     
     public func updateProductStatus() async {
+        if let task = updateProductStatusTask {
+            await task.value
+            return
+        }
+        
+        let stream = AsyncStream<Void> { continuation in
+            self.updateProductStatusContinuation = continuation
+        }
+        
+        let task = Task {
+            await self.internalUpdateProductStatus()
+            self.updateProductStatusContinuation?.finish()
+        }
+        
+        updateProductStatusTask = task
+        
+        for await _ in stream {}
+    }
+    
+    private func internalUpdateProductStatus() async {
         debugPrint("🏦 updateCustomerProductStatus ⚈ ⚈ ⚈ Updating Customer Product Status... ⚈ ⚈ ⚈")
         var purchasedConsumables: [Product] = []
         var purchasedNonConsumables: [Product] = []

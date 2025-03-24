@@ -5,7 +5,7 @@ public typealias Transaction = StoreKit.Transaction
 public typealias RenewalInfo = StoreKit.Product.SubscriptionInfo.RenewalInfo
 public typealias RenewalState = StoreKit.Product.SubscriptionInfo.RenewalState
 
-public class PurchasesManager: NSObject, PurchasesManagerProtocol {
+public actor PurchasesManager: NSObject, PurchasesManagerProtocol {
     // MARK: Variables
     static let identifier: String = "🏦"
     static public let shared: PurchasesManagerProtocol = internalShared
@@ -27,11 +27,16 @@ public class PurchasesManager: NSObject, PurchasesManagerProtocol {
     public var purchasedSubscriptions: [Product] = []
     public var purchasedNonRenewables: [Product] = []
     public var purchasedAllProducts: [Product] = []
-    
     var allIdentifiers: [String] = []
     var proIdentifiers: [String] = []
+    
+    // MARK: updateProductStatus locking mechanism
+     var updateProductStatusTask: Task<Void, Never>? = nil
+     var updateProductStatusContinuation: AsyncStream<Void>.Continuation?
+    
+    
     // MARK: Lifecycle
-    public func initialize(allIdentifiers: [String], proIdentifiers: [String]) {
+    public func initialize(allIdentifiers: [String], proIdentifiers: [String]) async {
         debugPrint("🏦 initialize ⚈ ⚈ ⚈ Initializing... ⚈ ⚈ ⚈")
         debugPrint("🏦 initialize ⚈ ⚈ ⚈ Starting Transaction Listener... ⚈ ⚈ ⚈")
         self.allIdentifiers = allIdentifiers
