@@ -8,11 +8,13 @@ import AttributionServerIntegration
 import AnalyticsIntegration
 import FirebaseIntegration
 import SentryIntegration
+import AttestationIntegration
 #endif
 import AppTrackingTransparency
 
 public protocol CoreManagerProtocol {
     static var shared: CoreManagerProtocol { get }
+        
     static var uniqueUserID: String? { get }
     static var sentry:PublicSentryManagerProtocol { get }
 
@@ -43,4 +45,5 @@ public protocol CoreManagerProtocol {
     func restore() async -> PurchasesRestoreResult
     
     func restoreAll() async -> PurchasesRestoreResult
+    
 }

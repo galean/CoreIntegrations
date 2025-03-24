@@ -8,6 +8,7 @@ import PurchasesIntegration
 import AnalyticsIntegration
 import FirebaseIntegration
 import SentryIntegration
+import AttestationIntegration
 #endif
 import AppTrackingTransparency
 import Foundation
@@ -19,7 +20,7 @@ import StoreKit
 public class CoreManager {
     public static var shared: CoreManagerProtocol = internalShared
     static var internalShared = CoreManager()
-    
+        
     public static var uniqueUserID: String? {
         return AttributionServerManager.shared.uniqueUserID
     }
