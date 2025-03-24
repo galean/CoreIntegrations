@@ -6,11 +6,6 @@ import UIKit
 public actor AttestationManager:AttestationManagerProtocol {
     static public let shared = AttestationManager()
         
-//    @MainActor
-//    private var uuid: String {
-//        return UUID().uuidString
-//    }
-        
     public var isSupported: Bool {
         get async {
             DCAppAttestService.shared.isSupported
@@ -28,7 +23,6 @@ public actor AttestationManager:AttestationManagerProtocol {
             let keyId = try await service.generateKey()
             let clientDataHash =  Data(SHA256.hash(data: uuid.data(using: .utf8)!))
             let attestation = try await service.attestKey(keyId, clientDataHash: clientDataHash)
-           // let uuid = await uuid
             let challenge: String = uuid.base64Encoded() ?? uuid
             
             let data = try JSONEncoder().encode(
@@ -39,14 +33,13 @@ public actor AttestationManager:AttestationManagerProtocol {
                     "attestation": attestation.base64EncodedString(),
                 ]
             )
-            //endpoint: "/app-attest/register-device"
+
             var request = URLRequest.post(to: serverURL.url(), with: data)
             request.addValue(uuid, forHTTPHeaderField: "tag")
             
             let (_, response) = try await URLSession.shared.data(for: request)
             
             if let httpResponse = response as? HTTPURLResponse {
-                print("DeviceCheck_attestKey \(httpResponse)")
                 let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
                 let warningDict = attestWarning?.toDictionary()
                 
@@ -82,16 +75,6 @@ public actor AttestationManager:AttestationManagerProtocol {
             keyId = result.key
             warning = result.warning
         }
-//        else{
-//            let validationResult = try await validateStoredKey(for: serverURL, uuid: uuid)
-//            if !validationResult.success {
-//                let result = try await generateKey(for: serverURL, uuid: uuid)
-//                keyId = result.key
-//                warning = result.warning
-//            }else{
-//                warning = validationResult.warning
-//            }
-//        }
         
         let clientDataHash = Data(SHA256.hash(data: payload ?? Data()))
         
@@ -105,14 +88,13 @@ public actor AttestationManager:AttestationManagerProtocol {
         let data = try JSONEncoder().encode(
             ["keyId": keyId, "token": uuid]
         )
-        //endpoint: "/app-attest/register-device"
+
         var request = URLRequest.post(to: serverURL.url(), with: data)
         request.addValue(uuid, forHTTPHeaderField: "tag")
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
-            print("DeviceCheck_validateStoredKey \(httpResponse)")
             let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
             let warningDict = attestWarning?.toDictionary()
             
@@ -139,7 +121,6 @@ public actor AttestationManager:AttestationManagerProtocol {
         let (_, response) = try await URLSession.shared.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
-            print("DeviceCheck_bypass \(httpResponse)")
             let attestWarning = httpResponse.value(forHTTPHeaderField: "x-app-attest-warning")
             let warningDict = attestWarning?.toDictionary()
             
