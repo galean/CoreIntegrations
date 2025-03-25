@@ -1,8 +1,16 @@
 
 import Foundation
 
+//protocol ConfigurationManagerDelegate: AnyObject {
+//    func onConfigurationFinish() // att + amplitude
+//    func onAttributionFinish() // server + af
+//    func onAttributionUpdated() // amplitude update
+//    func onAttributionTimeout()
+//}
+
 class AppConfigurationManager {
     public static var shared: AppConfigurationManager?
+//    public var delegate: ConfigurationManagerDelegate?
     
     private var model: CoreConfigurationModel
     private var isFirstStart: Bool
@@ -11,11 +19,18 @@ class AppConfigurationManager {
     private var timout: Int = 6
     private var currentSecond = 0
     private var waitingCallbacks = [(ConfigurationResult) -> Void]()
-    private var attributionCallback: (() -> Void)?
     private var isTimerStarted = false
     private var isTimerFinished = false
-    var configurationFinishHandled = false
+    
+    private var configurationCallback: (() -> Void)?
     private var configurationAttFinishHandled = false
+    
+    private var attributionCallback: (() -> Void)?
+    
+    var attributionFinishHandled = false
+    
+    var configurationFinishHandled = false
+
     
     private var configurationCompletelyFinished: Bool {
         return model.checkAllEventsFinished(completedEvents: completedEvents, isFirstStart: isFirstStart)
@@ -27,6 +42,10 @@ class AppConfigurationManager {
     
     private var configurationAttAndConfigFinished: Bool {
         return model.checkAttAndConfigFinished(completedEvents: completedEvents, isFirstStart: isFirstStart)
+    }
+    
+    private var attributionFinished: Bool {
+        return model.checkAttributionFinished(completedEvents: completedEvents)
     }
     
     private var isConfigurationFinished: Bool {
@@ -44,8 +63,10 @@ class AppConfigurationManager {
         isTimerFinished = false
         configurationFinishHandled = false
         configurationAttFinishHandled = false
-        attributionCallback = nil
+        configurationCallback = nil
         waitingCallbacks.removeAll()
+        attributionCallback = nil
+        attributionFinishHandled = false
         currentSecond = 0
         isTimerStarted = false
     }
@@ -75,6 +96,7 @@ class AppConfigurationManager {
         completedEvents.append(event)
         checkConfiguration()
         checkATTConfiguration()
+        checkAttributionFinished()
     }
     
     public func signForConfigurationEnd(_ callback: @escaping (ConfigurationResult) -> Void) {
@@ -91,6 +113,14 @@ class AppConfigurationManager {
             callback()
             return
         }
+        configurationCallback = callback
+    }
+    
+    public func signForAttributionFinished(_ callback: @escaping () -> Void) {
+        guard !attributionFinished else {
+            callback()
+            return
+        }
         attributionCallback = callback
     }
     
@@ -104,6 +134,18 @@ class AppConfigurationManager {
         }
         
         configurationAttFinishHandled = true
+        configurationCallback?()
+    }
+    
+    private func checkAttributionFinished() {
+        guard attributionFinished else {
+            return
+        }
+        
+        guard attributionFinishHandled == false else {
+            return
+        }
+        attributionFinishHandled = true
         attributionCallback?()
     }
     
@@ -115,6 +157,12 @@ class AppConfigurationManager {
         guard configurationFinishHandled == false else {
             return
         }
+        
+        if attributionFinishHandled == false {
+            attributionFinishHandled = true
+            attributionCallback?()
+        }
+        
         configurationFinishHandled = true
         
         let configurationResult: ConfigurationResult = configurationRequiredFinished ? .completed : .requiredFailed

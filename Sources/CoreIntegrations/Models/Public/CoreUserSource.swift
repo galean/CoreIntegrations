@@ -1,50 +1,33 @@
 
 import Foundation
 
-public enum CoreUserSource: CaseIterable, Hashable, Sendable, RawRepresentable {
+public enum CoreUserSource: Hashable, Sendable, RawRepresentable, Codable {
     case organic
     case asa
-    case facebook
-    case google
     case ipat
     case test_premium
-    case tiktok
-    case instagram
-    case snapchat
-    case bing
-    case unknown
-    
-    public typealias RawValue = String
-    
+    case tiktok_full_access
+    case other(String)
+
     public init(rawValue: String) {
         switch rawValue.lowercased() {
         case "organic": self = .organic
-        case "asa": self = .asa
-        case "facebook": self = .facebook
-        case "google": self = .google
+        case "Apple Search Ads": self = .asa
         case "ipat": self = .ipat
-        case "test_premium": self = .test_premium
-        case "tiktok": self = .tiktok
-        case "instagram": self = .instagram
-        case "snapchat": self = .snapchat
-        case "bing": self = .bing
-        default: self = .unknown
+        case "Full_Access": self = .test_premium
+        case "tiktok_full_access": self = .tiktok_full_access
+        default: self = .other(rawValue)
         }
     }
     
     public var rawValue: String {
         switch self {
         case .organic: return "organic"
-        case .asa: return "asa"
-        case .facebook: return "facebook"
-        case .google: return "google"
+        case .asa: return "Apple Search Ads"
         case .ipat: return "ipat"
-        case .test_premium: return "test_premium"
-        case .tiktok: return "tiktok"
-        case .instagram: return "instagram"
-        case .snapchat: return "snapchat"
-        case .bing: return "bing"
-        case .unknown: return "unknown"
+        case .test_premium: return "Full_Access"
+        case .tiktok_full_access: return "tiktok_full_access"
+        case .other(let rawValue): return rawValue
         }
     }
 }

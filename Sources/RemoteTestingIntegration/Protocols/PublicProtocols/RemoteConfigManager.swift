@@ -15,8 +15,11 @@ public protocol RemoteTestingProcotol {
 
 public protocol RemoteConfigManager {
     var allRemoteValues: [String: String] { get }
+    var remoteError: Error? { get }
     
-    func fetchRemoteConfig(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void)
+    func configure(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void)
+    
+    func updateRemoteConfig(_ appConfigurables: [String: String], completion: @escaping () -> Void)
     
     func getValue(forConfig config: any RemoteConfigurable) -> String?
     func exposure(forConfig config: RemoteConfigurable)

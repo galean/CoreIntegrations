@@ -13,25 +13,33 @@ public class CoreRemoteConfigManager: RemoteConfigManager {
     private var isConfigFetched:Bool = false
     
     public var allRemoteValues: [String: String] {
-        remoteConfigManager.allRemoteValues
+        return remoteConfigManager.allRemoteValues
+    }
+    
+    public var remoteError: Error? {
+        return remoteConfigManager.remoteError
     }
      
     public init(deploymentKey: String) {
         remoteConfigManager = AmplitudeExperimentManager(deploymentKey: deploymentKey)
     }
     
-    public func fetchRemoteConfig(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void) {
+    public func configure(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void) {
         guard !isConfigFetched else {
             completion()
             return
         }
         
-        remoteConfigManager.fetchRemoteConfig(appConfigurables) { [weak self] in
+        remoteConfigManager.configure(appConfigurables) { [weak self] in
             guard let self = self else {return}
 
             isConfigFetched = true
             completion()
         }
+    }
+    
+    public func updateRemoteConfig(_ userProperies: [String: String], completion: @escaping () -> Void) {
+        remoteConfigManager.updateRemoteConfig(userProperies, completion: completion)
     }
     
     public func getValue(forConfig config: RemoteConfigurable) -> String? {

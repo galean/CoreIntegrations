@@ -8,15 +8,15 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CoreIntegrations'
-  s.version          = '2.7.6amplremote'
+  s.version          = '2.7.7amplfinal'
   s.summary          = 'CoreIntegrations framework'
 
   s.description      = 'Description'
 
   s.homepage         = 'https://github.com/galean/CoreIntegrations.git'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
-  s.author           = { 'u-texas' => 'kanarskyi.anatolii@gmail.com' }
-  s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'feature/AmplitudeOnlyRemote' }
+  s.author           = { 'u-texas' => 'galean.pal@gmail.com' }
+  s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'feature/AmplitudeFinal' }
 
   s.ios.deployment_target = '15.0'
   

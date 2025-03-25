@@ -68,4 +68,19 @@ extension CoreConfigurationModel {
         return allCompleted
     }
     
+    func checkAttributionFinished(completedEvents: [any ConfigurationEvent]) -> Bool {
+        var allCompleted = true
+        let verifingEvents: [InternalConfigurationEvent] = [.appsflyerWeb2AppHandled, .attributionServerHandled, .remoteConfigLoaded]
+        
+        verifingEvents.forEach { event in
+            let eventCompleted = completedEvents.contains { completedEvent in
+                completedEvent.key == event.key
+            }
+            if eventCompleted == false {
+                allCompleted = false
+            }
+        }
+        
+        return allCompleted
+    }
 }

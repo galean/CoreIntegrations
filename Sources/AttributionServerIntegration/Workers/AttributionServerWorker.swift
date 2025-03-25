@@ -61,12 +61,12 @@ public class AttributionServerWorker {
 
 extension AttributionServerWorker: AttributionServerWorkerProtocol {
     func sendInstallAnalytics(parameters: AttributionInstallRequestModel, authToken: String,
-                              completion: @escaping (([String: String]?) -> Void)) {
+                              completion: @escaping (([String: String]?, Error?) -> Void)) {
         let jsonDataOrNil = try? JSONEncoder().encode(parameters)
         
         guard let url = installURL, let jsonData = jsonDataOrNil else {
             print("\n\n\nANALYTICS SEND ERROR\n\n\n")
-            completion([:])
+            completion([:], NSError(domain: "coreintegration.attribution.internal", code: 400))
             return
         }
         
@@ -84,13 +84,13 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
             }
             if let error = error {
                 self.handleServerError()
-                completion([:])
+                completion([:], error)
                 return
             }
             
             guard let data = data else{
                 self.handleServerError()
-                completion([:])
+                completion([:], NSError(domain: "coreintegration.attribution.internal", code: 400))
                 return
             }
             let jsonResult = try? JSONSerialization.jsonObject(with: data) as? [String: NSObject] ?? [:]
@@ -98,7 +98,7 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
                 partialResult, result in
                 partialResult[result.key] = "\(result.value)"
             }
-            completion(result)
+            completion(result, nil)
             
         }
         task.resume()

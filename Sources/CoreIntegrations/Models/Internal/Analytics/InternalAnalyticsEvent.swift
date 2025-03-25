@@ -6,9 +6,10 @@ import AnalyticsIntegration
 
 enum InternalAnalyticsEvent: String, CaseIterable, AmplitudeAnalyzableEvent {
     case first_launch
+//    case user_attributed
     case test_distribution
+    case test_distribution_update
     case att_permission
-    case amplitude_assigned
     
     public var key: String {
         return rawValue

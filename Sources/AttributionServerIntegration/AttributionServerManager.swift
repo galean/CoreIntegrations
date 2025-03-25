@@ -67,6 +67,7 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
 
 open class AttributionServerManager {
     public static var shared: AttributionServerManager = AttributionServerManager()
+    public var installError: Error? = nil
     public var uniqueUserID: String? {
         return dataWorker.uuid
     }
@@ -78,6 +79,7 @@ open class AttributionServerManager {
     var authorizationToken: AttributionServerToken!
     var facebookData: AttributionFacebookModel? = nil
     var appsflyerID: String? = nil
+    
         
     fileprivate func validateToken(_ token: AttributionServerToken?) -> Bool {
         guard authorizationToken != nil else {
@@ -94,7 +96,7 @@ open class AttributionServerManager {
     }
     
     fileprivate func collectInstallData() async -> AttributionInstallRequestModel {
-            let attributionDetails:AttributionDetails? = await dataWorker.attributionDetails()
+            let attributionDetails:AttributionDetails? = dataWorker.attributionDetails()
             
             let sdkVersion = dataWorker.sdkVersion
             let osVersion = dataWorker.osVersion
@@ -142,8 +144,8 @@ open class AttributionServerManager {
     fileprivate func sendInstallData(_ data: AttributionInstallRequestModel, authToken: AttributionServerToken, completion: @escaping (AttributionManagerResult?) -> Void) {
         serverWorker?.sendInstallAnalytics(parameters: data,
                                           authToken: authorizationToken)
-        { (response) in
-            self.handleSendInstallResponse(response, parameters: data, completion: completion)
+        { (response, error) in
+            self.handleSendInstallResponse(response, error: error, parameters: data, completion: completion)
         }
     }
     
@@ -200,33 +202,42 @@ open class AttributionServerManager {
         }
     }
     
-    fileprivate func handleSendInstallResponse(_ response: [String: String]?,
+    fileprivate func handleSendInstallResponse(_ response: [String: String]?, error: Error?,
                                                parameters: AttributionInstallRequestModel,
                                                completion: @escaping (AttributionManagerResult?) -> Void) {
-        if let result = response, let uuid = result["uuid"] as? String {
-            var attributionToSend: [String: String]
-            var isAB = false
-            if let attribution = result as? [String: String] {
-                attributionToSend = attribution
-                attributionToSend.removeValue(forKey: "uuid")
-                attributionToSend.removeValue(forKey: "isAB")
-                isAB = ((attribution["isAB"] ?? "0") as NSString).boolValue
-            } else {
-                attributionToSend = [String: String]()
-            }
-            
-            let idfv = result["idfv"] as? String
-            let result = AttributionManagerResult(userUUID: uuid, idfv: idfv,
-                                                  asaAttribution: attributionToSend, isIPAT: isAB)
-            udefWorker.saveInstallResult(result)
-            completion(result)
-            udefWorker.saveServerUserID(uuid)
-            udefWorker.deleteSavedInstallData()
-            checkAndSendSavedPurchase(userId: uuid)
-        } else {
+        guard error == nil else {
+            self.installError = error
             udefWorker.saveInstallData(parameters)
             completion(nil)
+            return
         }
+        
+        guard let result = response, let uuid = result["uuid"] as? String else {
+            self.installError = error
+            udefWorker.saveInstallData(parameters)
+            completion(nil)
+            return
+        }
+        
+        var attributionToSend: [String: String]
+        var isAB = false
+        if let attribution = result as? [String: String] {
+            attributionToSend = attribution
+            attributionToSend.removeValue(forKey: "uuid")
+            attributionToSend.removeValue(forKey: "isAB")
+            isAB = ((attribution["isAB"] ?? "0") as NSString).boolValue
+        } else {
+            attributionToSend = [String: String]()
+        }
+        
+        let idfv = result["idfv"] as? String
+        let attrResult = AttributionManagerResult(userUUID: uuid, idfv: idfv,
+                                              asaAttribution: attributionToSend, isIPAT: isAB)
+        udefWorker.saveInstallResult(attrResult)
+        completion(attrResult)
+        udefWorker.saveServerUserID(uuid)
+        udefWorker.deleteSavedInstallData()
+        checkAndSendSavedPurchase(userId: uuid)
     }
     
     fileprivate func handleSendPurchaseResult(_ result: Bool,

@@ -5,6 +5,7 @@ public protocol AppfslyerManagerProtocol {
     var customerUserID: String? { get set }
     var deeplinkResult: [String: String]? { get }
     var delegate: AppsflyerManagerDelegate? { get set }
+    var deeplinkError: Error? { get }
     
     func application( _ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] )
     func application(_ application: UIApplication, continue userActivity: NSUserActivity,

@@ -9,24 +9,16 @@ import AmplitudeExperiment
 public class AmplitudeExperimentManager {
     let client: ExperimentClient
     
-//    public private(set) var remoteConfigResult: [String: String]? = nil
-//    private var internalConfigResult: [String: String]? = nil
-//    public private(set) var install_server_path: String?
-//    public private(set) var purchase_server_path: String?
-//    public var amplitudeOn: Bool { return true }
-    
-//    var configured = false
-//    var configurationCompletion: (() -> Void)? = nil
-    
     var fetched = false
     var savedConfigurables: [any RemoteConfigurable]? = nil
     var fetchCompletion: (() -> Void)? = nil
     
     public var allRemoteValues = [String: String]()
+    public var remoteError: Error?
 
     init(deploymentKey: String) {
         let builder = ExperimentConfigBuilder()
-        builder.automaticExposureTracking(false)
+        builder.automaticExposureTracking(true)
         
         let config = builder.build()
         
@@ -35,10 +27,12 @@ public class AmplitudeExperimentManager {
             config: config
         )
         
-        fetch(userProperties: nil)
+        DispatchQueue.global().async {
+            self.fetch(userProperties: nil, completion: nil)
+        }
     }
     
-    func fetch(userProperties: [String: Any]?) {
+    func fetch(userProperties: [String: Any]?, completion: (() -> Void)?) {
         var user: ExperimentUser? = nil
         
         if let userProperties {
@@ -49,16 +43,21 @@ public class AmplitudeExperimentManager {
         }
         
         client.fetch(user: user) { client, error in
-            self.fetched = true
             defer {
                 self.fetchCompletion?()
                 self.fetchCompletion = nil
                 self.savedConfigurables = nil
+                completion?()
             }
             
+            self.fetched = true
+
             guard error == nil else {
+                self.remoteError = error
                 return
             }
+            
+            self.remoteError = nil
             
             if let savedConfigurables = self.savedConfigurables {
                 self.internalUpdateConfig(client: client, appConfigurables: savedConfigurables)
@@ -94,7 +93,13 @@ extension AmplitudeExperimentManager: RemoteConfigManager {
         client.exposure(key: config.key)
     }
     
-    public func fetchRemoteConfig(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void) {
+    public func updateRemoteConfig(_ userProperies: [String: String], completion: @escaping () -> Void) {
+        self.fetch(userProperties: userProperies) {
+            completion()
+        }
+    }
+    
+    public func configure(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void) {
         if fetched {
             self.internalUpdateConfig(client: client, appConfigurables: appConfigurables)
             completion()

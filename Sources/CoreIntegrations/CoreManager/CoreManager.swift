@@ -14,9 +14,7 @@ import AppTrackingTransparency
 import Foundation
 import StoreKit
 
-/*
-    I think it would be good to split CoreManager into different manager parts - for default configuration, for additional configurations like analytics, test_distribution etc, and for purchases and purchases attribution part
- */
+// MARK: Configuration
 public class CoreManager {
     public static var shared: CoreManagerProtocol = internalShared
     static var internalShared = CoreManager()
@@ -27,6 +25,21 @@ public class CoreManager {
     
     public static var sentry:PublicSentryManagerProtocol {
         return SentryManager.shared
+    }
+    
+    public var userInfo: UserInfo {
+        get {
+            guard let userInfoData = UserDefaults.standard.data(forKey: "coreintegrations.userAttrInfo"),
+                  let userInfo = try? JSONDecoder().decode(UserInfo.self, from: userInfoData) else {
+                return UserInfo(userSource: .organic, userInfo: [:])
+            }
+            
+            return userInfo
+        }
+        set {
+            let userData = try? JSONEncoder().encode(newValue)
+            UserDefaults.standard.set(userData, forKey: "coreintegrations.userAttrInfo")
+        }
     }
     
     var attAnswered: Bool = false
@@ -44,22 +57,15 @@ public class CoreManager {
     var firebaseManager: FirebaseManager = FirebaseManager()
     
     var delegate: CoreManagerDelegate?
-    
-    var configurationResultManager = ConfigurationResultManager()
-    
-    let configurationEndQueue = DispatchQueue(label: "coreIntegrations.manager.endQueue")
-    
+        
     var idConfigured = false
     
     func configureAll(configuration: CoreConfigurationProtocol) {
-        guard isConfigured == false else {
-            return
+        func verifyTestEnvironment(envVariables: [String: String]) -> Bool {
+            return envVariables["xctest_skip_config"] != nil
         }
-        isConfigured = true
         
-        let environmentVariables = ProcessInfo.processInfo.environment
-        if let _ = environmentVariables["xctest_skip_config"] {
-            
+        func handleTestEnvironment(envVariables: [String: String]) -> CoreManagerResult{
             let xc_network = environmentVariables["xctest_network"] ?? "organic"
             let xc_activePaywallName = environmentVariables["xctest_activePaywallName"] ?? "none"
             
@@ -73,89 +79,104 @@ public class CoreManager {
                 hardPaywall?.updateValue(xc_screen_style_h)
             }
             
-            let data = CoreManagerResultData(userSource: CoreUserSource(rawValue: xc_network), activePaywallName: xc_activePaywallName, isActivePaywallDefault: true, paywallsBySource: [CoreUserSource(rawValue: xc_network) : xc_activePaywallName])
-            let result = CoreManagerResult.success(data: data)
+            //            let data = CoreManagerResultData(userSource: CoreUserSource(rawValue: xc_network), activePaywallName: xc_activePaywallName, isActivePaywallDefault: true, paywallsBySource: [CoreUserSource(rawValue: xc_network) : xc_activePaywallName])
+            let result = CoreManagerResult.finished
             
             purchaseManager = PurchasesManager.shared
             purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
+            return result
+        }
+        
+        func configureServices(configuration: CoreConfigurationProtocol) {
+            if let sentryDataSource = configuration.sentryConfigDataSource {
+                let sentryConfig = SentryConfigData(dsn: sentryDataSource.dsn,
+                                                    debug: sentryDataSource.debug,
+                                                    tracesSampleRate: sentryDataSource.tracesSampleRate,
+                                                    profilesSampleRate: sentryDataSource.profilesSampleRate,
+                                                    shouldCaptureHttpRequests: sentryDataSource.shouldCaptureHttpRequests,
+                                                    httpCodesRange: sentryDataSource.httpCodesRange,
+                                                    handledDomains: sentryDataSource.handledDomains)
+                sentryManager.configure(sentryConfig)
+            }
             
-            self.delegate?.coreConfigurationFinished(result: result)
-            return
-        }
-        
-        self.configuration = configuration
-        
-        if let sentryDataSource = configuration.sentryConfigDataSource {
-            let sentryConfig = SentryConfigData(dsn: sentryDataSource.dsn,
-                                                debug: sentryDataSource.debug,
-                                                tracesSampleRate: sentryDataSource.tracesSampleRate,
-                                                profilesSampleRate: sentryDataSource.profilesSampleRate,
-                                                shouldCaptureHttpRequests: sentryDataSource.shouldCaptureHttpRequests,
-                                                httpCodesRange: sentryDataSource.httpCodesRange,
-                                                handledDomains: sentryDataSource.handledDomains)
-            sentryManager.configure(sentryConfig)
-        }
-
-        analyticsManager = AnalyticsManager.shared
-        
-        let amplitudeCustomURL = configuration.amplitudeDataSource.customServerURL
-
-        analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret, 
-                                    cnConfig: AppEnvironment.isChina,
-                                    customURL: amplitudeCustomURL)
-        
-        sendStoreCountryUserProperty()
-        configuration.appSettings.launchCount += 1
-        if configuration.appSettings.isFirstLaunch {
-            sendAppEnvironmentProperty()
-            sendFirstLaunchEvent()
-        }
-        
-        let allConfigurationEvents: [any ConfigurationEvent] = InternalConfigurationEvent.allCases + (configuration.initialConfigurationDataSource?.allEvents ?? [])
-        let configurationEventsModel = CoreConfigurationModel(allConfigurationEvents: allConfigurationEvents)
-        AppConfigurationManager.shared = AppConfigurationManager(model: configurationEventsModel,
-                                                                 isFirstStart: configuration.appSettings.isFirstLaunch,
-                                                                 timeout: configuration.configurationTimeout)
-        
-        appsflyerManager = AppfslyerManager(config: configuration.appsflyerConfig)
-        appsflyerManager?.delegate = self
-        
-        facebookManager = FacebookManager()
-        
-        purchaseManager = PurchasesManager.shared
-        
-        let attributionToken = configuration.appSettings.attributionServerSecret
-        let facebookData = AttributionFacebookModel(fbUserId: facebookManager?.userID ?? "",
-                                                    fbUserData: facebookManager?.userData ?? "",
-                                                    fbAnonId: facebookManager?.anonUserID ?? "")
-        let appsflyerToken = appsflyerManager?.appsflyerID
-        
-        purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
-
-        remoteConfigManager = CoreRemoteConfigManager(deploymentKey: configuration.appSettings.amplitudeDeploymentKey)
-        
-        let installPath = "/install-application"
-        let purchasePath = "/subscribe"
-        let installURLPath = configuration.attributionServerDataSource.installPath
-        let purchaseURLPath = configuration.attributionServerDataSource.purchasePath
-        
-        let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
+            analyticsManager = AnalyticsManager.shared
+            
+            let amplitudeCustomURL = configuration.amplitudeDataSource.customServerURL
+            
+            analyticsManager?.configure(appKey: configuration.appSettings.amplitudeSecret,
+                                        cnConfig: AppEnvironment.isChina,
+                                        customURL: amplitudeCustomURL)
+            
+            sendStoreCountryUserProperty()
+            configuration.appSettings.launchCount += 1
+            if configuration.appSettings.isFirstLaunch {
+                sendAppEnvironmentProperty()
+                sendFirstLaunchEvent()
+            }
+            
+            let allConfigurationEvents: [any ConfigurationEvent] = InternalConfigurationEvent.allCases + (configuration.initialConfigurationDataSource?.allEvents ?? [])
+            let configurationEventsModel = CoreConfigurationModel(allConfigurationEvents: allConfigurationEvents)
+            AppConfigurationManager.shared = AppConfigurationManager(model: configurationEventsModel,
+                                                                     isFirstStart: configuration.appSettings.isFirstLaunch,
+                                                                     timeout: configuration.configurationTimeout)
+            
+            appsflyerManager = AppfslyerManager(config: configuration.appsflyerConfig)
+            appsflyerManager?.delegate = self
+            
+            facebookManager = FacebookManager()
+            
+            purchaseManager = PurchasesManager.shared
+            
+            let attributionToken = configuration.appSettings.attributionServerSecret
+            let facebookData = AttributionFacebookModel(fbUserId: facebookManager?.userID ?? "",
+                                                        fbUserData: facebookManager?.userData ?? "",
+                                                        fbAnonId: facebookManager?.anonUserID ?? "")
+            let appsflyerToken = appsflyerManager?.appsflyerID
+            
+            purchaseManager?.initialize(allIdentifiers: configuration.paywallDataSource.allPurchaseIDs, proIdentifiers: configuration.paywallDataSource.allProPurchaseIDs)
+            
+            remoteConfigManager = CoreRemoteConfigManager(deploymentKey: configuration.appSettings.amplitudeDeploymentKey)
+            
+            let installPath = "/install-application"
+            let purchasePath = "/subscribe"
+            let installURLPath = configuration.attributionServerDataSource.installPath
+            let purchaseURLPath = configuration.attributionServerDataSource.purchasePath
+            
+            let attributionConfiguration = AttributionConfigData(authToken: attributionToken,
                                                                  installServerURLPath: installURLPath,
                                                                  purchaseServerURLPath: purchaseURLPath,
                                                                  installPath: installPath,
                                                                  purchasePath: purchasePath,
                                                                  appsflyerID: appsflyerToken,
                                                                  facebookData: facebookData)
+            
+            AttributionServerManager.shared.configure(config: attributionConfiguration)
+        }
         
-        AttributionServerManager.shared.configure(config: attributionConfiguration)
+        guard isConfigured == false else {
+            return
+        }
+        isConfigured = true
+        
+        let environmentVariables = ProcessInfo.processInfo.environment
+        if verifyTestEnvironment(envVariables: environmentVariables) {
+            let result = handleTestEnvironment(envVariables: environmentVariables)
+            self.delegate?.coreConfigurationFinished(result: result)
+            return
+        }
+        
+        self.configuration = configuration
+        
+        configureServices(configuration: configuration)
         
         NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive),
                                                name: UIApplication.didBecomeActiveNotification,
                                                object: nil)
-
-        handleConfigurationEndCallback()
         
-        handleAttributionInstall()
+        signForConfigurationFinish()
+        
+        signForAttributionInstall()
+        signForAttributionFinish()
     }
     
     @objc public func applicationDidBecomeActive() {
@@ -163,6 +184,8 @@ public class CoreManager {
         
         if appsflyerManager?.customerUserID != nil {
             appsflyerManager?.startAppsflyer()
+        } else {
+            sentryManager.log(NSError(domain: "coreintegrations.appsflyer.noCustomerUserID", code: 1001))
         }
         
         if configuration?.useDefaultATTRequest == true {
@@ -177,7 +200,7 @@ public class CoreManager {
     private func configureID() {
         let savedIDFV = AttributionServerManager.shared.installResultData?.idfv
         let uuid = AttributionServerManager.shared.savedUserUUID
-       
+        
         let id: String?
         if savedIDFV != nil {
             id = AttributionServerManager.shared.uniqueUserID
@@ -195,9 +218,7 @@ public class CoreManager {
             firebaseManager.configure(id: id)
             sentryManager.setUserID(id)
             self.analyticsManager?.setUserID(id)
-            
-            remoteConfigManager?.fetchRemoteConfig(configuration?.remoteConfigDataSource.allConfigurables ?? []) {
-                self.handleConfigurationUpdate()
+            remoteConfigManager?.configure(configuration?.remoteConfigDataSource.allConfigs ?? []) {
                 InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
             }
         }
@@ -214,7 +235,7 @@ public class CoreManager {
             handleATTAnswered(attStatus)
             return
         }
-                
+        
         /*
          This stupid thing is made to be sure, that we'll handle ATT anyways, 100%
          And it looks like that apple has a bug, at least in sandbox, when ATT == .notDetermined
@@ -231,7 +252,7 @@ public class CoreManager {
             let status = ATTrackingManager.trackingAuthorizationStatus
             self?.handleATTAnswered(status)
         }
-            
+        
         ATTrackingManager.requestTrackingAuthorization { [weak self] status in
             guard self?.attAnswered == false else { return }
             self?.attAnswered = true
@@ -246,20 +267,39 @@ public class CoreManager {
         InternalConfigurationEvent.attConcentGiven.markAsCompleted()
         facebookManager?.configureATT(isAuthorized: status == .authorized)
     }
-    
-    func handleAttributionInstall() {
+}
+
+// MARK: Attribution Start
+extension CoreManager {
+    func signForAttributionInstall() {
         guard let configurationManager = AppConfigurationManager.shared else {
             assertionFailure()
             return
         }
     
-        configurationManager.signForAttAndConfigLoaded {
-            let installPath = "/install-application"
-            let purchasePath = "/subscribe"
+        configurationManager.signForAttAndConfigLoaded { [weak self] in
+            self?.handleAttributionInstall()
+        }
+    }
+    
+    func handleAttributionInstall() {
+        let installPath = "/install-application"
+        let purchasePath = "/subscribe"
+        
+        let installURLPath = InternalRemoteConfig.install_server_path.value
+        let purchaseURLPath = InternalRemoteConfig.purchase_server_path.value
+        if installURLPath != "" && purchaseURLPath != "" {
+            let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
+                                                                 purchaseServerURLPath: purchaseURLPath,
+                                                                 installPath: installPath,
+                                                                 purchasePath: purchasePath)
             
-            let installURLPath = InternalRemoteConfig.install_server_path.value
-            let purchaseURLPath = InternalRemoteConfig.purchase_server_path.value
-            if installURLPath != "" && purchaseURLPath != "" {
+            AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
+        } else {
+            if let serverDataSource = configuration?.attributionServerDataSource {
+                let installURLPath = serverDataSource.installPath
+                let purchaseURLPath = serverDataSource.purchasePath
+                
                 let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
                                                                      purchaseServerURLPath: purchaseURLPath,
                                                                      installPath: installPath,
@@ -267,28 +307,151 @@ public class CoreManager {
                 
                 AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
             } else {
-                if let serverDataSource = self.configuration?.attributionServerDataSource {
-                    let installURLPath = serverDataSource.installPath
-                    let purchaseURLPath = serverDataSource.purchasePath
-                    
-                    let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
-                                                                         purchaseServerURLPath: purchaseURLPath,
-                                                                         installPath: installPath,
-                                                                         purchasePath: purchasePath)
-                    
-                    AttributionServerManager.shared.configureURLs(config: attributionConfiguration)
-                } else {
-                    assertionFailure()
-                }
-            }
-            
-            AttributionServerManager.shared.syncOnAppStart { result in
-                InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
+                assertionFailure()
             }
         }
+        
+        AttributionServerManager.shared.syncOnAppStart { result in
+            self.handlePossibleAttributionUpdate()
+            InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
+        }
+    }
+}
 
+// MARK: Attribution finished
+extension CoreManager {
+    func signForAttributionFinish() {
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        
+        configurationManager.signForAttributionFinished { [weak self] in
+            self?.handleAttributionFinish(isUpdated: false)
+        }
     }
     
+    func handleAttributionFinish(isUpdated: Bool) {
+        let isInternetError = checkIsNoInternetError()
+        
+        if isInternetError && checkIsNoInternetHandledOrIgnored() == false && isUpdated == false {
+            AppConfigurationManager.shared?.reset()
+            attAnswered = false
+            signForAttributionInstall()
+            signForAttributionFinish()
+            signForConfigurationFinish()
+            delegate?.coreConfigurationFinished(result: .noInternet)
+            return
+        }
+        
+        let result = getAttributionResult()
+        
+        var attributionDict: [String: String] = ["network": result.network.rawValue]
+        if result.userAttribution.isEmpty == false {
+            attributionDict += result.userAttribution
+        }
+        
+        userInfo = UserInfo(userSource: result.network, userInfo: result.userAttribution)
+        if isUpdated {
+            sendUserAttributionUpdate(userAttribution: attributionDict)
+        } else {
+            sendUserAttribution(userAttribution: attributionDict)
+        }
+        
+        remoteConfigManager?.updateRemoteConfig(attributionDict) {
+            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted()
+        }
+    }
+    
+    func getAttributionResult() -> (network: CoreUserSource, userAttribution: [String: String]) {
+        let deepLinkResult = self.appsflyerManager?.deeplinkResult ?? [:]
+        let asaResult = AttributionServerManager.shared.installResultData
+        
+        let isIPAT = asaResult?.isIPAT ?? false
+        let isASA = (asaResult?.asaAttribution["campaignName"] as? String != nil) ||
+        (asaResult?.asaAttribution["campaign_name"] as? String != nil)
+        
+        var networkSource: CoreUserSource = .organic
+        
+        var userAttribution = [String: String]()
+        if let networkValue = deepLinkResult["network"] {
+            networkSource = .other(networkValue)
+            userAttribution = deepLinkResult
+        } else if isIPAT {
+            networkSource = .ipat
+        } else if isASA {
+            networkSource = .asa
+            userAttribution = asaResult?.asaAttribution ?? [:]
+        }
+        
+        return (networkSource, userAttribution)
+    }
+}
+
+// MARK: Attrubution Update
+extension CoreManager {
+    func handlePossibleAttributionUpdate() {
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        
+        guard configurationManager.attributionFinishHandled else {
+            return
+        }
+        
+        handleAttributionFinish(isUpdated: true)
+    }
+}
+
+// MARK: Configuration
+extension CoreManager {
+    func signForConfigurationFinish() {
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        
+        configurationManager.signForConfigurationEnd { [weak self] configurationResult in
+            self?.handleConfigurationFinish(result: .finished)
+        }
+    }
+    
+    func handleConfigurationFinish(result: CoreManagerResult) {
+        self.delegate?.coreConfigurationFinished(result: result)
+    }
+}
+
+// MARK: Support
+extension CoreManager {
+    func checkIsNoInternetHandledOrIgnored() -> Bool {
+        guard AppEnvironment.isChina else {
+            return true
+        }
+        
+        guard configuration?.appSettings.isFirstLaunch == true else {
+            return true
+        }
+        
+        let noInternetCanBeShown = !handledNoInternetAlert
+        guard noInternetCanBeShown else {
+            return true
+        }
+        
+        return false
+    }
+    
+    func checkIsNoInternetError() -> Bool {
+        let attrError = AttributionServerManager.shared.installError
+        let afError = appsflyerManager?.deeplinkError
+        let remoteError = remoteConfigManager?.remoteError
+
+        return attrError != nil && afError != nil && remoteError != nil
+    }
+}
+
+// MARK: Purchases
+extension CoreManager {
     func sendPurchaseToAttributionServer(_ details: PurchaseDetails) {
         let tlmamDetals = AttributionPurchaseModel(details)
         AttributionServerManager.shared.syncPurchase(data: tlmamDetals)
@@ -298,7 +461,7 @@ public class CoreManager {
         guard facebookManager != nil else {
             return
         }
-       
+        
         let isTrial = purchase.product.subscription?.introductoryOffer != nil
         let trialPrice = CGFloat(NSDecimalNumber(decimal: purchase.product.subscription?.introductoryOffer?.price ?? 0).floatValue)//introductoryPrice?.price.doubleValue ?? 0
         let price = CGFloat(NSDecimalNumber(decimal: purchase.product.price).floatValue)
@@ -319,247 +482,5 @@ public class CoreManager {
         if isTrial {
             self.appsflyerManager?.logTrialPurchase()
         }
-    }
-    
-    func handleConfigurationEndCallback() {
-        guard let configurationManager = AppConfigurationManager.shared else {
-            assertionFailure()
-            return
-        }
-        
-        configurationManager.signForConfigurationEnd { configurationResult in
-            self.configurationEndQueue.async {
-                let result = self.getConfigurationResult(isFirstConfiguration: true)
-                self.delegate?.coreConfigurationFinished(result: result)
-            }
-            // calculate attribution
-            // calculate correct paywall name
-            // return everything to the app
-        }
-    }
-    
-    func handleConfigurationUpdate() {
-        guard let configurationManager = AppConfigurationManager.shared else {
-            assertionFailure()
-            return
-        }
-        
-        if configurationManager.configurationFinishHandled {
-            self.configurationEndQueue.async {
-                let result = self.getConfigurationResult(isFirstConfiguration: false)
-                self.delegate?.coreConfigurationUpdated(newResult: result)
-            }
-        }
-    }
-    
-    func checkIsNoInternetHandledOrIgnored() -> Bool {
-        guard AppEnvironment.isChina else {
-            return true
-        }
-        
-        guard configuration?.appSettings.isFirstLaunch == true else {
-            return true
-        }
-        
-        let noInternetCanBeShown = !handledNoInternetAlert
-        guard noInternetCanBeShown else {
-            return true
-        }
-        
-        return false
-    }
-    
-    func getConfigurationResult(isFirstConfiguration: Bool) -> CoreManagerResult {
-        let configs = self.configuration?.remoteConfigDataSource.allConfigs ?? []
-        let abTests = self.configuration?.remoteConfigDataSource.allABTests ?? InternalRemoteABTests.allCases
-        let allConfigs: [any ExtendedRemoteConfigurable] = configs + abTests
-        let remoteResult = self.remoteConfigManager?.allRemoteValues ?? [:]
-        let asaResult = AttributionServerManager.shared.installResultData
-        let isIPAT = asaResult?.isIPAT ?? false
-        let deepLinkResult = self.appsflyerManager?.deeplinkResult ?? [:]
-        let isASA = (asaResult?.asaAttribution["campaignName"] as? String != nil) ||
-        (asaResult?.asaAttribution["campaign_name"] as? String != nil)
-        
-        if checkIsNoInternetHandledOrIgnored() == false {
-            //guard remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty else {
-            if remoteResult.isEmpty && asaResult == nil && deepLinkResult.isEmpty {
-                AppConfigurationManager.shared?.reset()
-                attAnswered = false
-                handleAttributionInstall()
-                handleConfigurationEndCallback()
-                let result = self.configurationResultManager.calculateResult()
-                return CoreManagerResult.error(data: result)
-            }
-        }
-        
-        var isRedirect = false
-        var networkSource: CoreUserSource = .unknown
-        
-        if let networkValue = deepLinkResult["network"] {
-            if networkValue.contains("web2app_fb") {
-                networkSource = .facebook
-            } else if networkValue.contains("Google_StoreRedirect") {
-                networkSource = .google
-            } else if networkValue.contains("tiktok") {
-                networkSource = .tiktok
-            } else if networkValue.contains("instagram") {
-                networkSource = .instagram
-            } else if networkValue.contains("snapchat") {
-                networkSource = .snapchat
-            } else if networkValue.lowercased().contains("bing") {
-                networkSource = .bing
-            } else if networkValue == "Full_Access" {
-                networkSource = .test_premium
-            } else if networkValue == "restricted" {
-                if let fixedSource = self.configuration?.appSettings.paywallSourceForRestricted {
-                    networkSource = fixedSource
-                }
-            } else if networkValue.lowercased() == "asa_test" {
-                networkSource = .asa
-            }
-            else {
-                networkSource = .unknown
-            }
-            
-            isRedirect = true
-        }
-        
-        var userSource: CoreUserSource
-        
-        if isIPAT {
-            userSource = .ipat
-        }else if isRedirect {
-            userSource = networkSource
-        }else if isASA {
-            userSource = .asa
-        }else {
-            userSource = .organic
-        }
-        
-        if isFirstConfiguration {
-            self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
-            self.sendTestDistributionEvent(abTests: abTests, deepLinkResult: deepLinkResult, userSource: userSource)
-            self.saveRemoteConfig(source: userSource, allConfigs: allConfigs)
-        } else {
-            self.sendABTestsUserProperties(abTests: abTests, userSource: userSource)
-            self.saveRemoteConfig(source: userSource, allConfigs: allConfigs)
-        }
-        
-        self.configurationResultManager.userSource = userSource
-        self.configurationResultManager.deepLinkResult = deepLinkResult
-        self.configurationResultManager.asaAttributionResult = asaResult?.asaAttribution
-        
-        let result = self.configurationResultManager.calculateResult()
-           
-        return CoreManagerResult.success(data: result)
-    }
-    
-    func saveRemoteConfig(source: CoreUserSource, allConfigs: [any ExtendedRemoteConfigurable]) {
-        allConfigs.forEach { config in
-            let value: String?
-            if config.activeForSources.contains(source) {
-                value = nil
-            } else {
-                value = config.defaultValue
-            }
-            config.updateInternalValue(value)
-        }
-    }
-}
-
-class ConfigurationResultManager {
-    var userSource: CoreUserSource = .organic
-    var asaAttributionResult: [String: String]?
-    var deepLinkResult: [String: String]?
-    
-    func calculateResult() -> CoreManagerResultData {
-        // get appsflyer info
-        var paywallsBySource = [CoreUserSource: PaywallInfo]()
-        InternalRemoteABTests.allCases.forEach { config in
-            let value = config.value
-            let paywall = self.getPaywallNameFromConfig(value)
-            if config.activeForSources.count != 1 {
-                assertionFailure()
-            }
-            if let source = config.activeForSources.first {
-                paywallsBySource[source] = paywall
-            }
-        }
-        
-        let activePaywallName: String
-        let activePaywallIsDefault: Bool
-        var userSourceInfo: [String: String]? = deepLinkResult
-        
-        if let deepLinkValue: String = deepLinkResult?["deep_link_value"], deepLinkValue != "none", deepLinkValue != "",
-           let firebaseValue = CoreManager.internalShared.remoteConfigManager?.allRemoteValues[deepLinkValue] {
-            let activePaywallInfo = getPaywallNameFromConfig(firebaseValue)
-            activePaywallName = activePaywallInfo.name
-            activePaywallIsDefault = activePaywallInfo.isDefault
-            userSourceInfo = deepLinkResult
-        } else {
-            let organicConfigValue = InternalRemoteABTests.ab_paywall_organic.value
-            
-            switch userSource {
-            case .organic, .ipat, .test_premium, .unknown:
-                if let organicPaywall = paywallsBySource[CoreUserSource.organic] {
-                    activePaywallName = organicPaywall.name
-                    activePaywallIsDefault = organicPaywall.isDefault
-                } else {
-                    assertionFailure()
-                    activePaywallName = organicConfigValue
-                    activePaywallIsDefault = true
-                }
-            default:
-                if let paywallBySource = paywallsBySource[userSource] {
-                    activePaywallName = paywallBySource.name
-                    activePaywallIsDefault = paywallBySource.isDefault
-                } else {
-                    assertionFailure()
-                    activePaywallName = organicConfigValue
-                    activePaywallIsDefault = true
-                }
-            }
-        }
-        
-        let paywallNamesBySource = paywallsBySource.reduce(into: [CoreUserSource: String]()) { partialResult, paywallInfo in
-            partialResult[paywallInfo.key] = paywallInfo.value.name
-        }
-        
-        let result = CoreManagerResultData(userSource: userSource,
-                                           userSourceInfo: userSourceInfo,
-                                           activePaywallName: activePaywallName,
-                                           isActivePaywallDefault: activePaywallIsDefault,
-                                           paywallsBySource: paywallNamesBySource)
-        return result
-    }
-    
-    private func getPaywallNameFromConfig(_ config: String) -> PaywallInfo {
-        let paywallName: String
-        let isDefault: Bool
-        let value = config
-        if value.hasPrefix("none_") {
-            paywallName = String(value.dropFirst("none_".count))
-            isDefault = true
-        } else {
-            paywallName = value
-            isDefault = false
-        }
-        return PaywallInfo(name: paywallName, isDefault: isDefault)
-    }
-    
-    struct PaywallInfo {
-        let name: String
-        let isDefault: Bool
-    }
-}
-
-typealias PaywallName = String
-enum PaywallDefaultType {
-    case organic
-    case web2app
-    case fb_google_redirect
-    
-    var defaultPaywallName: PaywallName {
-        return "default"
     }
 }

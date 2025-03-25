@@ -6,6 +6,7 @@ public protocol AttributionServerManagerProtocol {
     var uniqueUserID: String? { get }
     var savedUserUUID: String? { get }
     var installResultData: AttributionManagerResult? { get }
+    var installError: Error? { get }
 
     func configure(config: AttributionConfigData)
     func configureURLs(config: AttributionConfigURLs)

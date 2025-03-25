@@ -14,6 +14,8 @@ public protocol CoreManagerProtocol {
     static var shared: CoreManagerProtocol { get }
     static var uniqueUserID: String? { get }
     static var sentry:PublicSentryManagerProtocol { get }
+    
+    var userInfo: UserInfo { get }
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?,
@@ -41,4 +43,14 @@ public protocol CoreManagerProtocol {
     func restore() async -> PurchasesRestoreResult
     
     func restoreAll() async -> PurchasesRestoreResult
+}
+
+public struct UserInfo: Codable {
+    var userSource: CoreUserSource
+    var userInfo: [String: String]
+    
+    public init(userSource: CoreUserSource, userInfo: [String : String]) {
+        self.userSource = userSource
+        self.userInfo = userInfo
+    }
 }

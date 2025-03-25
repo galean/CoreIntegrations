@@ -56,43 +56,45 @@ extension CoreManager {
         InternalUserProperty.att_status.identify(parameter: "\(answer)")
     }
     
-    func sendDeepLinkUserProperties(deepLinkResult: [String: String]) {
-        let userProperties = deepLinkResult
-        InternalUserProperty.identify(userProperties)
-    }
+    //    func sendDeepLinkUserProperties(deepLinkResult: [String: String]) {
+    //        let userProperties = deepLinkResult
+    //        InternalUserProperty.identify(userProperties)
+    //    }
     
-    func sendABTestsUserProperties(abTests: [any CoreRemoteABTestable], userSource: CoreUserSource) { // +
-        let userProperties = abTests.reduce(into: [String:String]()) { partialResult, abtest in
-            let shouldSend: Bool = abtest.activeForSources.contains(userSource)
-            var value = abtest.value
-            if !shouldSend {
-                value = "none"
-            } else if value.contains("none_") {
-                value = "none"
-            }
-            partialResult[abtest.key] = value
-        }
-        InternalUserProperty.identify(userProperties)
-    }
-    
-    func sendTestDistributionEvent(abTests: [any CoreRemoteABTestable], deepLinkResult: [String: String],
-                                   userSource: CoreUserSource) { // +
-        var parameters = abTests.reduce(into: [String:String]()) { partialResult, abtest in
-            let shouldSend: Bool = abtest.activeForSources.contains(userSource)
-            var value = abtest.value
-            if !shouldSend {
-                value = "none"
-            } else if value.contains("none_") {
-                value = "none"
-            }
-            partialResult[abtest.key] = value
-        }
+    func sendUserAttribution(userAttribution: [String: String]) {
+        guard userAttribution.isEmpty == false else { return }
         
-        parameters = parameters + deepLinkResult
-        
-        InternalAnalyticsEvent.test_distribution.log(parameters: parameters)
+        InternalUserProperty.identify(userAttribution)
+        InternalAnalyticsEvent.test_distribution.log(parameters: userAttribution)
         analyticsManager?.forceEventsUpload()
     }
+    
+    func sendUserAttributionUpdate(userAttribution: [String: String]) {
+        guard userAttribution.isEmpty == false else { return }
+        
+        InternalUserProperty.identify(userAttribution)
+        InternalAnalyticsEvent.test_distribution_update.log(parameters: userAttribution)
+        analyticsManager?.forceEventsUpload()
+    }
+    
+//    func sendABTestsUserProperties(abTests: [any CoreRemoteConfigurable], userSource: CoreUserSource) { // +
+//        let userProperties = abTests.reduce(into: [String:String]()) { partialResult, abtest in
+//            partialResult[abtest.key] = abtest.value
+//        }
+//        InternalUserProperty.identify(userProperties)
+//    }
+//    
+//    func sendTestDistributionEvent(abTests: [any CoreRemoteConfigurable], deepLinkResult: [String: String],
+//                                   userSource: CoreUserSource) { // +
+//        var parameters = abTests.reduce(into: [String:String]()) { partialResult, abtest in
+//            partialResult[abtest.key] = abtest.value
+//        }
+//        
+//        parameters = parameters + deepLinkResult
+//        
+//        InternalAnalyticsEvent.test_distribution.log(parameters: parameters)
+//        analyticsManager?.forceEventsUpload()
+//    }
     
     func sendStoreCountryUserProperty() {
         Task {

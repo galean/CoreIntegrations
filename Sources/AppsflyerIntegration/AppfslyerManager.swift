@@ -3,6 +3,7 @@ import AppsFlyerLib
 
 public class AppfslyerManager: NSObject {
     public var delegate: AppsflyerManagerDelegate?
+    public var deeplinkError: Error? = nil
     public var deeplinkResult: [String: String]? {
         get {
             return UserDefaults.standard.object(forKey: deepLinkResultUDKey) as? [String: String]
@@ -103,6 +104,7 @@ extension AppfslyerManager: AppfslyerManagerProtocol {
 
 extension AppfslyerManager: AppsFlyerLibDelegate {
     public func onConversionDataSuccess(_ conversionInfo: [AnyHashable : Any]) {
+        deeplinkError = nil
         let deepLinkInfo = parseDeepLink(conversionInfo)
         deeplinkResult = deepLinkInfo
         delegate?.handledDeeplink(deepLinkInfo)
@@ -110,6 +112,7 @@ extension AppfslyerManager: AppsFlyerLibDelegate {
     }
     
     public func onConversionDataFail(_ error: Error) {
+        self.deeplinkError = error
         delegate?.coreConfiguration(handleDeeplinkError: error)
     }
 }

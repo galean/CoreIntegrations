@@ -11,12 +11,12 @@ extension CoreManager: AppsflyerManagerDelegate {
     
     public func coreConfiguration(handleDeeplinkError error: Error) {
         delegate?.coreConfiguration(handleDeeplinkError: error)
+        InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted()
     }
     
     public func handledDeeplink(_ result: [String : String]) {
-        sendDeepLinkUserProperties(deepLinkResult: result)
+//        sendDeepLinkUserProperties(deepLinkResult: result)
+        handlePossibleAttributionUpdate()
         InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted()
-        
-        handleConfigurationUpdate()
     }
 }
