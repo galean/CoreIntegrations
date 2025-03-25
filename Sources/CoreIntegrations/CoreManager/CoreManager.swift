@@ -31,7 +31,7 @@ public class CoreManager {
         get {
             guard let userInfoData = UserDefaults.standard.data(forKey: "coreintegrations.userAttrInfo"),
                   let userInfo = try? JSONDecoder().decode(UserInfo.self, from: userInfoData) else {
-                return UserInfo(userSource: .organic, userInfo: [:])
+                return UserInfo(userSource: .organic, attrInfo: [:])
             }
             
             return userInfo
@@ -351,7 +351,7 @@ extension CoreManager {
             attributionDict += result.userAttribution
         }
         
-        userInfo = UserInfo(userSource: result.network, userInfo: result.userAttribution)
+        userInfo = UserInfo(userSource: result.network, attrInfo: result.userAttribution)
         if isUpdated {
             sendUserAttributionUpdate(userAttribution: attributionDict)
         } else {

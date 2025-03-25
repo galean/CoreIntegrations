@@ -46,11 +46,11 @@ public protocol CoreManagerProtocol {
 }
 
 public struct UserInfo: Codable {
-    var userSource: CoreUserSource
-    var userInfo: [String: String]
+    public var userSource: CoreUserSource
+    public var attrInfo: [String: String]
     
-    public init(userSource: CoreUserSource, userInfo: [String : String]) {
+    public init(userSource: CoreUserSource, attrInfo: [String : String]) {
         self.userSource = userSource
-        self.userInfo = userInfo
+        self.attrInfo = attrInfo
     }
 }
