@@ -13,9 +13,7 @@ class AppConfigurationManager {
 //    public var delegate: ConfigurationManagerDelegate?
     
     private var model: CoreConfigurationModel
-    private var isFirstStart: Bool
     
-    private var completedEvents = [any ConfigurationEvent]()
     private var timout: Int = 6
     private var currentSecond = 0
     private var waitingCallbacks = [(ConfigurationResult) -> Void]()
@@ -31,35 +29,22 @@ class AppConfigurationManager {
     
     var configurationFinishHandled = false
 
-    
-    private var configurationCompletelyFinished: Bool {
-        return model.checkAllEventsFinished(completedEvents: completedEvents, isFirstStart: isFirstStart)
-    }
-    
-    private var configurationRequiredFinished: Bool {
-        return model.checkRequiredEventsFinished(completedEvents: completedEvents, isFirstStart: isFirstStart)
-    }
-    
-    private var configurationAttAndConfigFinished: Bool {
-        return model.checkAttAndConfigFinished(completedEvents: completedEvents, isFirstStart: isFirstStart)
-    }
-    
-    private var attributionFinished: Bool {
-        return model.checkAttributionFinished(completedEvents: completedEvents)
+    var statusForAnalytics: [String: String] {
+        return model.statusDescription
     }
     
     private var isConfigurationFinished: Bool {
-        return isTimerFinished || configurationCompletelyFinished
+        return isTimerFinished || model.checkAllEventsFinished()
     }
-    
-    init(model: CoreConfigurationModel, isFirstStart: Bool, timeout: Int = 6) {
-        self.model = model
-        self.isFirstStart = isFirstStart
+
+    init(allConfigurationEvents: [any ConfigurationEvent], isFirstStart: Bool, timeout: Int = 6) {
+        model = CoreConfigurationModel(allConfigurationEvents: allConfigurationEvents, isFirstStart: isFirstStart)
         self.timout = timeout
     }
     
     public func reset() {
-        completedEvents.removeAll()
+        model.completedEvents.removeAll()
+        model.completionErrors.removeAll()
         isTimerFinished = false
         configurationFinishHandled = false
         configurationAttFinishHandled = false
@@ -92,8 +77,11 @@ class AppConfigurationManager {
         }
     }
     
-    public func handleCompleted(event: any ConfigurationEvent) {
-        completedEvents.append(event)
+    public func handleCompleted(event: any ConfigurationEvent, error: Error?) {
+        model.completedEvents.append(event)
+        if let error {
+            model.completionErrors[event.key] = error
+        }
         checkConfiguration()
         checkATTConfiguration()
         checkAttributionFinished()
@@ -101,7 +89,7 @@ class AppConfigurationManager {
     
     public func signForConfigurationEnd(_ callback: @escaping (ConfigurationResult) -> Void) {
         guard !isConfigurationFinished else {
-            let configurationResult: ConfigurationResult = configurationRequiredFinished ? .completed : .requiredFailed
+            let configurationResult: ConfigurationResult = model.checkRequiredEventsFinished() ? .completed : .requiredFailed
             callback(configurationResult)
             return
         }
@@ -117,7 +105,7 @@ class AppConfigurationManager {
     }
     
     public func signForAttributionFinished(_ callback: @escaping () -> Void) {
-        guard !attributionFinished else {
+        guard !model.checkAttributionFinished() else {
             callback()
             return
         }
@@ -125,7 +113,7 @@ class AppConfigurationManager {
     }
     
     private func checkATTConfiguration() {
-        guard configurationAttAndConfigFinished else {
+        guard model.checkAttAndConfigFinished() else {
             return
         }
         
@@ -138,7 +126,7 @@ class AppConfigurationManager {
     }
     
     private func checkAttributionFinished() {
-        guard attributionFinished else {
+        guard model.checkAttributionFinished() else {
             return
         }
         
@@ -165,7 +153,7 @@ class AppConfigurationManager {
         
         configurationFinishHandled = true
         
-        let configurationResult: ConfigurationResult = configurationRequiredFinished ? .completed : .requiredFailed
+        let configurationResult: ConfigurationResult = model.checkRequiredEventsFinished() ? .completed : .requiredFailed
         waitingCallbacks.forEach { callback in
             callback(configurationResult)
         }

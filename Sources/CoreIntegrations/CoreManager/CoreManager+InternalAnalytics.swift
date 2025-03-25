@@ -61,19 +61,19 @@ extension CoreManager {
     //        InternalUserProperty.identify(userProperties)
     //    }
     
-    func sendUserAttribution(userAttribution: [String: String]) {
+    func sendUserAttribution(userAttribution: [String: String], status: [String: String]) {
         guard userAttribution.isEmpty == false else { return }
         
         InternalUserProperty.identify(userAttribution)
-        InternalAnalyticsEvent.test_distribution.log(parameters: userAttribution)
+        InternalAnalyticsEvent.test_distribution.log(parameters: userAttribution+status)
         analyticsManager?.forceEventsUpload()
     }
     
-    func sendUserAttributionUpdate(userAttribution: [String: String]) {
+    func sendUserAttributionUpdate(userAttribution: [String: String], status: [String: String]) {
         guard userAttribution.isEmpty == false else { return }
         
         InternalUserProperty.identify(userAttribution)
-        InternalAnalyticsEvent.test_distribution_update.log(parameters: userAttribution)
+        InternalAnalyticsEvent.test_distribution_update.log(parameters: userAttribution+status)
         analyticsManager?.forceEventsUpload()
     }
     

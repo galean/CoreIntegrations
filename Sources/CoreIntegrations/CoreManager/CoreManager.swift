@@ -115,8 +115,7 @@ public class CoreManager {
             }
             
             let allConfigurationEvents: [any ConfigurationEvent] = InternalConfigurationEvent.allCases + (configuration.initialConfigurationDataSource?.allEvents ?? [])
-            let configurationEventsModel = CoreConfigurationModel(allConfigurationEvents: allConfigurationEvents)
-            AppConfigurationManager.shared = AppConfigurationManager(model: configurationEventsModel,
+            AppConfigurationManager.shared = AppConfigurationManager(allConfigurationEvents: allConfigurationEvents,
                                                                      isFirstStart: configuration.appSettings.isFirstLaunch,
                                                                      timeout: configuration.configurationTimeout)
             
@@ -218,8 +217,8 @@ public class CoreManager {
             firebaseManager.configure(id: id)
             sentryManager.setUserID(id)
             self.analyticsManager?.setUserID(id)
-            remoteConfigManager?.configure(configuration?.remoteConfigDataSource.allConfigs ?? []) {
-                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted()
+            remoteConfigManager?.configure(configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
+                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
             }
         }
     }
@@ -250,7 +249,7 @@ public class CoreManager {
             
             self?.sendAttEvent(answer: false)
             let status = ATTrackingManager.trackingAuthorizationStatus
-            self?.handleATTAnswered(status)
+            self?.handleATTAnswered(status, error: NSError(domain: "coreintegrations.att.timeout", code: 6456))
         }
         
         ATTrackingManager.requestTrackingAuthorization { [weak self] status in
@@ -262,9 +261,9 @@ public class CoreManager {
         }
     }
     
-    func handleATTAnswered(_ status: ATTrackingManager.AuthorizationStatus) {
+    func handleATTAnswered(_ status: ATTrackingManager.AuthorizationStatus, error: Error? = nil) {
         AppConfigurationManager.shared?.startTimoutTimer()
-        InternalConfigurationEvent.attConcentGiven.markAsCompleted()
+        InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
         facebookManager?.configureATT(isAuthorized: status == .authorized)
     }
 }
@@ -313,7 +312,7 @@ extension CoreManager {
         
         AttributionServerManager.shared.syncOnAppStart { result in
             self.handlePossibleAttributionUpdate()
-            InternalConfigurationEvent.attributionServerHandled.markAsCompleted()
+            InternalConfigurationEvent.attributionServerHandled.markAsCompleted(error: AttributionServerManager.shared.installError)
         }
     }
 }
@@ -332,6 +331,11 @@ extension CoreManager {
     }
     
     func handleAttributionFinish(isUpdated: Bool) {
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        
         let isInternetError = checkIsNoInternetError()
         
         if isInternetError && checkIsNoInternetHandledOrIgnored() == false && isUpdated == false {
@@ -353,13 +357,13 @@ extension CoreManager {
         
         userInfo = UserInfo(userSource: result.network, attrInfo: result.userAttribution)
         if isUpdated {
-            sendUserAttributionUpdate(userAttribution: attributionDict)
+            sendUserAttributionUpdate(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
         } else {
-            sendUserAttribution(userAttribution: attributionDict)
+            sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
         }
         
-        remoteConfigManager?.updateRemoteConfig(attributionDict) {
-            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted()
+        remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
+            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
         }
     }
     

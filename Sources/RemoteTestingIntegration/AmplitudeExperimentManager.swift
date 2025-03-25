@@ -18,7 +18,7 @@ public class AmplitudeExperimentManager {
 
     init(deploymentKey: String) {
         let builder = ExperimentConfigBuilder()
-        builder.automaticExposureTracking(true)
+        builder.automaticExposureTracking(false)
         
         let config = builder.build()
         

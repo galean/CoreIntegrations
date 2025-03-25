@@ -18,6 +18,6 @@ public extension ConfigurationEvent {
             assertionFailure()
             return
         }
-        configurationManager.handleCompleted(event: self)
+        configurationManager.handleCompleted(event: self, error: nil)
     }
 }

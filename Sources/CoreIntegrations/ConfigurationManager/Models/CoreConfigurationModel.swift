@@ -3,10 +3,42 @@ import Foundation
 
 struct CoreConfigurationModel {
     var allConfigurationEvents: [any ConfigurationEvent]
+    var completedEvents = [any ConfigurationEvent]()
+    var completionErrors = [String: Error]()
+    
+    var isFirstStart: Bool
+    
+    init(allConfigurationEvents: [any ConfigurationEvent], completedEvents: [any ConfigurationEvent] = [any ConfigurationEvent](), isFirstStart: Bool) {
+        self.allConfigurationEvents = allConfigurationEvents
+        self.completedEvents = completedEvents
+        self.isFirstStart = isFirstStart
+    }
+    
+    var statusDescription: [String: String] {
+        var result = [String: String]()
+        completedEvents.forEach { event in
+            let error = completionErrors.first(where: { $0.key == event.key })?.value
+            if let error {
+                result[event.key] = "error: \(error)"
+            } else {
+                result[event.key] = "finished"
+            }
+        }
+        let notCompleted = allConfigurationEvents.filter { event in
+            !completedEvents.contains { completedEvent in
+                completedEvent.key == event.key
+            }
+        }
+        notCompleted.forEach { event in
+            result[event.key] = "not finished"
+        }
+        
+        return result
+    }
 }
   
 extension CoreConfigurationModel {
-    func checkAllEventsFinished(completedEvents: [any ConfigurationEvent], isFirstStart: Bool) -> Bool {
+    func checkAllEventsFinished() -> Bool {
         var allCompleted = true
         
         let verifingEvents = allConfigurationEvents.filter { event in
@@ -27,7 +59,7 @@ extension CoreConfigurationModel {
         return allCompleted
     }
     
-    func checkRequiredEventsFinished(completedEvents: [any ConfigurationEvent], isFirstStart: Bool) -> Bool {
+    func checkRequiredEventsFinished() -> Bool {
         var allCompleted = true
         
         var verifingEvents = allConfigurationEvents.filter { event in
@@ -52,7 +84,7 @@ extension CoreConfigurationModel {
         return allCompleted
     }
     
-    func checkAttAndConfigFinished(completedEvents: [any ConfigurationEvent], isFirstStart: Bool) -> Bool {
+    func checkAttAndConfigFinished() -> Bool {
         var allCompleted = true
         let verifingEvents = [InternalConfigurationEvent.attConcentGiven, InternalConfigurationEvent.remoteConfigLoaded]
         
@@ -68,7 +100,7 @@ extension CoreConfigurationModel {
         return allCompleted
     }
     
-    func checkAttributionFinished(completedEvents: [any ConfigurationEvent]) -> Bool {
+    func checkAttributionFinished() -> Bool {
         var allCompleted = true
         let verifingEvents: [InternalConfigurationEvent] = [.appsflyerWeb2AppHandled, .attributionServerHandled, .remoteConfigLoaded]
         

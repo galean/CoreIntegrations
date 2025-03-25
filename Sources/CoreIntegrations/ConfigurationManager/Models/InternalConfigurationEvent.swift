@@ -25,11 +25,11 @@ enum InternalConfigurationEvent: String, ConfigurationEvent {
         return rawValue
     }
 
-    func markAsCompleted() {
+    func markAsCompleted(error: Error? = nil) {
         guard let configurationManager = AppConfigurationManager.shared else {
             assertionFailure()
             return
         }
-        configurationManager.handleCompleted(event: self)
+        configurationManager.handleCompleted(event: self, error: error)
     }
 }

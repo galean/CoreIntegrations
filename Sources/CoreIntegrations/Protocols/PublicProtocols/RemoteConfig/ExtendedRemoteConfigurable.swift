@@ -10,38 +10,32 @@ import AmplitudeExperiment
 public protocol ExtendedRemoteConfigurable: RemoteConfigurable {
     var boolValue: Bool { get }
     func updateValue(_ newValue: String?)
-    func exposure()
 }
 
 public extension ExtendedRemoteConfigurable {
     var value: String {
         get {
-            let result = internalValue
-        
             if stickyBucketed {
-                stickyBuckettedValue(with: result)
-            } else if stickyBuckettedValue != nil {
-                stickyBuckettedValue(with: nil)
+                if stickyBuckettedValue == nil {
+                    setStickyBuckettedValue(with: remoteValue)
+                }
+            } else {
+                setStickyBuckettedValue(with: nil)
             }
             
-            return result
+            let value = internalValue
+            
+            if lastExposedValue != value {
+                setLastExposedValue(newValue: value)
+                exposure()
+            }
+            
+            return internalValue
         }
     }
     
     func updateValue(_ newValue: String?) {
-        manualReassignValue(with: newValue)
-    }
-    
-    func updateInternalValue(_ newValue: String?) {
-        internalManualReassignValue(with: newValue)
-    }
-    
-    func exposure() {
-        guard let configManager = CoreManager.internalShared.remoteConfigManager else {
-            return
-        }
-        
-        configManager.exposure(forConfig: self)
+        setManualReassignValue(with: newValue)
     }
     
     var boolValue: Bool {
@@ -64,29 +58,52 @@ public extension ExtendedRemoteConfigurable {
 }
 
 extension ExtendedRemoteConfigurable {
+    private func updateInternalValue(_ newValue: String?) {
+        setInternalManualReassignValue(with: newValue)
+    }
+    
+    private func exposure() {
+        guard let configManager = CoreManager.internalShared.remoteConfigManager else {
+            return
+        }
+        
+        configManager.exposure(forConfig: self)
+    }
+}
+
+extension ExtendedRemoteConfigurable {
     private var internalValue: String {
         get {
             if let _ = ProcessInfo.processInfo.environment["xctest_skip_config"] {
-                return reassignedValue ?? defaultValue
+                return manualReassignedValue ?? defaultValue
             }
             
-            guard let configManager = CoreManager.internalShared.remoteConfigManager else {
-                return defaultValue
-            }
-            
-            return reassignedValue ?? internalReassignedValue ?? stickyBuckettedValue ?? configManager.getValue(forConfig: self) ?? defaultValue
+            return manualReassignedValue ?? internalReassignedValue ?? stickyBuckettedValue ?? remoteValue
         }
     }
     
-    private func manualReassignValue(with newValue: String?) {
+    private var remoteValue: String {
+        guard let configManager = CoreManager.internalShared.remoteConfigManager else {
+            return defaultValue
+        }
+        
+        return configManager.getValue(forConfig: self) ?? defaultValue
+    }
+}
+
+extension ExtendedRemoteConfigurable {
+    private var manualReassignedValue: String? {
+        let savedValue = UserDefaults.standard.object(forKey: key) as? String
+        return savedValue
+    }
+    
+    private func setManualReassignValue(with newValue: String?) {
         UserDefaults.standard.setValue(newValue, forKey: key)
     }
-    
-    private func internalManualReassignValue(with newValue: String?) {
-        UserDefaults.standard.setValue(newValue, forKey: "internal"+key)
-    }
-    
-    private func stickyBuckettedValue(with newValue: String?) {
+}
+
+extension ExtendedRemoteConfigurable {
+    private func setStickyBuckettedValue(with newValue: String?) {
         guard let newValue else {
             UserDefaults.standard.removeObject(forKey: "sticky_"+key)
             return
@@ -94,18 +111,31 @@ extension ExtendedRemoteConfigurable {
         UserDefaults.standard.setValue(newValue, forKey: "sticky_"+key)
     }
     
-    private var reassignedValue: String? {
-        let savedValue = UserDefaults.standard.object(forKey: key) as? String
+    private var stickyBuckettedValue: String? {
+        let savedValue = UserDefaults.standard.object(forKey: "sticky_"+key) as? String
+        return savedValue
+    }
+}
+
+extension ExtendedRemoteConfigurable {
+    private var lastExposedValue: String? {
+        let savedValue = UserDefaults.standard.object(forKey: "last_exposed_"+key) as? String
         return savedValue
     }
     
+    private func setLastExposedValue(newValue: String?) {
+        UserDefaults.standard.setValue(newValue, forKey: "last_exposed_"+key)
+    }
+}
+
+// Not used in this version anymore, but must be for old versions support
+extension ExtendedRemoteConfigurable {
     private var internalReassignedValue: String? {
         let savedValue = UserDefaults.standard.object(forKey: "internal"+key) as? String
         return savedValue
     }
     
-    private var stickyBuckettedValue: String? {
-        let savedValue = UserDefaults.standard.object(forKey: "sticky_"+key) as? String
-        return savedValue
+    private func setInternalManualReassignValue(with newValue: String?) {
+        UserDefaults.standard.setValue(newValue, forKey: "internal"+key)
     }
 }
