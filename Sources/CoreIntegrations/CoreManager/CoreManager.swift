@@ -364,10 +364,18 @@ extension CoreManager {
         
         if currentUserInfo == nil || currentUserInfo?.userSource != result.network {
             userInfo = UserInfo(userSource: result.network, attrInfo: result.userAttribution)
-            sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
-            
-            remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
-                InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+            if result.network == .organic {
+                sendUserAttribution(userAttribution: [:], status: configurationManager.statusForAnalytics)
+                
+                remoteConfigManager?.updateRemoteConfig([:]) { [weak self] in
+                    InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                }
+            } else {
+                sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
+                
+                remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
+                    InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                }
             }
         } else {
             InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: remoteConfigManager?.remoteError)
