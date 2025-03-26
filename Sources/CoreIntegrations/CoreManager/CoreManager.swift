@@ -27,16 +27,21 @@ public class CoreManager {
         return SentryManager.shared
     }
     
-    public var userInfo: UserInfo {
+    public var userInfo: UserInfo? {
         get {
             guard let userInfoData = UserDefaults.standard.data(forKey: "coreintegrations.userAttrInfo"),
                   let userInfo = try? JSONDecoder().decode(UserInfo.self, from: userInfoData) else {
-                return UserInfo(userSource: .organic, attrInfo: [:])
+                return nil
             }
             
             return userInfo
         }
         set {
+            guard newValue != nil else {
+                UserDefaults.standard.removeObject(forKey: "coreintegrations.userAttrInfo")
+                return
+            }
+            
             let userData = try? JSONEncoder().encode(newValue)
             UserDefaults.standard.set(userData, forKey: "coreintegrations.userAttrInfo")
         }
@@ -357,7 +362,7 @@ extension CoreManager {
         
         let currentUserInfo = userInfo
         
-        if currentUserInfo.userSource != result.network {
+        if currentUserInfo == nil || currentUserInfo?.userSource != result.network {
             userInfo = UserInfo(userSource: result.network, attrInfo: result.userAttribution)
             sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
             

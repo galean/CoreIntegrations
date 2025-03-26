@@ -15,7 +15,7 @@ public protocol CoreManagerProtocol {
     static var uniqueUserID: String? { get }
     static var sentry:PublicSentryManagerProtocol { get }
     
-    var userInfo: UserInfo { get }
+    var userInfo: UserInfo? { get }
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?,
@@ -47,9 +47,9 @@ public protocol CoreManagerProtocol {
 
 public struct UserInfo: Codable {
     public var userSource: CoreUserSource
-    public var attrInfo: [String: String]
+    public var attrInfo: [String: String]?
     
-    public init(userSource: CoreUserSource, attrInfo: [String : String]) {
+    public init(userSource: CoreUserSource, attrInfo: [String : String]? = nil) {
         self.userSource = userSource
         self.attrInfo = attrInfo
     }
