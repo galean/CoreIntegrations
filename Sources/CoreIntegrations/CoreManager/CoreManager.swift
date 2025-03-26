@@ -186,13 +186,10 @@ public class CoreManager {
     }
     
     @objc public func applicationDidBecomeActive() {
-        print("coreint applicationDidBecomeActive")
-        
         configureID()
         
         if shouldReconfigure {
             shouldReconfigure = false
-            print("coreint shouldReconfigure")
             AppConfigurationManager.shared?.reset()
             attAnswered = false
             signForAttributionInstall()
@@ -296,7 +293,6 @@ public class CoreManager {
     }
     
     func handleATTAnswered(_ status: ATTrackingManager.AuthorizationStatus, error: Error? = nil) {
-        print("coreint handleATTAnswered")
         AppConfigurationManager.shared?.startTimoutTimer()
         InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
         facebookManager?.configureATT(isAuthorized: status == .authorized)
@@ -345,9 +341,7 @@ extension CoreManager {
             }
         }
         
-        print("coreint handleAttributionInstall")
         AttributionServerManager.shared.syncOnAppStart { result in
-            print("coreint syncOnAppStart finished")
             self.handlePossibleAttributionUpdate()
             InternalConfigurationEvent.attributionServerHandled.markAsCompleted(error: AttributionServerManager.shared.installError)
         }
@@ -362,9 +356,7 @@ extension CoreManager {
             return
         }
         
-        print("coreint signForAttributionFinish")
         configurationManager.signForAttributionFinished { [weak self] in
-            print("coreint signForAttributionFinished")
             self?.handleAttributionFinish(isUpdated: false)
         }
     }
@@ -465,9 +457,7 @@ extension CoreManager {
             return
         }
         
-        print("coreint signForConfigurationFinish")
         configurationManager.signForConfigurationEnd { [weak self] configurationResult in
-            print("coreint signForConfigurationEnd")
             self?.handleConfigurationFinish(result: .finished)
         }
     }

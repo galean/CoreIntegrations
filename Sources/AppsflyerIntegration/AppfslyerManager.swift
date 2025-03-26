@@ -109,12 +109,10 @@ extension AppfslyerManager: AppsFlyerLibDelegate {
         deeplinkResult = deepLinkInfo
         delegate?.handledDeeplink(deepLinkInfo)
         delegate?.coreConfiguration(didReceive: conversionInfo)
-        print("coreint onConversionDataSuccess")
     }
     
     public func onConversionDataFail(_ error: Error) {
         self.deeplinkError = error
         delegate?.coreConfiguration(handleDeeplinkError: error)
-        print("coreint onConversionDataFail")
     }
 }

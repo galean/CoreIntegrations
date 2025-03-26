@@ -161,7 +161,6 @@ extension CoreManager: CoreManagerProtocol {
     }
     
     public func handleNoInternetAlertWasShown() {
-        print("coreint handleNoInternetAlertWasShown")
         handledNoInternetAlert = true
         
         reconfigureOnBecomeActive()
