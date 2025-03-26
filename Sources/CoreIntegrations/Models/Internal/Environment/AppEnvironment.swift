@@ -25,9 +25,16 @@ public enum AppEnvironment: String {
         }
     }
     
-    public static var isChina: Bool {
-        if Locale.current.regionCode == "CN" { return true }
-        if SKPaymentQueue.default().storefront?.countryCode == "CHN" { return true }
+    public static var isChina: Bool = {
+        if Locale.current.regionCode == "CN" {
+            return true
+        }
+        guard let store = SKPaymentQueue.default().storefront else {
+            return false
+        }
+        if store.countryCode == "CHN" {
+            return true
+        }
         return false
-    }
+    }()
 }
