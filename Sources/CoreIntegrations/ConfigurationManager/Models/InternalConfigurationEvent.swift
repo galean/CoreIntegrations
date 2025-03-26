@@ -26,6 +26,7 @@ enum InternalConfigurationEvent: String, ConfigurationEvent {
     }
 
     func markAsCompleted(error: Error? = nil) {
+        print("coreint markAsCompleted \(self.key)")
         guard let configurationManager = AppConfigurationManager.shared else {
             assertionFailure()
             return
