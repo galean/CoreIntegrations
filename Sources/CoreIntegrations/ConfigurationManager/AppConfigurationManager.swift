@@ -78,9 +78,13 @@ class AppConfigurationManager {
     }
     
     public func handleCompleted(event: any ConfigurationEvent, error: Error?) {
-        model.completedEvents.append(event)
+        if !model.completedEvents.contains(where: { $0.key == event.key }) {
+            model.completedEvents.append(event)
+        }
         if let error {
             model.completionErrors[event.key] = error
+        } else {
+            model.completionErrors.removeValue(forKey: event.key)
         }
         checkConfiguration()
         checkATTConfiguration()
