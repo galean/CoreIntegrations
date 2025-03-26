@@ -18,8 +18,8 @@ struct CoreConfigurationModel {
         var result = [String: String]()
         completedEvents.forEach { event in
             let error = completionErrors.first(where: { $0.key == event.key })?.value
-            if let error {
-                result[event.key] = "error: \(error)"
+            if let nserror = error as? NSError {
+                result[event.key] = "error: \(nserror.code)"
             } else {
                 result[event.key] = "finished"
             }
