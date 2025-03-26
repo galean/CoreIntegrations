@@ -8,5 +8,6 @@ internal protocol AttributionServerWorkerProtocol {
     func sendPurchaseAnalytics(analytics: AttrubutionPurchaseRequestModel,
                                userId: AttributionUserUUID,
                                authToken: AttributionServerToken,
+                               isBackgroundSession: Bool,
                                completion: @escaping ((Bool) -> Void))
 }

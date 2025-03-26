@@ -36,7 +36,7 @@ public class AttributionServerWorker {
         return session
     }
     
-    fileprivate var backgroundSession: URLSession {
+    fileprivate var waitingSession: URLSession {
         let config = URLSessionConfiguration.default
         config.waitsForConnectivity = true
         let session = URLSession(configuration: config)
@@ -88,7 +88,7 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
         
         let taskSession: URLSession
         if isBackgroundSession {
-            taskSession = backgroundSession
+            taskSession = waitingSession
         } else {
             taskSession = session
         }
@@ -100,7 +100,7 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
             if let error = error {
                 self.handleServerError()
                 
-                if taskSession == self.session {
+                if taskSession.configuration.waitsForConnectivity == false {
                     self.sendInstallAnalytics(parameters: parameters, authToken: authToken, completion: completion)
                 }
                 
@@ -125,7 +125,7 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
     }
     
     func sendPurchaseAnalytics(analytics: AttrubutionPurchaseRequestModel, userId: String,
-                               authToken: String,
+                               authToken: String, isBackgroundSession: Bool = false,
                                completion: @escaping ((Bool) -> Void)) {
         let jsonDataOrNil = try? JSONEncoder().encode(analytics)
         
@@ -137,9 +137,22 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
         
         let request = createRequest(url: url, body: jsonData, authToken: authToken)
         
-        let task = session.dataTask(with: request) { (data, response, error) in
+        let taskSession: URLSession
+        if isBackgroundSession {
+            taskSession = waitingSession
+        } else {
+            taskSession = session
+        }
+        
+        let task = taskSession.dataTask(with: request) { (data, response, error) in
             if let error = error {
                 self.handleServerError()
+                
+                if taskSession.configuration.waitsForConnectivity == false {
+                    self.sendPurchaseAnalytics(analytics: analytics, userId: userId, authToken: authToken,
+                                               isBackgroundSession: true, completion: completion)
+                }
+                
                 completion(false)
                 return
             }

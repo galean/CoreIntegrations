@@ -197,7 +197,8 @@ open class AttributionServerManager {
         
         serverWorker?.sendPurchaseAnalytics(analytics: anal,
                                            userId: userId,
-                                           authToken: authorizationToken)
+                                           authToken: authorizationToken,
+                                            isBackgroundSession: false)
         { (response) in
             self.handleSendPurchaseResult(response, details: details)
         }
