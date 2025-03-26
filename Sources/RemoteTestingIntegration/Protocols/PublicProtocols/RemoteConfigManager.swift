@@ -10,7 +10,7 @@ import Foundation
 public protocol RemoteTestingProcotol {
     var configurationCompletion: (() -> Void)? { get set }
     
-    init(deploymentKey: String)
+    init(deploymentKey: String, userInfo: [String: String])
 }
 
 public protocol RemoteConfigManager {

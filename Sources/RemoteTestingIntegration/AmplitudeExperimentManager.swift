@@ -16,7 +16,7 @@ public class AmplitudeExperimentManager {
     public var allRemoteValues = [String: String]()
     public var remoteError: Error?
 
-    init(deploymentKey: String) {
+    init(deploymentKey: String, userInfo: [String: String]) {
         let builder = ExperimentConfigBuilder()
         builder.automaticExposureTracking(false)
         
@@ -28,7 +28,7 @@ public class AmplitudeExperimentManager {
         )
         
         DispatchQueue.global().async {
-            self.fetch(userProperties: nil, completion: nil)
+            self.fetch(userProperties: userInfo, completion: nil)
         }
     }
     

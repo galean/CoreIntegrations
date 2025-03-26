@@ -20,8 +20,8 @@ public class CoreRemoteConfigManager: RemoteConfigManager {
         return remoteConfigManager.remoteError
     }
      
-    public init(deploymentKey: String) {
-        remoteConfigManager = AmplitudeExperimentManager(deploymentKey: deploymentKey)
+    public init(deploymentKey: String, userInfo: [String: String]) {
+        remoteConfigManager = AmplitudeExperimentManager(deploymentKey: deploymentKey, userInfo: userInfo)
     }
     
     public func configure(_ appConfigurables: [any RemoteConfigurable], completion: @escaping () -> Void) {
