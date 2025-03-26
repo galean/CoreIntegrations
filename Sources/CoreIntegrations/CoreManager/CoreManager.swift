@@ -377,6 +377,7 @@ extension CoreManager {
         let isInternetError = checkIsNoInternetError()
         
         if isInternetError && checkIsNoInternetHandledOrIgnored() == false && isUpdated == false {
+            AppConfigurationManager.shared?.reset()
             delegate?.coreConfigurationFinished(result: .noInternet)
             return
         }
