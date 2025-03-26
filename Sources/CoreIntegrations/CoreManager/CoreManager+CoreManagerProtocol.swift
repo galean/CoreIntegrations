@@ -161,6 +161,11 @@ extension CoreManager: CoreManagerProtocol {
     }
     
     public func handleNoInternetAlertWasShown() {
+        print("coreint handleNoInternetAlertWasShown")
         handledNoInternetAlert = true
+        
+        remoteConfigManager?.configure(configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
+            InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+        }
     }
 }

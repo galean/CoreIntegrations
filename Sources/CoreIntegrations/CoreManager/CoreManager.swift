@@ -185,6 +185,8 @@ public class CoreManager {
     }
     
     @objc public func applicationDidBecomeActive() {
+        print("coreint applicationDidBecomeActive")
+        
         configureID()
         
         if appsflyerManager?.customerUserID != nil {
