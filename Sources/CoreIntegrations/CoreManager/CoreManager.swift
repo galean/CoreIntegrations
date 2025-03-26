@@ -438,6 +438,12 @@ extension CoreManager {
     }
     
     func handleConfigurationFinish(result: CoreManagerResult) {
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        
+        sendConfigurationFinished(status: configurationManager.statusForAnalytics)
         self.delegate?.coreConfigurationFinished(result: result)
     }
 }

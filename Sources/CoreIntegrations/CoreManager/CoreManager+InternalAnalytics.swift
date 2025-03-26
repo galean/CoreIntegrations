@@ -63,13 +63,18 @@ extension CoreManager {
     
     func sendUserAttribution(userAttribution: [String: String], status: [String: String]) {
         guard userAttribution.isEmpty == false else {
-            InternalAnalyticsEvent.test_distribution.log(parameters: status)
+            InternalAnalyticsEvent.framework_attributed.log(parameters: status)
             analyticsManager?.forceEventsUpload()
             return
         }
         
         InternalUserProperty.identify(userAttribution)
-        InternalAnalyticsEvent.test_distribution.log(parameters: userAttribution+status)
+        InternalAnalyticsEvent.framework_attributed.log(parameters: userAttribution+status)
+        analyticsManager?.forceEventsUpload()
+    }
+    
+    func sendConfigurationFinished(status: [String: String]) {
+        InternalAnalyticsEvent.framework_finished.log(parameters: status)
         analyticsManager?.forceEventsUpload()
     }
     
