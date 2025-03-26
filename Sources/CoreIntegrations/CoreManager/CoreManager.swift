@@ -191,6 +191,7 @@ public class CoreManager {
         configureID()
         
         if shouldReconfigure {
+            shouldReconfigure = false
             print("coreint shouldReconfigure")
             AppConfigurationManager.shared?.reset()
             attAnswered = false
