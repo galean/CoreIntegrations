@@ -372,7 +372,11 @@ extension CoreManager {
                     InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
                 }
             } else {
-                sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
+                if isUpdated {
+                    sendUserAttributionUpdate(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
+                } else {
+                    sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
+                }
                 
                 remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
                     InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)

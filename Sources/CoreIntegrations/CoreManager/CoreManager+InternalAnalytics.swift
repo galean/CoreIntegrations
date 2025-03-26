@@ -63,13 +63,21 @@ extension CoreManager {
     
     func sendUserAttribution(userAttribution: [String: String], status: [String: String]) {
         guard userAttribution.isEmpty == false else {
-            InternalAnalyticsEvent.framework_attributed.log(parameters: status)
+            InternalAnalyticsEvent.framework_attribution.log(parameters: status)
             analyticsManager?.forceEventsUpload()
             return
         }
         
         InternalUserProperty.identify(userAttribution)
-        InternalAnalyticsEvent.framework_attributed.log(parameters: userAttribution+status)
+        InternalAnalyticsEvent.framework_attribution.log(parameters: userAttribution+status)
+        analyticsManager?.forceEventsUpload()
+    }
+    
+    func sendUserAttributionUpdate(userAttribution: [String: String], status: [String: String]) {
+        guard userAttribution.isEmpty == false else { return }
+        
+        InternalUserProperty.identify(userAttribution)
+        InternalAnalyticsEvent.framework_attribution_update.log(parameters: userAttribution+status)
         analyticsManager?.forceEventsUpload()
     }
     
@@ -78,13 +86,7 @@ extension CoreManager {
         analyticsManager?.forceEventsUpload()
     }
     
-//    func sendUserAttributionUpdate(userAttribution: [String: String], status: [String: String]) {
-//        guard userAttribution.isEmpty == false else { return }
-//        
-//        InternalUserProperty.identify(userAttribution)
-//        InternalAnalyticsEvent.test_distribution_update.log(parameters: userAttribution+status)
-//        analyticsManager?.forceEventsUpload()
-//    }
+    
     
 //    func sendABTestsUserProperties(abTests: [any CoreRemoteConfigurable], userSource: CoreUserSource) { // +
 //        let userProperties = abTests.reduce(into: [String:String]()) { partialResult, abtest in

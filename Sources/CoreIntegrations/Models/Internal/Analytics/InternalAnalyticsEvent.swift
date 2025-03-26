@@ -6,7 +6,8 @@ import AnalyticsIntegration
 
 enum InternalAnalyticsEvent: String, CaseIterable, AmplitudeAnalyzableEvent {
     case first_launch
-    case framework_attributed
+    case framework_attribution
+    case framework_attribution_update
     case framework_finished
     case test_distribution
     case att_permission
