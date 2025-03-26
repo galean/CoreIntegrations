@@ -72,7 +72,7 @@ extension ExtendedRemoteConfigurable {
 }
 
 extension ExtendedRemoteConfigurable {
-    private var internalValue: String {
+    internal var internalValue: String {
         get {
             if let _ = ProcessInfo.processInfo.environment["xctest_skip_config"] {
                 return manualReassignedValue ?? defaultValue
@@ -81,7 +81,9 @@ extension ExtendedRemoteConfigurable {
             return manualReassignedValue ?? internalReassignedValue ?? stickyBuckettedValue ?? remoteValue
         }
     }
-    
+}
+
+extension ExtendedRemoteConfigurable {
     private var remoteValue: String {
         guard let configManager = CoreManager.internalShared.remoteConfigManager else {
             return defaultValue

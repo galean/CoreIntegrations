@@ -285,8 +285,8 @@ extension CoreManager {
         let installPath = "/install-application"
         let purchasePath = "/subscribe"
         
-        let installURLPath = InternalRemoteConfig.install_server_path.value
-        let purchaseURLPath = InternalRemoteConfig.purchase_server_path.value
+        let installURLPath = InternalRemoteConfig.install_server_path.internalValue
+        let purchaseURLPath = InternalRemoteConfig.purchase_server_path.internalValue
         if installURLPath != "" && purchaseURLPath != "" {
             let attributionConfiguration = AttributionConfigURLs(installServerURLPath: installURLPath,
                                                                  purchaseServerURLPath: purchaseURLPath,
@@ -359,15 +359,13 @@ extension CoreManager {
         
         if currentUserInfo.userSource != result.network {
             userInfo = UserInfo(userSource: result.network, attrInfo: result.userAttribution)
-            if isUpdated {
-                sendUserAttributionUpdate(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
-            } else {
-                sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
-            }
+            sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
             
             remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
                 InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
             }
+        } else {
+            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: remoteConfigManager?.remoteError)
         }
     }
     

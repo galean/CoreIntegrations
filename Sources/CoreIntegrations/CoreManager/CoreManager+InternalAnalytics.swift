@@ -69,13 +69,13 @@ extension CoreManager {
         analyticsManager?.forceEventsUpload()
     }
     
-    func sendUserAttributionUpdate(userAttribution: [String: String], status: [String: String]) {
-        guard userAttribution.isEmpty == false else { return }
-        
-        InternalUserProperty.identify(userAttribution)
-        InternalAnalyticsEvent.test_distribution_update.log(parameters: userAttribution+status)
-        analyticsManager?.forceEventsUpload()
-    }
+//    func sendUserAttributionUpdate(userAttribution: [String: String], status: [String: String]) {
+//        guard userAttribution.isEmpty == false else { return }
+//        
+//        InternalUserProperty.identify(userAttribution)
+//        InternalAnalyticsEvent.test_distribution_update.log(parameters: userAttribution+status)
+//        analyticsManager?.forceEventsUpload()
+//    }
     
 //    func sendABTestsUserProperties(abTests: [any CoreRemoteConfigurable], userSource: CoreUserSource) { // +
 //        let userProperties = abTests.reduce(into: [String:String]()) { partialResult, abtest in
