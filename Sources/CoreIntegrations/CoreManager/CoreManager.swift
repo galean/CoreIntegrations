@@ -199,9 +199,10 @@ public class CoreManager {
             signForAttributionFinish()
             signForConfigurationFinish()
             
-            remoteConfigManager?.updateRemoteConfig([:]) { }
-            remoteConfigManager?.configure(configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
-                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+            remoteConfigManager?.updateRemoteConfig([:]) { [ weak self] in
+                self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
+                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                }
             }
         }
         
