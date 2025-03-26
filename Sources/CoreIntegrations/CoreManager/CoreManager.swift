@@ -373,7 +373,7 @@ extension CoreManager {
                 }
             } else {
                 if isUpdated {
-                    sendUserAttributionUpdate(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
+                    sendUserAttributionUpdate(userAttribution: attributionDict)
                 } else {
                     sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
                 }
