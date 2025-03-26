@@ -355,15 +355,19 @@ extension CoreManager {
             attributionDict += result.userAttribution
         }
         
-        userInfo = UserInfo(userSource: result.network, attrInfo: result.userAttribution)
-        if isUpdated {
-            sendUserAttributionUpdate(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
-        } else {
-            sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
-        }
+        let currentUserInfo = userInfo
         
-        remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
-            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+        if currentUserInfo.userSource != result.network {
+            userInfo = UserInfo(userSource: result.network, attrInfo: result.userAttribution)
+            if isUpdated {
+                sendUserAttributionUpdate(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
+            } else {
+                sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
+            }
+            
+            remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
+                InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+            }
         }
     }
     
