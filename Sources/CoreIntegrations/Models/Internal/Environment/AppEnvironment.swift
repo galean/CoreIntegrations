@@ -26,15 +26,14 @@ public enum AppEnvironment: String {
     }
     
     public static var isChina: Bool = {
-        if Locale.current.regionCode == "CN" {
-            return true
+        if #available(iOS 16, *) {
+            guard let region = Locale.current.region else {
+                return false
+            }
+            
+            return region.identifier == "CN"
+        } else {
+            return Locale.current.regionCode == "CN"
         }
-        guard let store = SKPaymentQueue.default().storefront else {
-            return false
-        }
-        if store.countryCode == "CHN" {
-            return true
-        }
-        return false
     }()
 }
