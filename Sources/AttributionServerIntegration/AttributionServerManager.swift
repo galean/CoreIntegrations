@@ -143,7 +143,8 @@ open class AttributionServerManager {
     
     fileprivate func sendInstallData(_ data: AttributionInstallRequestModel, authToken: AttributionServerToken, completion: @escaping (AttributionManagerResult?) -> Void) {
         serverWorker?.sendInstallAnalytics(parameters: data,
-                                          authToken: authorizationToken)
+                                           authToken: authorizationToken,
+                                           isBackgroundSession: false)
         { (response, error) in
             self.handleSendInstallResponse(response, error: error, parameters: data, completion: completion)
         }

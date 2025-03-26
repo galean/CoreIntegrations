@@ -30,8 +30,15 @@ public class AttributionServerWorker {
     
     fileprivate var session: URLSession {
         let config = URLSessionConfiguration.default
+        config.waitsForConnectivity = false
+        config.timeoutIntervalForRequest = 5
+        let session = URLSession(configuration: config)
+        return session
+    }
+    
+    fileprivate var backgroundSession: URLSession {
+        let config = URLSessionConfiguration.default
         config.waitsForConnectivity = true
-        config.timeoutIntervalForRequest = 30
         let session = URLSession(configuration: config)
         return session
     }
@@ -61,6 +68,7 @@ public class AttributionServerWorker {
 
 extension AttributionServerWorker: AttributionServerWorkerProtocol {
     func sendInstallAnalytics(parameters: AttributionInstallRequestModel, authToken: String,
+                              isBackgroundSession: Bool = false,
                               completion: @escaping (([String: String]?, Error?) -> Void)) {
         let jsonDataOrNil = try? JSONEncoder().encode(parameters)
         
@@ -78,12 +86,24 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
         
         isSyncingInstall = true
         
-        let task = session.dataTask(with: request) { (data, response, error) in
+        let taskSession: URLSession
+        if isBackgroundSession {
+            taskSession = backgroundSession
+        } else {
+            taskSession = session
+        }
+        
+        let task = taskSession.dataTask(with: request) { (data, response, error) in
             defer {
                 self.isSyncingInstall = false
             }
             if let error = error {
                 self.handleServerError()
+                
+                if taskSession == self.session {
+                    self.sendInstallAnalytics(parameters: parameters, authToken: authToken, completion: completion)
+                }
+                
                 completion([:], error)
                 return
             }
