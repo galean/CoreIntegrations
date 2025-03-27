@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/amplitude/experiment-ios-client",
       "state" : {
-        "revision" : "6a94d70915b3756daae2a989fa57f03c19547c67",
-        "version" : "1.13.5"
+        "revision" : "f74d9f9a470d46bc0ee80060674652f07d91cd8d",
+        "version" : "1.16.1"
       }
     },
     {
