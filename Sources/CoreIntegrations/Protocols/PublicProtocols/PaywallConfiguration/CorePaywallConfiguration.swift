@@ -9,7 +9,7 @@ public protocol CorePaywallConfiguration: CaseIterable {
 }
 
 public extension CorePaywallConfiguration {
-    static func ==(lhs: any CorePaywallConfiguration, rhs: any CorePaywallConfiguration) -> Bool {
+    static func ==(lhs: Self, rhs: Self) -> Bool {
         return lhs.id == rhs.id
     }
     

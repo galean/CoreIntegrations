@@ -6,7 +6,7 @@ public protocol CorePurchaseGroup: Equatable, CaseIterable, RawRepresentable whe
 }
 
 public extension CorePurchaseGroup {
-    static func ==(lhs: any CorePurchaseGroup, rhs: any CorePurchaseGroup) -> Bool {
+    static func ==(lhs: Self, rhs: Self) -> Bool {
         return lhs.rawValue == rhs.rawValue
     }
     
