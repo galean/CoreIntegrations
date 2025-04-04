@@ -185,22 +185,26 @@ public class CoreManager {
         signForAttributionFinish()
     }
     
+    func reconfigure() {
+        AppConfigurationManager.shared?.reset()
+        attAnswered = false
+        signForAttributionInstall()
+        signForAttributionFinish()
+        signForConfigurationFinish()
+        
+        remoteConfigManager?.updateRemoteConfig([:]) { [ weak self] in
+            self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
+                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+            }
+        }
+    }
+    
     @objc public func applicationDidBecomeActive() {
         configureID()
         
         if shouldReconfigure {
             shouldReconfigure = false
-            AppConfigurationManager.shared?.reset()
-            attAnswered = false
-            signForAttributionInstall()
-            signForAttributionFinish()
-            signForConfigurationFinish()
-            
-            remoteConfigManager?.updateRemoteConfig([:]) { [ weak self] in
-                self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
-                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
-                }
-            }
+            reconfigure()
         }
         
         if appsflyerManager?.customerUserID != nil {
@@ -216,15 +220,6 @@ public class CoreManager {
         Task {
             await purchaseManager?.updateProductStatus()
         }
-    }
-    
-    func reconfigureOnBecomeActive() {
-        shouldReconfigure = true
-        /*
-         remoteConfigManager?.configure(configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
-             InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
-         }
-         */
     }
     
     private func configureID() {
@@ -293,9 +288,20 @@ public class CoreManager {
     }
     
     func handleATTAnswered(_ status: ATTrackingManager.AuthorizationStatus, error: Error? = nil) {
-        AppConfigurationManager.shared?.startTimoutTimer()
-        InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
-        facebookManager?.configureATT(isAuthorized: status == .authorized)
+        if AppEnvironment.isChina {
+            DispatchQueue.global().asyncAfter(deadline: .now() + 2) { [weak self] in
+                self?.reconfigure()
+                self?.attAnswered = true
+                AppConfigurationManager.shared?.startTimoutTimer()
+                InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
+                self?.facebookManager?.configureATT(isAuthorized: status == .authorized)
+                self?.appsflyerManager?.startAppsflyer()
+            }
+        } else {
+            AppConfigurationManager.shared?.startTimoutTimer()
+            InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
+            facebookManager?.configureATT(isAuthorized: status == .authorized)
+        }
     }
 }
 
