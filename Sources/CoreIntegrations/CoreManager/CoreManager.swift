@@ -365,8 +365,6 @@ public class CoreManager {
                 networkSource = .facebook
             } else if networkValue.contains("Google_StoreRedirect") {
                 networkSource = .google
-            } else if networkValue.contains("tiktok") {
-                networkSource = .tiktok
             } else if networkValue.contains("instagram") {
                 networkSource = .instagram
             } else if networkValue.contains("snapchat") {
@@ -382,6 +380,8 @@ public class CoreManager {
             } else if networkValue.lowercased() == "tiktok_full_access" {
                 let tiktok_config = self.remoteConfigManager?.internalConfigResult?["tiktok_full_access"] == "true"
                 networkSource = tiktok_config ? .tiktok_full_access : .organic
+            } else if networkValue.contains("tiktok") {
+                networkSource = .tiktok
             } else if networkValue == "restricted" {
                 if let fixedSource = self.configuration?.appSettings.paywallSourceForRestricted {
                     networkSource = fixedSource
