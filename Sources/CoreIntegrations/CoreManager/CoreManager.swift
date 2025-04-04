@@ -361,7 +361,7 @@ public class CoreManager {
         var networkSource: CoreUserSource = .unknown
         
         if let networkValue = deepLinkResult["network"] {
-            if networkValue.contains("web2app_fb") || networkValue.contains("metaweb_int") {
+            if networkValue.contains("web2app_fb") || networkValue.contains("metaweb_int") || networkValue.contains("facebook_int") {
                 networkSource = .facebook
             } else if networkValue.contains("Google_StoreRedirect") {
                 networkSource = .google
