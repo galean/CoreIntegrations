@@ -289,7 +289,7 @@ public class CoreManager {
     
     func handleATTAnswered(_ status: ATTrackingManager.AuthorizationStatus, error: Error? = nil) {
         if AppEnvironment.isChina {
-            DispatchQueue.global().asyncAfter(deadline: .now() + 2) { [weak self] in
+            DispatchQueue.global().asyncAfter(deadline: .now() + 3) { [weak self] in
                 self?.reconfigure()
                 self?.attAnswered = true
                 AppConfigurationManager.shared?.startTimoutTimer()
