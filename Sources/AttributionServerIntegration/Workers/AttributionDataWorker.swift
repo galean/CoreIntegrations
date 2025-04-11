@@ -30,7 +30,7 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
     }
     
     var sdkVersion: String {
-        return "2.7.10amplfinal+fix"
+        return "2.7.11amplfinal"
     }
     
     var osVersion: String {
@@ -70,7 +70,7 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
 //                print("Failed request to api-adservices.apple.com. Error: \(error.localizedDescription)")
 //            }
             
-        return AttributionDetails(details: [:], attributionToken: attToken)
+        return AttributionDetails(details: ["token": attToken], attributionToken: attToken)
     }
     
     var storeCountry: String {
