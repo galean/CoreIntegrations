@@ -221,6 +221,8 @@ open class AttributionServerManager {
             return
         }
         
+        self.installError = nil
+        
         var attributionToSend: [String: String]
         var isAB = false
         if let attribution = result as? [String: String] {
