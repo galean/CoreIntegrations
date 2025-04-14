@@ -49,7 +49,6 @@ public class CoreManager {
     
     var attAnswered: Bool = false
     var isConfigured: Bool = false
-    var handledNoInternetAlert: Bool = false
     
     var configuration: CoreConfigurationProtocol?
     var appsflyerManager: AppfslyerManagerProtocol?
@@ -64,6 +63,8 @@ public class CoreManager {
     var delegate: CoreManagerDelegate?
         
     var idConfigured = false
+    
+    var handledNoInternetAlert: Bool = false
     var shouldReconfigure = false
     
     func configureAll(configuration: CoreConfigurationProtocol) {
@@ -202,7 +203,7 @@ public class CoreManager {
     @objc public func applicationDidBecomeActive() {
         configureID()
         
-        if shouldReconfigure {
+        if shouldReconfigure && handledNoInternetAlert {
             shouldReconfigure = false
             reconfigure()
         }
@@ -376,6 +377,7 @@ extension CoreManager {
         let isInternetError = checkIsNoInternetError()
         
         if isInternetError && checkIsNoInternetHandledOrIgnored() == false && isUpdated == false {
+            shouldReconfigure = true
             AppConfigurationManager.shared?.reset()
             delegate?.coreConfigurationFinished(result: .noInternet)
             return
