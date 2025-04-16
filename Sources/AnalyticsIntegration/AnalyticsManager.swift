@@ -86,6 +86,9 @@ public class AnalyticsManager {
                 print("Analytics logged \(event.uppercased()), values \(properties)")
             }
         }
+        
+#warning("Should be removed after tests")
+        Amplitude.instance().uploadEvents()
     }
     
     func amplitudeIdentify(key: String, value: NSObject) {

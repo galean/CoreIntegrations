@@ -61,28 +61,47 @@ extension CoreManager {
     //        InternalUserProperty.identify(userProperties)
     //    }
     
+#warning("Should be removed after tests")
+    func sendConfigurationDelaied(status: [String: String]) {
+        let internetStatus = ["connection": "\(NetworkManager.shared.isConnected)", "connection_type": NetworkManager.shared.currentConnectionType?.description ?? "unexpected"]
+        InternalAnalyticsEvent.framework_start_delaied.log(parameters: status+internetStatus)
+        analyticsManager?.forceEventsUpload()
+    }
+    
+    func sendConfigurationStarted(status: [String: String]) {
+        let internetStatus = ["connection": "\(NetworkManager.shared.isConnected)", "connection_type": NetworkManager.shared.currentConnectionType?.description ?? "unexpected"]
+        InternalAnalyticsEvent.framework_attribution_started.log(parameters: status+internetStatus)
+        analyticsManager?.forceEventsUpload()
+    }
+    
     func sendUserAttribution(userAttribution: [String: String], status: [String: String]) {
+        let internetStatus = ["connection": "\(NetworkManager.shared.isConnected)", "connection_type": NetworkManager.shared.currentConnectionType?.description ?? "unexpected"]
+        
         guard userAttribution.isEmpty == false else {
-            InternalAnalyticsEvent.framework_attribution.log(parameters: status)
+            InternalAnalyticsEvent.framework_attribution.log(parameters: status+internetStatus)
             analyticsManager?.forceEventsUpload()
             return
         }
         
         InternalUserProperty.identify(userAttribution)
-        InternalAnalyticsEvent.framework_attribution.log(parameters: userAttribution+status)
+        InternalAnalyticsEvent.framework_attribution.log(parameters: userAttribution+status+internetStatus)
         analyticsManager?.forceEventsUpload()
     }
     
     func sendUserAttributionUpdate(userAttribution: [String: String]) {
+        let internetStatus = ["connection": "\(NetworkManager.shared.isConnected)", "connection_type": NetworkManager.shared.currentConnectionType?.description ?? "unexpected"]
+        
         guard userAttribution.isEmpty == false else { return }
         
         InternalUserProperty.identify(userAttribution)
-        InternalAnalyticsEvent.framework_attribution_update.log(parameters: userAttribution)
+        InternalAnalyticsEvent.framework_attribution_update.log(parameters: userAttribution+internetStatus)
         analyticsManager?.forceEventsUpload()
     }
     
     func sendConfigurationFinished(status: [String: String]) {
-        InternalAnalyticsEvent.framework_finished.log(parameters: status)
+        let internetStatus = ["connection": "\(NetworkManager.shared.isConnected)", "connection_type": NetworkManager.shared.currentConnectionType?.description ?? "unexpected"]
+        
+        InternalAnalyticsEvent.framework_finished.log(parameters: status+internetStatus)
         analyticsManager?.forceEventsUpload()
     }
     

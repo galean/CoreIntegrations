@@ -290,7 +290,9 @@ public class CoreManager {
     
     func handleATTAnswered(_ status: ATTrackingManager.AuthorizationStatus, error: Error? = nil) {
         if AppEnvironment.isChina {
+            sendConfigurationDelaied(status: [:])
             DispatchQueue.global().asyncAfter(deadline: .now() + 3) { [weak self] in
+                self?.sendConfigurationStarted(status: [:])
                 self?.reconfigure()
                 self?.attAnswered = true
                 AppConfigurationManager.shared?.startTimoutTimer()
@@ -299,6 +301,7 @@ public class CoreManager {
                 self?.appsflyerManager?.startAppsflyer()
             }
         } else {
+            sendConfigurationStarted(status: [:])
             AppConfigurationManager.shared?.startTimoutTimer()
             InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
             facebookManager?.configureATT(isAuthorized: status == .authorized)
@@ -478,6 +481,7 @@ extension CoreManager {
         
         sendConfigurationFinished(status: configurationManager.statusForAnalytics)
         self.delegate?.coreConfigurationFinished(result: result)
+        NetworkManager.shared.stopMonitoring()
     }
 }
 

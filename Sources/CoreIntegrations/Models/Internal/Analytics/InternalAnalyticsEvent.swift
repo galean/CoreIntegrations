@@ -6,6 +6,11 @@ import AnalyticsIntegration
 
 enum InternalAnalyticsEvent: String, CaseIterable, AmplitudeAnalyzableEvent {
     case first_launch
+    
+#warning("Should be removed after tests")
+    case framework_start_delaied
+    case framework_attribution_started
+    
     case framework_attribution
     case framework_attribution_update
     case framework_finished
