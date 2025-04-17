@@ -155,6 +155,7 @@ open class AttributionServerManager {
         
         guard let userId = userIdOrNil else {
             self.udefWorker.savePurchaseData(details)
+            syncOnAppStart { result in }
             return
         }
         

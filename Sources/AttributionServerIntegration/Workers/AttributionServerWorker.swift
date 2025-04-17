@@ -101,7 +101,7 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
                 self.handleServerError()
                 
                 if taskSession.configuration.waitsForConnectivity == false {
-                    self.sendInstallAnalytics(parameters: parameters, authToken: authToken, completion: completion)
+                    self.sendInstallAnalytics(parameters: parameters, authToken: authToken, isBackgroundSession: true, completion: completion)
                 }
                 
                 completion([:], error)
