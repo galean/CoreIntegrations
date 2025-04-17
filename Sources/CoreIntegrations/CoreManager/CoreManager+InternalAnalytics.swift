@@ -62,6 +62,12 @@ extension CoreManager {
     //    }
     
 #warning("Should be removed after tests")
+    func sendOnBecomeActive(status: [String: String]) {
+        let internetStatus = ["connection": "\(NetworkManager.shared.isConnected)", "connection_type": NetworkManager.shared.currentConnectionType?.description ?? "unexpected"]
+        InternalAnalyticsEvent.framework_entered_foreground.log(parameters: status+internetStatus)
+        analyticsManager?.forceEventsUpload()
+    }
+    
     func sendConfigurationDelaied(status: [String: String]) {
         let internetStatus = ["connection": "\(NetworkManager.shared.isConnected)", "connection_type": NetworkManager.shared.currentConnectionType?.description ?? "unexpected"]
         InternalAnalyticsEvent.framework_start_delaied.log(parameters: status+internetStatus)

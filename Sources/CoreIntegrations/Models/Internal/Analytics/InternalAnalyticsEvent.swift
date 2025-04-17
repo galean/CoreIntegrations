@@ -8,6 +8,7 @@ enum InternalAnalyticsEvent: String, CaseIterable, AmplitudeAnalyzableEvent {
     case first_launch
     
 #warning("Should be removed after tests")
+    case framework_entered_foreground
     case framework_start_delaied
     case framework_attribution_started
     
