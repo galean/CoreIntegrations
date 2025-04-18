@@ -308,7 +308,7 @@ public class CoreManager {
                 self?.reconfigureAfterATT(status, error: error)
             }
             
-            DispatchQueue.global().asyncAfter(deadline: .now() + 5) { [weak self] in
+            DispatchQueue.global().asyncAfter(deadline: .now() + 6) { [weak self] in
                 guard isReconfigured == false else {
                     return
                 }
