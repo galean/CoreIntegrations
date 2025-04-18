@@ -134,7 +134,7 @@ extension CoreManager: CoreManagerProtocol {
                             coreCofiguration configuration: CoreConfigurationProtocol,
                             coreDelegate delegate: CoreManagerDelegate) {
         self.delegate = delegate
-        NetworkManager.shared.startMonitoring()
+        networkMonitor.startMonitoring()
         self.configureAll(configuration: configuration)
     }
     

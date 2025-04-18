@@ -30,8 +30,6 @@ extension NWInterface.InterfaceType: @retroactive CustomStringConvertible {
 }
 
 final class NetworkManager {
-    static let shared = NetworkManager()
-
     private let queue = DispatchQueue(label: "CoreNetworkConnectivityMonitor")
     private let monitor: NWPathMonitor
 
@@ -40,12 +38,8 @@ final class NetworkManager {
     
     var internetHandlers: [(Bool) -> Void] = []
 
-    private init() {
+    init() {
         monitor = NWPathMonitor()
-    }
-
-    func startMonitoring() {
-        isConnected = monitor.currentPath.status != .unsatisfied
         monitor.pathUpdateHandler = { [weak self] path in
             self?.isConnected = path.status != .unsatisfied
             self?.currentConnectionType = NWInterface.InterfaceType.allCases.filter { path.usesInterfaceType($0) }.first
@@ -53,6 +47,10 @@ final class NetworkManager {
                 handler(self?.isConnected ?? false)
             }
         }
+    }
+
+    func startMonitoring() {
+        isConnected = monitor.currentPath.status != .unsatisfied
         monitor.start(queue: queue)
     }
 
@@ -63,5 +61,6 @@ final class NetworkManager {
     
     func monitorInternetChanges(_ completion: @escaping (Bool) -> Void) {
         internetHandlers.append(completion)
+        completion(isConnected)
     }
 }

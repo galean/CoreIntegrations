@@ -67,6 +67,8 @@ public class CoreManager {
     var handledNoInternetAlert: Bool = false
     var shouldReconfigure = false
     
+    var networkMonitor = NetworkManager()
+    
     func configureAll(configuration: CoreConfigurationProtocol) {
         func verifyTestEnvironment(envVariables: [String: String]) -> Bool {
             return envVariables["xctest_skip_config"] != nil
@@ -293,7 +295,7 @@ public class CoreManager {
             sendConfigurationDelaied(status: [:])
             
             var isReconfigured = false
-            NetworkManager.shared.monitorInternetChanges { [weak self] isEnabled in
+            networkMonitor.monitorInternetChanges { [weak self] isEnabled in
                 guard isEnabled else {
                     return
                 }
@@ -505,7 +507,7 @@ extension CoreManager {
         
         sendConfigurationFinished(status: configurationManager.statusForAnalytics)
         self.delegate?.coreConfigurationFinished(result: result)
-        NetworkManager.shared.stopMonitoring()
+        networkMonitor.stopMonitoring()
     }
 }
 
