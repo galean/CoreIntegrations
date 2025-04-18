@@ -291,14 +291,28 @@ public class CoreManager {
     func handleATTAnswered(_ status: ATTrackingManager.AuthorizationStatus, error: Error? = nil) {
         if AppEnvironment.isChina {
             sendConfigurationDelaied(status: [:])
-            DispatchQueue.global().asyncAfter(deadline: .now() + 3) { [weak self] in
-                self?.sendConfigurationStarted(status: [:])
-                self?.reconfigure()
-                self?.attAnswered = true
-                AppConfigurationManager.shared?.startTimoutTimer()
-                InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
-                self?.facebookManager?.configureATT(isAuthorized: status == .authorized)
-                self?.appsflyerManager?.startAppsflyer()
+            
+            var isReconfigured = false
+            NetworkManager.shared.monitorInternetChanges { [weak self] isEnabled in
+                guard isEnabled else {
+                    return
+                }
+                
+                guard isReconfigured == false else {
+                    return
+                }
+                isReconfigured = true
+                
+                self?.reconfigureAfterATT(status, error: error)
+            }
+            
+            DispatchQueue.global().asyncAfter(deadline: .now() + 10) { [weak self] in
+                guard isReconfigured == false else {
+                    return
+                }
+                isReconfigured = true
+                
+                self?.reconfigureAfterATT(status, error: error)
             }
         } else {
             sendConfigurationStarted(status: [:])
@@ -306,6 +320,16 @@ public class CoreManager {
             InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
             facebookManager?.configureATT(isAuthorized: status == .authorized)
         }
+    }
+    
+    func reconfigureAfterATT(_ status: ATTrackingManager.AuthorizationStatus, error: Error? = nil) {
+        sendConfigurationStarted(status: [:])
+        reconfigure()
+        attAnswered = true
+        AppConfigurationManager.shared?.startTimoutTimer()
+        InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
+        facebookManager?.configureATT(isAuthorized: status == .authorized)
+        appsflyerManager?.startAppsflyer()
     }
 }
 

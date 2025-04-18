@@ -37,6 +37,8 @@ final class NetworkManager {
 
     private(set) var isConnected = false
     private(set) var currentConnectionType: NWInterface.InterfaceType?
+    
+    var internetHandlers: [(Bool) -> Void] = []
 
     private init() {
         monitor = NWPathMonitor()
@@ -47,11 +49,19 @@ final class NetworkManager {
         monitor.pathUpdateHandler = { [weak self] path in
             self?.isConnected = path.status != .unsatisfied
             self?.currentConnectionType = NWInterface.InterfaceType.allCases.filter { path.usesInterfaceType($0) }.first
+            self?.internetHandlers.forEach { handler in
+                handler(self?.isConnected ?? false)
+            }
         }
         monitor.start(queue: queue)
     }
 
     func stopMonitoring() {
+        internetHandlers.removeAll()
         monitor.cancel()
+    }
+    
+    func monitorInternetChanges(_ completion: @escaping (Bool) -> Void) {
+        internetHandlers.append(completion)
     }
 }

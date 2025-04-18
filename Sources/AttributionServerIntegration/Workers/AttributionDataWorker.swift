@@ -30,7 +30,7 @@ class AttributionDataWorker: AttributionDataWorkerProtocol {
     }
     
     var sdkVersion: String {
-        return "2.7.14amplfinal"
+        return "2.7.15amplfinal"
     }
     
     var osVersion: String {
