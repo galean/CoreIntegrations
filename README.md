@@ -1,3 +1,3 @@
 # CoreIntegrations
 
-Framework version - 2.7.15amplfinal+affix
+Framework version - 2.7.16amplfinal
