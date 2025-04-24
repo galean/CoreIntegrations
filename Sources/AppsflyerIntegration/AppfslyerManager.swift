@@ -115,4 +115,9 @@ extension AppfslyerManager: AppsFlyerLibDelegate {
         self.deeplinkError = error
         delegate?.coreConfiguration(handleDeeplinkError: error)
     }
+    
+    public func onAppOpenAttributionFailure(_ error: any Error) {
+        self.deeplinkError = error
+        delegate?.coreConfiguration(handleDeeplinkError: error)
+    }
 }
