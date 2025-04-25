@@ -101,9 +101,34 @@ extension CoreConfigurationModel {
     }
     
     func checkAttributionFinished() -> Bool {
+        // verify no internet connection. We think we don't have internet connection when RemoteConfig service and attribution service returned errors. We don't look on Appsflyer, because it doesn't return errors when no internet :(
+        var completedWithErrors = true
+        let errorVerifingEvents: [InternalConfigurationEvent] = [.remoteConfigLoaded, .attributionServerHandled]
+        errorVerifingEvents.forEach { event in
+            let eventCompleted = completedEvents.contains { completedEvent in
+                completedEvent.key == event.key
+            }
+            let eventCompletedWithError = completionErrors.contains { completedEvent in
+                completedEvent.key == event.key
+            }
+            
+            if eventCompleted == false {
+                completedWithErrors = false
+            }
+            
+            if eventCompletedWithError == false {
+                completedWithErrors = false
+            }
+        }
+        
+        // Finish configuration if we see already that there's no internet
+        guard completedWithErrors == false else {
+            return true
+        }
+        
+        // But if both these services didn't return errors - then we wait for AF also, because it doesn't look like an internet error, maybe just one service internal error
         var allCompleted = true
         let verifingEvents: [InternalConfigurationEvent] = [.appsflyerWeb2AppHandled, .attributionServerHandled, .remoteConfigLoaded]
-        
         verifingEvents.forEach { event in
             let eventCompleted = completedEvents.contains { completedEvent in
                 completedEvent.key == event.key

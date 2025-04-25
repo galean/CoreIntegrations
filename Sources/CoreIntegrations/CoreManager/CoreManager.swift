@@ -532,10 +532,9 @@ extension CoreManager {
     
     func checkIsNoInternetError() -> Bool {
         let attrError = AttributionServerManager.shared.installError
-        let afError = appsflyerManager?.deeplinkError
         let remoteError = remoteConfigManager?.remoteError
 
-        return attrError != nil && afError != nil && remoteError != nil
+        return attrError != nil && remoteError != nil
     }
 }
 
