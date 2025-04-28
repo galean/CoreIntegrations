@@ -39,6 +39,10 @@ struct CoreConfigurationModel {
   
 extension CoreConfigurationModel {
     func checkAllEventsFinished() -> Bool {
+        guard checkCompletedWithErrors() == false else {
+            return true
+        }
+        
         var allCompleted = true
         
         let verifingEvents = allConfigurationEvents.filter { event in
@@ -60,6 +64,10 @@ extension CoreConfigurationModel {
     }
     
     func checkRequiredEventsFinished() -> Bool {
+        guard checkCompletedWithErrors() == false else {
+            return true
+        }
+        
         var allCompleted = true
         
         var verifingEvents = allConfigurationEvents.filter { event in
@@ -100,7 +108,7 @@ extension CoreConfigurationModel {
         return allCompleted
     }
     
-    func checkAttributionFinished() -> Bool {
+    func checkCompletedWithErrors() -> Bool {
         // verify no internet connection. We think we don't have internet connection when RemoteConfig service and attribution service returned errors. We don't look on Appsflyer, because it doesn't return errors when no internet :(
         var completedWithErrors = true
         let errorVerifingEvents: [InternalConfigurationEvent] = [.remoteConfigLoaded, .attributionServerHandled]
@@ -121,8 +129,12 @@ extension CoreConfigurationModel {
             }
         }
         
+        return completedWithErrors
+    }
+    
+    func checkAttributionFinished() -> Bool {
         // Finish configuration if we see already that there's no internet
-        guard completedWithErrors == false else {
+        guard checkCompletedWithErrors() == false else {
             return true
         }
         
