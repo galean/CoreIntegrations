@@ -9,7 +9,7 @@ public protocol ConfigurationEvent: CaseIterable {
 }
 
 public extension ConfigurationEvent {
-    static func ==(lhs: any ConfigurationEvent, rhs: any ConfigurationEvent) -> Bool {
+    static func ==(lhs: Self, rhs: Self) -> Bool {
         return lhs.key == rhs.key
     }
     
