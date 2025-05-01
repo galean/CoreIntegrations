@@ -13,6 +13,10 @@ extension PurchasesManager {
         do {
             let storeProducts = try await Product.products(for: identifiers)
             debugPrint("🏦 requestProductsForPaywall ✅ Completed gathering Products.")
+            
+            guard !storeProducts.isEmpty else {
+                return .error(error: "products for identifiers not found")
+            }
 
             debugPrint("🏦 requestProductsForPaywall ✅ Completed updating available Products.")
             return .success(products: storeProducts)
@@ -32,6 +36,10 @@ extension PurchasesManager {
         do {
             let storeProducts = try await Product.products(for: identifiers)
             debugPrint("🏦 requestAllProducts ✅ Completed gathering Products.")
+            
+            guard !storeProducts.isEmpty else {
+                return .error(error: "products for identifiers not found")
+            }
             
             allAvailableProducts = storeProducts
             
