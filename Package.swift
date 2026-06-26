@@ -15,7 +15,7 @@ let package = Package(
             targets: ["CoreIntegrations"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "11.0.0"),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.0.0"),
         .package(url: "https://github.com/facebook/facebook-ios-sdk", from: "17.3.0"),
         .package(url: "https://github.com/AppsFlyerSDK/AppsFlyerFramework-Dynamic", from: "6.0.0"),
         .package(url: "https://github.com/amplitude/analytics-connector-ios.git", from: "1.0.0"),
