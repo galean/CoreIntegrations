@@ -78,6 +78,7 @@ extension PurchasesManager {
     
     //This call displays a system prompt that asks users to authenticate with their App Store credentials.
     //Call this function only in response to an explicit user action, such as tapping a button.
+    @MainActor
     public func restore() async -> SKRestoreResult {
         do {
             try await AppStore.sync()
@@ -99,6 +100,7 @@ extension PurchasesManager {
         return .success(products: allProducts)
     }
     
+    @MainActor
     public func verifyPremium() async -> SKVerifyPremiumResult {
         DebugLogger.log("🏦 verifyPremium ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
         await updateProductStatus()
@@ -128,6 +130,7 @@ extension PurchasesManager {
         }
     }
     
+    @MainActor
     public func verifyAll() async -> SKVerifyAllResult {
         DebugLogger.log("🏦 verifyAll ⚈ ⚈ ⚈ Verifying... ⚈ ⚈ ⚈")
         await updateProductStatus()

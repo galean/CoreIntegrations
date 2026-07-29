@@ -23,11 +23,11 @@ public class PurchasesManager: NSObject, PurchasesManagerProtocol {
     public var subscriptions: [Product] = []
     public var nonRenewables: [Product] = []
     // Arrays that hold the purchases products
-    public var purchasedConsumables: [Product] = []
-    public var purchasedNonConsumables: [Product] = []
-    public var purchasedSubscriptions: [Product] = []
-    public var purchasedNonRenewables: [Product] = []
-    public var purchasedAllProducts: [Product] = []
+    @MainActor public var purchasedConsumables: [Product] = []
+    @MainActor public var purchasedNonConsumables: [Product] = []
+    @MainActor public var purchasedSubscriptions: [Product] = []
+    @MainActor public var purchasedNonRenewables: [Product] = []
+    @MainActor public var purchasedAllProducts: [Product] = []
     
     var allIdentifiers: [String] = []
     var proIdentifiers: [String] = []

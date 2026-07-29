@@ -4,6 +4,7 @@ import StoreKit
 import LoggingIntegration
 
 extension PurchasesManager {
+    @MainActor
     public func isPurchased(_ product: Product) async throws -> Bool {
         DebugLogger.log("🏦 isPurchased ⚈ ⚈ ⚈ Checking if the product is purchased... ⚈ ⚈ ⚈")
         switch product.type {

@@ -57,6 +57,7 @@ extension PurchasesManager {
         return purchasedAllProducts
     }
     
+    @MainActor
     public func updateProductStatus() async {
         DebugLogger.log("🏦 updateProductStatus ⚈ ⚈ ⚈ Updating Customer Product Status... ⚈ ⚈ ⚈")
         var snapshot = EntitlementSnapshot()
