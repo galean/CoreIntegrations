@@ -15,12 +15,16 @@ enum InternalRemoteConfig: String, CoreRemoteConfigurable {
     
     case ab_paywall
     
+    case minimal_supported_app_version
+    
     var key: String { return rawValue }
     
     var defaultValue: String {
         switch self {
         case .ab_paywall:
             return "none"
+        case .minimal_supported_app_version:
+            return "0"
         default:
             return ""
         }
