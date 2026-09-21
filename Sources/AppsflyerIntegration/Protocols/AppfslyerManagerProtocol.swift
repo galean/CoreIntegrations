@@ -17,12 +17,10 @@ public protocol AppfslyerManagerProtocol {
     func startAppsflyer()
     /// Signals that the ATT decision is known, i.e. the session may be sent.
     func handleATTResolved()
-    /// Blocks or resumes AppsFlyer postbacks to every integrated ad network for this user.
     func setAdPartnersDataSharingEnabled(_ isEnabled: Bool)
     func logTrialPurchase()
 }
 
 public extension AppfslyerManagerProtocol {
     func handleATTResolved() {}
-    func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {}
 }

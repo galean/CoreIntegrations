@@ -57,7 +57,7 @@ public class CoreManager {
     var isConfigured: Bool = false
     
     var configuration: CoreConfigurationProtocol?
-    var isAdPartnersDataSharingEnabled: Bool = true
+    var isAdPartnersDataSharingEnabled = true
     var appsflyerManager: AppfslyerManagerProtocol?
     var facebookManager: FacebookManagerProtocol?
     var purchaseManager: PurchasesManagerProtocol?
@@ -130,8 +130,6 @@ public class CoreManager {
         }
         
         func configureServices(configuration: CoreConfigurationProtocol) {
-            isAdPartnersDataSharingEnabled = configuration.isAdPartnersDataSharingEnabled
-            
             if let sentryDataSource = configuration.sentryConfigDataSource {
                 let sentryConfig = SentryConfigData(dsn: sentryDataSource.dsn,
                                                     debug: sentryDataSource.debug,
@@ -146,11 +144,13 @@ public class CoreManager {
             
             analyticsManager = AnalyticsManager.shared
             
-            firebaseManager.setAdPartnersDataSharingEnabled(isAdPartnersDataSharingEnabled)
+            isAdPartnersDataSharingEnabled = configuration.isAdPartnersDataSharingEnabled
             
             if configuration.hasCustomFirebaseConfiguration {
                 firebaseManager.handle(event: FirebaseConfigurationStateMachine.Event.waitForExternalConfiguration)
-            } 
+            }
+            
+            firebaseManager.setAdPartnersDataSharingEnabled(isAdPartnersDataSharingEnabled)
             
             let amplitudeDataSource = configuration.amplitudeDataSource
             analyticsManager?.configure(

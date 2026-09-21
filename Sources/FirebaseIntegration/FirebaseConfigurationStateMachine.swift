@@ -100,7 +100,6 @@ public class FirebaseConfigurationStateMachine: NSObject {
         }
     }
 
-    /// Analytics storage stays granted - only the advertising consent types follow the user's choice.
     private func applyConsent() {
         let advertisingConsent: ConsentStatus = isAdPartnersDataSharingEnabled ? .granted : .denied
         Analytics.setConsent([

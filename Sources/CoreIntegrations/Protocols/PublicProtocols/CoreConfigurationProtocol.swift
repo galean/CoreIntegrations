@@ -13,9 +13,6 @@ public protocol CoreConfigurationProtocol {
     var paywallDataSource: any CorePaywallDataSource { get }
     var useDefaultATTRequest: Bool { get }
     var isFacebookEnabled: Bool { get }
-    /// Whether the user's data may be shared with advertising partners.
-    /// Mirrors the CCPA/CPRA "Do Not Sell or Share My Personal Information" choice: `false` means the user opted out.
-    /// Read once while the framework configures; use `CoreManagerProtocol.setAdPartnersDataSharingEnabled(_:)` for later changes.
     var isAdPartnersDataSharingEnabled: Bool { get }
     var hasExternalAuthorization: Bool { get }
     var hasCustomFirebaseConfiguration: Bool { get }
