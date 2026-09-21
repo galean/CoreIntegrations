@@ -146,6 +146,8 @@ public class CoreManager {
             
             analyticsManager = AnalyticsManager.shared
             
+            firebaseManager.setAdPartnersDataSharingEnabled(isAdPartnersDataSharingEnabled)
+            
             if configuration.hasCustomFirebaseConfiguration {
                 firebaseManager.handle(event: FirebaseConfigurationStateMachine.Event.waitForExternalConfiguration)
             } 

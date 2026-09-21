@@ -22,6 +22,8 @@ public class FirebaseConfigurationStateMachine: NSObject {
     private(set) var state: State = .notSet
     private var savedID: String?
     
+    private var isAdPartnersDataSharingEnabled = true
+
     private var _fcmToken: String?
     private var _userId: String = ""
     
@@ -52,7 +54,9 @@ public class FirebaseConfigurationStateMachine: NSObject {
           
         case (.notSet, .handleExternalConfigurationFinished):
             state = .configuredExternally
+            applyConsent()
         case (.waitingForExternalConfiguration(let id), .handleExternalConfigurationFinished):
+            applyConsent()
             if let savedId = id {
                 _userId = savedId
                 sendAnalyticsID(savedId)
@@ -85,8 +89,31 @@ public class FirebaseConfigurationStateMachine: NSObject {
         }
     }
     
+    public func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {
+        isAdPartnersDataSharingEnabled = isEnabled
+
+        switch state {
+        case .notSet, .waitingForExternalConfiguration:
+            break
+        case .configuredInternally, .configuredExternally, .finishedConfigurationWithID:
+            applyConsent()
+        }
+    }
+
+    /// Analytics storage stays granted - only the advertising consent types follow the user's choice.
+    private func applyConsent() {
+        let advertisingConsent: ConsentStatus = isAdPartnersDataSharingEnabled ? .granted : .denied
+        Analytics.setConsent([
+            .adStorage: advertisingConsent,
+            .adUserData: advertisingConsent,
+            .adPersonalization: advertisingConsent,
+            .analyticsStorage: .granted
+        ])
+    }
+
     private func configureFirebase() {
         FirebaseApp.configure()
+        applyConsent()
         Analytics.logEvent("Firebase Init", parameters: nil)
         
         // Set messaging delegate to receive FCM token
