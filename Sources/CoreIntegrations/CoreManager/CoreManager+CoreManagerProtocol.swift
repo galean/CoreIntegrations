@@ -196,6 +196,17 @@ extension CoreManager: CoreManagerProtocol {
         attResolutionCoordinator.resolveExternally(status)
     }
     
+    public func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {
+        guard isConfigured else {
+            if ProcessInfo.processInfo.environment["xctest_skip_config"] == nil {
+                assertionFailure("Set the launch value through CoreConfigurationProtocol.isAdPartnersDataSharingEnabled - this setter only applies changes made after the framework is configured.")
+            }
+            return
+        }
+        
+        isAdPartnersDataSharingEnabled = isEnabled
+    }
+    
     public func handleCustomFirebaseConfigured() {
         handleExternalFirebaseConfigurationFinished()
     }

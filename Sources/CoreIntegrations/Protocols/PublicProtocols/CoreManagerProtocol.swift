@@ -41,6 +41,11 @@ public protocol CoreManagerProtocol {
 
     func handleCustomFirebaseConfigured()
     
+    /// Applies a change of the user's advertising data sharing choice made while the app is running.
+    /// The launch value comes from `CoreConfigurationProtocol.isAdPartnersDataSharingEnabled`;
+    /// calling this before the framework is configured has no effect.
+    func setAdPartnersDataSharingEnabled(_ isEnabled: Bool)
+    
     func setExternalAuthId(_ externalAuthId: String?)
     
     @MainActor
@@ -64,6 +69,10 @@ public protocol CoreManagerProtocol {
     
     func stopSessionReplayRecord()
     
+}
+
+public extension CoreManagerProtocol {
+    func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) { }
 }
 
 public struct UserInfo: Codable {
