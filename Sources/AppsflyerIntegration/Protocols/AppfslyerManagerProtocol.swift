@@ -20,7 +20,3 @@ public protocol AppfslyerManagerProtocol {
     func setAdPartnersDataSharingEnabled(_ isEnabled: Bool)
     func logTrialPurchase()
 }
-
-public extension AppfslyerManagerProtocol {
-    func handleATTResolved() {}
-}
