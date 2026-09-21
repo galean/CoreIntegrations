@@ -180,6 +180,7 @@ public class CoreManager {
             appsflyerManager = AppfslyerManager(config: configuration.appsflyerConfig,
                                                 launchOptions: launchOptions)
             appsflyerManager?.delegate = self
+            appsflyerManager?.setAdPartnersDataSharingEnabled(isAdPartnersDataSharingEnabled)
             
             if configuration.isFacebookEnabled {
                 facebookManager = FacebookManager()

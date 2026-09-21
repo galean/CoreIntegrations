@@ -32,6 +32,7 @@ public class AppfslyerManager: NSObject {
      `startSessionIfReady()`. All of them are mutated on the main queue only.
      */
     private var isATTResolved = false
+    private var isAdPartnersDataSharingEnabled = true
     private var isUserIDReady = false
     private var sessionStartPolicy = AppsFlyerSessionStartPolicy()
     private var startOrderingPolicy = AppsFlyerStartOrderingPolicy<ConversionResult>()
@@ -117,10 +118,16 @@ public class AppfslyerManager: NSObject {
             return
         }
         startOrderingPolicy.beginStart()
+        applySharingFilter()
 
         AppsFlyerLib.shared().start { [weak self] _, error in
             self?.handleStartCompletion(error)
         }
+    }
+
+    /// `nil` clears the filter, `["all"]` covers every current and future partner.
+    private func applySharingFilter() {
+        AppsFlyerLib.shared().setSharingFilterForPartners(isAdPartnersDataSharingEnabled ? nil : ["all"])
     }
 
     private func handleStartCompletion(_ error: Error?) {
@@ -252,6 +259,13 @@ extension AppfslyerManager: AppfslyerManagerProtocol {
 
     public func handleATTResolved() {
         updateGates { $0.isATTResolved = true }
+    }
+
+    public func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {
+        updateGates {
+            $0.isAdPartnersDataSharingEnabled = isEnabled
+            $0.applySharingFilter()
+        }
     }
 
     public func logTrialPurchase() {

@@ -205,6 +205,7 @@ extension CoreManager: CoreManagerProtocol {
         }
         
         isAdPartnersDataSharingEnabled = isEnabled
+        appsflyerManager?.setAdPartnersDataSharingEnabled(isEnabled)
     }
     
     public func handleCustomFirebaseConfigured() {
