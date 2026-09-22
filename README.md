@@ -1,2 +1,2 @@
 # CoreIntegrations
-Framework version - 3.0.2rc
+Framework version - 3.0.3rc

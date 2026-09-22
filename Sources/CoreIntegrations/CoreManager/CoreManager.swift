@@ -57,6 +57,7 @@ public class CoreManager {
     var isConfigured: Bool = false
     
     var configuration: CoreConfigurationProtocol?
+    var isAdPartnersDataSharingEnabled = true
     var appsflyerManager: AppfslyerManagerProtocol?
     var facebookManager: FacebookManagerProtocol?
     var purchaseManager: PurchasesManagerProtocol?
@@ -143,9 +144,13 @@ public class CoreManager {
             
             analyticsManager = AnalyticsManager.shared
             
+            isAdPartnersDataSharingEnabled = configuration.isAdPartnersDataSharingEnabled
+            
             if configuration.hasCustomFirebaseConfiguration {
                 firebaseManager.handle(event: FirebaseConfigurationStateMachine.Event.waitForExternalConfiguration)
-            } 
+            }
+            
+            firebaseManager.setAdPartnersDataSharingEnabled(isAdPartnersDataSharingEnabled)
             
             let amplitudeDataSource = configuration.amplitudeDataSource
             analyticsManager?.configure(
@@ -177,6 +182,7 @@ public class CoreManager {
             appsflyerManager = AppfslyerManager(config: configuration.appsflyerConfig,
                                                 launchOptions: launchOptions)
             appsflyerManager?.delegate = self
+            appsflyerManager?.setAdPartnersDataSharingEnabled(isAdPartnersDataSharingEnabled)
             
             if configuration.isFacebookEnabled {
                 facebookManager = FacebookManager()

@@ -13,6 +13,7 @@ public protocol CoreConfigurationProtocol {
     var paywallDataSource: any CorePaywallDataSource { get }
     var useDefaultATTRequest: Bool { get }
     var isFacebookEnabled: Bool { get }
+    var isAdPartnersDataSharingEnabled: Bool { get }
     var hasExternalAuthorization: Bool { get }
     var hasCustomFirebaseConfiguration: Bool { get }
     var configurationTimeout: Int { get }
@@ -25,6 +26,8 @@ public protocol CoreConfigurationProtocol {
 
 public extension CoreConfigurationProtocol {
     var isFacebookEnabled: Bool { return true }
+    
+    var isAdPartnersDataSharingEnabled: Bool { return true }
     
     var useDefaultATTRequest: Bool { return true }
     
