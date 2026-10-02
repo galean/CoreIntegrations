@@ -75,8 +75,8 @@ public class AppfslyerManager: NSObject {
         AppsFlyerLib.shared().handleLaunchOptions(launchOptions)
         AppsFlyerLib.shared().registerSessionReadyListener { [weak self] in
             self?.updateGates {
-                // AppsFlyer 7 owns lifecycle readiness. Each listener callback opens one
-                // start opportunity; UIKit activation must not open a second one.
+                // AppsFlyer 7 owns lifecycle readiness. The listener re-fires on every activation
+                // of the same foreground cycle, so it only marks readiness - see the start policy.
                 $0.sessionStartPolicy.sessionBecameReady()
             }
         }

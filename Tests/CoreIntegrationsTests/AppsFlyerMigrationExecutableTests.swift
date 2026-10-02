@@ -17,12 +17,18 @@ private struct AppsFlyerMigrationExecutableTests {
                 "The first gate convergence in a ready cycle must start AppsFlyer")
         require(sessionStartPolicy.claimStart() == false,
                 "Repeated gate updates must not start AppsFlyer twice in the same ready cycle")
+        sessionStartPolicy.sessionBecameReady()
+        require(sessionStartPolicy.claimStart() == false,
+                "A listener re-fire in the same foreground cycle must not open a second start")
         sessionStartPolicy.sessionBecameUnavailable()
         require(sessionStartPolicy.claimStart() == false,
                 "A background transition must close stale readiness")
         sessionStartPolicy.sessionBecameReady()
         require(sessionStartPolicy.claimStart(),
-                "A later readiness listener cycle must allow the next AppsFlyer session")
+                "The next foreground cycle must allow the next AppsFlyer session")
+        sessionStartPolicy.sessionBecameReady()
+        require(sessionStartPolicy.claimStart() == false,
+                "The next foreground cycle must allow exactly one start")
 
         var configurationPolicy = AppsFlyerConfigurationOutcomePolicy()
         require(configurationPolicy.shouldAcceptConversionResult,
