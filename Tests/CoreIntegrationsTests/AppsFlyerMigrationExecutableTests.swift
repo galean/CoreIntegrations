@@ -96,7 +96,7 @@ private struct AppsFlyerMigrationExecutableTests {
         )
         AppConfigurationManager.shared = timedOutConfiguration
         var configurationEndCount = 0
-        timedOutConfiguration.signForConfigurationEnd { _ in
+        timedOutConfiguration.signForConfigurationEnd { _, _ in
             DispatchQueue.main.async {
                 configurationEndCount += 1
             }
@@ -135,9 +135,8 @@ private struct AppsFlyerMigrationExecutableTests {
         }
 
         var staleGeneration: Int?
-        let signedGeneration = generationConfiguration.generation
-        generationConfiguration.signForConfigurationEnd { _ in
-            staleGeneration = signedGeneration
+        generationConfiguration.signForConfigurationEnd { _, generation in
+            staleGeneration = generation
         }
         finishAllEvents(of: generationConfiguration)
         // The no-internet flow resets the generation before the hop to main lands.
@@ -146,9 +145,8 @@ private struct AppsFlyerMigrationExecutableTests {
                 "A finish whose generation was reset before the hop must be dropped")
 
         var deliveredGeneration: Int?
-        let nextSignedGeneration = generationConfiguration.generation
-        generationConfiguration.signForConfigurationEnd { _ in
-            deliveredGeneration = nextSignedGeneration
+        generationConfiguration.signForConfigurationEnd { _, generation in
+            deliveredGeneration = generation
         }
         finishAllEvents(of: generationConfiguration)
         require(deliveredGeneration == generationConfiguration.generation,
@@ -157,9 +155,8 @@ private struct AppsFlyerMigrationExecutableTests {
                 "A stale finish must stay dropped after the next generation has finished")
 
         var fastPathGenerations = [Int]()
-        let fastPathSignedGeneration = generationConfiguration.generation
-        generationConfiguration.signForConfigurationEnd { _ in
-            fastPathGenerations.append(fastPathSignedGeneration)
+        generationConfiguration.signForConfigurationEnd { _, generation in
+            fastPathGenerations.append(generation)
         }
         require(fastPathGenerations == [generationConfiguration.generation],
                 "Signing on a finished configuration must deliver the finish once, immediately")
@@ -168,7 +165,7 @@ private struct AppsFlyerMigrationExecutableTests {
         // callbacks, so a sign-time generation cannot be confused with the next one.
         var droppedBySignCount = 0
         generationConfiguration.reset()
-        generationConfiguration.signForConfigurationEnd { _ in droppedBySignCount += 1 }
+        generationConfiguration.signForConfigurationEnd { _, _ in droppedBySignCount += 1 }
         generationConfiguration.reset()
         finishAllEvents(of: generationConfiguration)
         require(droppedBySignCount == 0,
@@ -197,6 +194,79 @@ private struct AppsFlyerMigrationExecutableTests {
         }
         require(backgroundHandoffRanOnMain,
                 "Work submitted from a background queue must be handed off to main")
+
+        // A finish that hops to main is delivered only while its generation is current: the same
+        // path as `CoreManager.signForConfigurationFinish` and `handleConfigurationFinish`.
+        var landedFinishHops = 0
+        var deliveredFinishes = 0
+        func signForConfigurationFinish() {
+            AppConfigurationManager.shared?.signForConfigurationEnd { _, generation in
+                MainQueueExecutor.perform {
+                    landedFinishHops += 1
+                    guard let configurationManager = AppConfigurationManager.shared,
+                          configurationManager.isCurrent(generation: generation) else {
+                        return
+                    }
+                    deliveredFinishes += 1
+                }
+            }
+        }
+
+        // Finishes a fresh configuration on a background queue and counts the finishes delivered
+        // once `expectedHops` hops have landed on main.
+        func countDeliveredFinishes(expectedHops: Int,
+                                    onMainAfterBackgroundFinish: ((AppConfigurationManager) -> Void)? = nil) -> Int {
+            let configuration = AppConfigurationManager(
+                model: CoreConfigurationModel(allConfigurationEvents: allEvents, isFirstStart: true)
+            )
+            AppConfigurationManager.shared = configuration
+            landedFinishHops = 0
+            deliveredFinishes = 0
+            signForConfigurationFinish()
+
+            let backgroundFinishReturned = DispatchSemaphore(value: 0)
+            if let onMainAfterBackgroundFinish {
+                // Enqueued before the background finish starts, so it runs on main ahead of that
+                // finish's hop. It waits until `handleCompleted` has returned, so it never races
+                // the background `checkConfiguration()`.
+                DispatchQueue.main.async {
+                    backgroundFinishReturned.wait()
+                    onMainAfterBackgroundFinish(configuration)
+                }
+            }
+            DispatchQueue.global().async {
+                allEvents.forEach { configuration.handleCompleted(event: $0, error: nil) }
+                backgroundFinishReturned.signal()
+            }
+
+            let hopsDeadline = Date(timeIntervalSinceNow: 2)
+            while landedFinishHops < expectedHops, Date() < hopsDeadline {
+                RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
+            }
+            require(landedFinishHops == expectedHops,
+                    "Every finish hop must land on main")
+            return deliveredFinishes
+        }
+
+        // The no-internet flow resets on main before the background finish's hop lands.
+        let staleDeliveries = countDeliveredFinishes(expectedHops: 1) { configuration in
+            configuration.reset()
+        }
+        require(staleDeliveries == 0,
+                "A finish whose generation was reset before its hop landed must be dropped")
+
+        // The next generation finishes on main before the stale hop lands.
+        let replacedDeliveries = countDeliveredFinishes(expectedHops: 2) { configuration in
+            configuration.reset()
+            signForConfigurationFinish()
+            finishAllEvents(of: configuration)
+        }
+        require(replacedDeliveries == 1,
+                "Only the finish of the current generation must be delivered")
+
+        let backgroundDeliveries = countDeliveredFinishes(expectedHops: 1)
+        require(backgroundDeliveries == 1,
+                "A background finish of the current generation must be delivered once")
 
         print("AppsFlyerMigrationExecutableTests: PASS")
     }

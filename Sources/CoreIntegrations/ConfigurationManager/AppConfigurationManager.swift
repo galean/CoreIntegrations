@@ -29,8 +29,7 @@ class AppConfigurationManager {
     
     var configurationFinishHandled = false
 
-    // A finish callback belongs to the generation that produced it, and a hop to main may land
-    // after `reset()` has started the next one.
+    // Advanced by every `reset()`; each finish callback is handed the generation it was signed in.
     private(set) var generation = 0
 
     var statusForAnalytics: [String: String] {
@@ -101,13 +100,22 @@ class AppConfigurationManager {
         checkAttributionFinished()
     }
     
-    public func signForConfigurationEnd(_ callback: @escaping (ConfigurationResult) -> Void) {
+    public func signForConfigurationEnd(_ callback: @escaping (ConfigurationResult, Int) -> Void) {
+        let generation = self.generation
         guard !isConfigurationFinished else {
             let configurationResult: ConfigurationResult = model.checkRequiredEventsFinished() ? .completed : .requiredFailed
-            callback(configurationResult)
+            callback(configurationResult, generation)
             return
         }
-        waitingCallbacks.append(callback)
+        waitingCallbacks.append { configurationResult in
+            callback(configurationResult, generation)
+        }
+    }
+    
+    // A finish signed in an earlier generation must not be reported once `reset()` has started
+    // the next one, and a hop to main may land after that reset.
+    func isCurrent(generation: Int) -> Bool {
+        self.generation == generation
     }
     
     public func signForAttAndConfigLoaded(_ callback: @escaping () -> Void) {

@@ -571,10 +571,7 @@ extension CoreManager {
             return
         }
         
-        // Captured at sign time: `reset()` drops the signed callbacks, so this closure can only
-        // fire as the finish of the generation it was signed in.
-        let generation = configurationManager.generation
-        configurationManager.signForConfigurationEnd { [weak self] configurationResult in
+        configurationManager.signForConfigurationEnd { [weak self] _, generation in
             self?.handleConfigurationFinish(result: .finished, generation: generation)
         }
     }
@@ -595,7 +592,7 @@ extension CoreManager {
         }
         // The finished generation can be reset - or already replaced by the next one - on main
         // before this hop lands; its status must not be reported then.
-        guard configurationManager.generation == generation else {
+        guard configurationManager.isCurrent(generation: generation) else {
             return
         }
         
