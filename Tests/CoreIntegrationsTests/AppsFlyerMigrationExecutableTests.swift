@@ -119,6 +119,61 @@ private struct AppsFlyerMigrationExecutableTests {
         require(timedOutConfiguration.statusForAnalytics["appsflyerWeb2AppHandled"] == "finished",
                 "A late GCD still updates the step status, without a second configuration finish")
 
+        // A finish callback carries the generation it was signed in; the hop to main delivers
+        // the finish only while that generation is still current.
+        let generationConfiguration = AppConfigurationManager(
+            model: CoreConfigurationModel(allConfigurationEvents: allEvents, isFirstStart: true)
+        )
+        require(generationConfiguration.generation == 0,
+                "A new configuration must start at generation 0")
+        generationConfiguration.reset()
+        require(generationConfiguration.generation == 1,
+                "A reset must start the next generation")
+
+        func finishAllEvents(of configuration: AppConfigurationManager) {
+            allEvents.forEach { configuration.handleCompleted(event: $0, error: nil) }
+        }
+
+        var staleGeneration: Int?
+        let signedGeneration = generationConfiguration.generation
+        generationConfiguration.signForConfigurationEnd { _ in
+            staleGeneration = signedGeneration
+        }
+        finishAllEvents(of: generationConfiguration)
+        // The no-internet flow resets the generation before the hop to main lands.
+        generationConfiguration.reset()
+        require(staleGeneration != nil && staleGeneration != generationConfiguration.generation,
+                "A finish whose generation was reset before the hop must be dropped")
+
+        var deliveredGeneration: Int?
+        let nextSignedGeneration = generationConfiguration.generation
+        generationConfiguration.signForConfigurationEnd { _ in
+            deliveredGeneration = nextSignedGeneration
+        }
+        finishAllEvents(of: generationConfiguration)
+        require(deliveredGeneration == generationConfiguration.generation,
+                "A finish whose generation is still current must be delivered")
+        require(staleGeneration != generationConfiguration.generation,
+                "A stale finish must stay dropped after the next generation has finished")
+
+        var fastPathGenerations = [Int]()
+        let fastPathSignedGeneration = generationConfiguration.generation
+        generationConfiguration.signForConfigurationEnd { _ in
+            fastPathGenerations.append(fastPathSignedGeneration)
+        }
+        require(fastPathGenerations == [generationConfiguration.generation],
+                "Signing on a finished configuration must deliver the finish once, immediately")
+
+        // A callback signed before a reset never fires after it: the reset drops the signed
+        // callbacks, so a sign-time generation cannot be confused with the next one.
+        var droppedBySignCount = 0
+        generationConfiguration.reset()
+        generationConfiguration.signForConfigurationEnd { _ in droppedBySignCount += 1 }
+        generationConfiguration.reset()
+        finishAllEvents(of: generationConfiguration)
+        require(droppedBySignCount == 0,
+                "A reset must drop the callbacks signed in the previous generation")
+
         var synchronousMainExecution = false
         MainQueueExecutor.perform {
             synchronousMainExecution = true

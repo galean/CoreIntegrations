@@ -571,28 +571,31 @@ extension CoreManager {
             return
         }
         
+        // Captured at sign time: `reset()` drops the signed callbacks, so this closure can only
+        // fire as the finish of the generation it was signed in.
+        let generation = configurationManager.generation
         configurationManager.signForConfigurationEnd { [weak self] configurationResult in
-            self?.handleConfigurationFinish(result: .finished)
+            self?.handleConfigurationFinish(result: .finished, generation: generation)
         }
     }
     
     // The configuration timer fires on a global queue, while the AppsFlyer session tally read
     // below is written on main. Same hop as `handleAttributionFinish`, which also puts the
     // delegate callback on main.
-    func handleConfigurationFinish(result: CoreManagerResult) {
+    func handleConfigurationFinish(result: CoreManagerResult, generation: Int) {
         MainQueueExecutor.perform { [weak self] in
-            self?.handleConfigurationFinishOnMain(result: result)
+            self?.handleConfigurationFinishOnMain(result: result, generation: generation)
         }
     }
 
-    private func handleConfigurationFinishOnMain(result: CoreManagerResult) {
+    private func handleConfigurationFinishOnMain(result: CoreManagerResult, generation: Int) {
         guard let configurationManager = AppConfigurationManager.shared else {
             assertionFailure()
             return
         }
-        // The no-internet path can reset the generation on main before this hop lands; the
-        // finished generation is gone then, and its status must not be reported.
-        guard configurationManager.configurationFinishHandled else {
+        // The finished generation can be reset - or already replaced by the next one - on main
+        // before this hop lands; its status must not be reported then.
+        guard configurationManager.generation == generation else {
             return
         }
         

@@ -29,6 +29,10 @@ class AppConfigurationManager {
     
     var configurationFinishHandled = false
 
+    // A finish callback belongs to the generation that produced it, and a hop to main may land
+    // after `reset()` has started the next one.
+    private(set) var generation = 0
+
     var statusForAnalytics: [String: String] {
         return model.statusDescription
     }
@@ -59,6 +63,7 @@ class AppConfigurationManager {
         attributionFinishHandled = false
         currentSecond = 0
         isTimerStarted = false
+        generation += 1
     }
     
     public func startTimoutTimer() {
