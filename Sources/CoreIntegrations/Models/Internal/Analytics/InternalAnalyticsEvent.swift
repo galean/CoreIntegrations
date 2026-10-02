@@ -15,6 +15,7 @@ enum InternalAnalyticsEvent: String, CaseIterable, AmplitudeAnalyzableEvent {
     case framework_attribution
     case framework_attribution_update
     case framework_finished
+    case framework_appsflyer_start_failed
     case test_distribution
     case att_permission
     

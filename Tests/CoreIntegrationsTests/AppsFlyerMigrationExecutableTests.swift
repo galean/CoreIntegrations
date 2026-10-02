@@ -30,36 +30,94 @@ private struct AppsFlyerMigrationExecutableTests {
         require(sessionStartPolicy.claimStart() == false,
                 "The next foreground cycle must allow exactly one start")
 
-        var configurationPolicy = AppsFlyerConfigurationOutcomePolicy()
-        require(configurationPolicy.shouldAcceptConversionResult,
-                "GCD must be able to complete configuration before a start failure")
-        configurationPolicy.recordSessionStartFailure()
-        require(configurationPolicy.shouldAcceptConversionResult == false,
-                "GCD must not overwrite session-start error 1002")
-        configurationPolicy.reset()
-        require(configurationPolicy.shouldAcceptConversionResult,
-                "A new configuration generation must accept GCD again")
+        require(AppsFlyerSessionState.started.rawValue == "started"
+                    && AppsFlyerSessionState.starting.rawValue == "starting"
+                    && AppsFlyerSessionState.failed.rawValue == "failed"
+                    && AppsFlyerSessionState.notStarted.rawValue == "not started",
+                "Session states must keep their analytics values")
 
-        var orderingPolicy = AppsFlyerStartOrderingPolicy<String>()
-        require(orderingPolicy.receiveConversion("organic") == "organic",
-                "Conversion outside an in-flight start must be delivered immediately")
-        orderingPolicy.beginStart()
-        require(orderingPolicy.receiveConversion("cached") == nil,
-                "Conversion must wait until the start result is known")
-        require(orderingPolicy.finishStart() == "cached",
-                "The buffered conversion must be released after start completion")
-        require(orderingPolicy.finishStart() == nil,
-                "Buffered conversion must be released only once")
+        var sessionTally = AppsFlyerSessionTally()
+        let startDate = Date()
+        require(sessionTally.state == .notStarted,
+                "No start call must report not started")
+        let firstAttempt = sessionTally.beginStart(at: startDate)
+        require(firstAttempt.number == 1 && firstAttempt.secondsSincePreviousAttempt == nil,
+                "The first attempt must be number 1 without a previous interval")
+        require(sessionTally.state == .starting,
+                "An unfinished call must report starting")
+        sessionTally.finishStart(succeeded: false)
+        require(sessionTally.state == .failed,
+                "A failed call with nothing in flight must report failed")
+        let secondAttempt = sessionTally.beginStart(at: startDate.addingTimeInterval(2.5))
+        require(secondAttempt.number == 2 && secondAttempt.secondsSincePreviousAttempt == 2.5,
+                "The next attempt must carry its number and the time since the previous call")
+        require(sessionTally.state == .starting,
+                "Starting must win over failed")
+        sessionTally.finishStart(succeeded: true)
+        require(sessionTally.state == .started,
+                "A successful call must report started")
+        _ = sessionTally.beginStart(at: startDate.addingTimeInterval(10))
+        require(sessionTally.state == .started,
+                "Started must win over starting")
+        sessionTally.finishStart(succeeded: false)
+        require(sessionTally.state == .started,
+                "Started must win over failed")
 
-        var overlappingOrderingPolicy = AppsFlyerStartOrderingPolicy<String>()
-        overlappingOrderingPolicy.beginStart()
-        require(overlappingOrderingPolicy.receiveConversion("overlap") == nil,
-                "Conversion must be buffered while the first start is outstanding")
-        overlappingOrderingPolicy.beginStart()
-        require(overlappingOrderingPolicy.finishStart() == nil,
-                "The first completion must not release GCD while another start is outstanding")
-        require(overlappingOrderingPolicy.finishStart() == "overlap",
-                "The last overlapping completion must release the buffered GCD exactly once")
+        var overlappingTally = AppsFlyerSessionTally()
+        let overlappingNumbers = [overlappingTally.beginStart(at: startDate).number,
+                                  overlappingTally.beginStart(at: startDate).number,
+                                  overlappingTally.beginStart(at: startDate).number]
+        require(overlappingNumbers == [1, 2, 3],
+                "Overlapping attempts must not share a number")
+
+        func isRateLimited(_ error: NSError) -> Bool {
+            AppsFlyerStartAttempt(number: 1, secondsSincePreviousAttempt: nil, error: error).isRateLimited
+        }
+        require(isRateLimited(NSError(domain: "com.appsflyer.sdk.event", code: 10)),
+                "A start inside minTimeBetweenSessions must be classified as rate limited")
+        require(isRateLimited(NSError(domain: "com.appsflyer.sdk.event", code: 11)) == false,
+                "Another event error code must stay an error")
+        require(isRateLimited(NSError(domain: "com.appsflyer.sdk.network", code: 10)) == false,
+                "Code 10 from another domain must stay an error")
+
+        // A GCD result alone - nothing else has happened before it - completes the AppsFlyer
+        // step to finished through a real AppConfigurationManager.
+        let allEvents: [any ConfigurationEvent] = InternalConfigurationEvent.allCases
+        AppConfigurationManager.shared = AppConfigurationManager(
+            model: CoreConfigurationModel(allConfigurationEvents: allEvents, isFirstStart: true)
+        )
+        InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted()
+        require(AppConfigurationManager.shared?.statusForAnalytics["appsflyerWeb2AppHandled"] == "finished",
+                "A GCD result alone must complete the AppsFlyer step to finished")
+
+        let timedOutConfiguration = AppConfigurationManager(
+            model: CoreConfigurationModel(allConfigurationEvents: allEvents, isFirstStart: true),
+            timeout: 1
+        )
+        AppConfigurationManager.shared = timedOutConfiguration
+        var configurationEndCount = 0
+        timedOutConfiguration.signForConfigurationEnd { _ in
+            DispatchQueue.main.async {
+                configurationEndCount += 1
+            }
+        }
+        timedOutConfiguration.startTimoutTimer()
+
+        let timeoutDeadline = Date(timeIntervalSinceNow: 3)
+        while configurationEndCount == 0, Date() < timeoutDeadline {
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
+        }
+        require(configurationEndCount == 1,
+                "The configuration timer must finish configuration without GCD")
+        require(timedOutConfiguration.statusForAnalytics["appsflyerWeb2AppHandled"] == "not finished",
+                "The timer must leave the AppsFlyer step not finished")
+
+        InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted()
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.2))
+        require(configurationEndCount == 1,
+                "A late GCD must not finish configuration a second time")
+        require(timedOutConfiguration.statusForAnalytics["appsflyerWeb2AppHandled"] == "finished",
+                "A late GCD still updates the step status, without a second configuration finish")
 
         var synchronousMainExecution = false
         MainQueueExecutor.perform {
