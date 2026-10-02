@@ -239,7 +239,9 @@ private struct AppsFlyerMigrationExecutableTests {
                 backgroundFinishReturned.signal()
             }
 
-            let hopsDeadline = Date(timeIntervalSinceNow: 2)
+            // Generous on purpose: the loop ends as soon as the hops land, and the first
+            // RunLoop pass may sit inside the main block's semaphore wait on a starved CI box.
+            let hopsDeadline = Date(timeIntervalSinceNow: 10)
             while landedFinishHops < expectedHops, Date() < hopsDeadline {
                 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
             }

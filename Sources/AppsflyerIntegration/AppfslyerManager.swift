@@ -236,6 +236,7 @@ extension AppfslyerManager: AppfslyerManagerProtocol {
         AppsFlyerLib.shared().getAppsFlyerUID()
     }
 
+    /// Main thread only: the tally behind it is written on main.
     public var appsflyerSession: AppsFlyerSessionState {
         sessionTally.state
     }
