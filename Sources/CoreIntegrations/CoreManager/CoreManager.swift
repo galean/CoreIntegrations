@@ -598,7 +598,8 @@ extension CoreManager {
         
         sendConfigurationFinished(status: analyticsStatus(of: configurationManager))
         self.delegate?.coreConfigurationFinished(result: result)
-        networkMonitor.stopMonitoring()
+        // The configuration handlers (China no-internet flow) are done; the monitor stays up for analytics.
+        networkMonitor.removeInternetHandlers()
     }
 }
 
