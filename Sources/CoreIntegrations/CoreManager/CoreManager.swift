@@ -73,6 +73,9 @@ public class CoreManager {
     
     var handledNoInternetAlert: Bool = false
     var shouldReconfigure = false
+    /// Set by either retry trigger. Lives for the whole process and is NOT reset by a configuration reset:
+    /// after one retry a second failure ends as `.finished` with errors, never as a second `.noInternet`.
+    var didRetryAfterNoInternet = false
     /// The ATT answer, kept for configuration retries: the system gives it once per process.
     var attAnswer: ATTAnswer?
     
@@ -327,10 +330,7 @@ public class CoreManager {
     @objc public func applicationDidBecomeActive() {
         configureID()
         
-        if shouldReconfigure && handledNoInternetAlert {
-            shouldReconfigure = false
-            reconfigure()
-        }
+        retryAfterNoInternet()
         
         if appsflyerManager?.customerUserID != nil {
             appsflyerManager?.startAppsflyer()
@@ -345,6 +345,26 @@ public class CoreManager {
         Task {
             await purchaseManager?.updateProductStatus()
         }
+    }
+    
+    /*
+     The one retry after `.noInternet`, whichever trigger comes first: the network returning, or the
+     app becoming active. Both run on main and clear `shouldReconfigure`, so the other one finds
+     nothing to do. Until the app is active and connected the retry waits with `shouldReconfigure`
+     set: its timer and requests would not survive suspension, and without network it would fail.
+     Deliberately, `handleNoInternetAlertWasShown()` does not let activation retry without network:
+     returning from Settings offline keeps waiting for the network, it does not finish the configuration.
+     */
+    private func retryAfterNoInternet() {
+        assert(Thread.isMainThread, "retryAfterNoInternet is main-thread only")
+        guard shouldReconfigure,
+              UIApplication.shared.applicationState == .active,
+              networkMonitor.isConnected else {
+            return
+        }
+        shouldReconfigure = false
+        didRetryAfterNoInternet = true
+        reconfigure()
     }
     
     @MainActor
@@ -496,6 +516,13 @@ extension CoreManager {
             shouldReconfigure = true
             resetConfigurationGeneration()
             delegate?.coreConfigurationFinished(result: .noInternet)
+            networkMonitor.monitorInternetChanges { [weak self] _ in
+                // The subscription reports the current state synchronously, and we are inside the finish of the
+                // previous attempt: the next attempt must not start nested in it. Re-read the state after the hop.
+                DispatchQueue.main.async {
+                    self?.retryAfterNoInternet()
+                }
+            }
             return
         }
         
@@ -665,6 +692,11 @@ extension CoreManager {
         
         let noInternetCanBeShown = !handledNoInternetAlert
         guard noInternetCanBeShown else {
+            return true
+        }
+        
+        // One retry per process: if it fails too, it finishes with its errors.
+        guard didRetryAfterNoInternet == false else {
             return true
         }
         
