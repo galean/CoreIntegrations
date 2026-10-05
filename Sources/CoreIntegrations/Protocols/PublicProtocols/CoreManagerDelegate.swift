@@ -6,6 +6,8 @@ public protocol CoreManagerDelegate: AnyObject {
     func coreInitialRemoteConfigurationFinished()
     
     func coreConfigurationFinished(result: CoreManagerResult)
+    /// Called on the main thread: the remote config update completion that triggers it is
+    /// delivered through the configuration manager's hop to main.
     func coreConfigurationUpdated()
     
     func coreConfiguration(didReceive deepLinkResult: [AnyHashable : Any])
