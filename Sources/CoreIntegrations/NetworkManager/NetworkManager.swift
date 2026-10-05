@@ -54,9 +54,15 @@ final class NetworkManager {
         monitor.start(queue: queue)
     }
 
-    func stopMonitoring() {
+    /*
+     Only the handlers are dropped; the monitor is never cancelled. `NWPathMonitor` is a
+     subscription to system path changes - its handler runs only when the path changes - and
+     `isConnected` / `currentConnectionType` are read by analytics events for the whole life of
+     the process. A cancelled monitor cannot be restarted, so those events would report the
+     connection state frozen at the moment of cancellation.
+     */
+    func removeInternetHandlers() {
         internetHandlers.removeAll()
-        monitor.cancel()
     }
     
     func monitorInternetChanges(_ completion: @escaping (Bool) -> Void) {

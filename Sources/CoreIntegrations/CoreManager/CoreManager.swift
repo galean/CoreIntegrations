@@ -53,7 +53,6 @@ public class CoreManager {
     }
     
     lazy var attResolutionCoordinator = makeATTResolutionCoordinator()
-    var appsflyerConfigurationOutcomePolicy = AppsFlyerConfigurationOutcomePolicy()
     var isConfigured: Bool = false
     
     var configuration: CoreConfigurationProtocol?
@@ -270,6 +269,15 @@ public class CoreManager {
         signForAttributionInstall()
         signForAttributionFinish()
         signForConfigurationFinish()
+
+        /*
+         A reconfiguration does not start a session by itself - whether a start follows depends
+         on the caller. So a success already delivered in this process is reused for the new
+         generation; a conversion failure, or a result only persisted by an earlier launch, is not.
+         */
+        if appsflyerManager?.didDeliverConversionData == true {
+            InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted()
+        }
         
         remoteConfigManager?.updateRemoteConfig([:]) { [ weak self] in
             self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
@@ -280,7 +288,6 @@ public class CoreManager {
 
     private func resetConfigurationGeneration() {
         AppConfigurationManager.shared?.reset()
-        appsflyerConfigurationOutcomePolicy.reset()
     }
     
     func internalHanleAuthID(_ authID: String?) {
@@ -479,14 +486,14 @@ extension CoreManager {
                     if isUpdated {
                         sendUserAttributionUpdate(userAttribution: ["ipat": "\(ipat)"])
                     } else {
-                        sendUserAttribution(userAttribution: ["ipat": "\(ipat)"], status: configurationManager.statusForAnalytics)
+                        sendUserAttribution(userAttribution: ["ipat": "\(ipat)"], status: analyticsStatus(of: configurationManager))
                     }
                     
                     remoteConfigManager?.updateRemoteConfig(["ipat": "\(ipat)"]) { [weak self] in
                         InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
                     }
                 } else {
-                    sendUserAttribution(userAttribution: [:], status: configurationManager.statusForAnalytics)
+                    sendUserAttribution(userAttribution: [:], status: analyticsStatus(of: configurationManager))
                     
                     remoteConfigManager?.updateRemoteConfig([:]) { [weak self] in
                         InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
@@ -496,7 +503,7 @@ extension CoreManager {
                 if isUpdated {
                     sendUserAttributionUpdate(userAttribution: attributionDict)
                 } else {
-                    sendUserAttribution(userAttribution: attributionDict, status: configurationManager.statusForAnalytics)
+                    sendUserAttribution(userAttribution: attributionDict, status: analyticsStatus(of: configurationManager))
                 }
                 
                 remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
@@ -564,25 +571,47 @@ extension CoreManager {
             return
         }
         
-        configurationManager.signForConfigurationEnd { [weak self] configurationResult in
-            self?.handleConfigurationFinish(result: .finished)
+        configurationManager.signForConfigurationEnd { [weak self] _, generation in
+            self?.handleConfigurationFinish(result: .finished, generation: generation)
         }
     }
     
-    func handleConfigurationFinish(result: CoreManagerResult) {
+    // The configuration timer fires on a global queue, while the AppsFlyer session tally read
+    // below is written on main. Same hop as `handleAttributionFinish`, which also puts the
+    // delegate callback on main.
+    func handleConfigurationFinish(result: CoreManagerResult, generation: Int) {
+        MainQueueExecutor.perform { [weak self] in
+            self?.handleConfigurationFinishOnMain(result: result, generation: generation)
+        }
+    }
+
+    private func handleConfigurationFinishOnMain(result: CoreManagerResult, generation: Int) {
         guard let configurationManager = AppConfigurationManager.shared else {
             assertionFailure()
             return
         }
+        // The finished generation can be reset - or already replaced by the next one - on main
+        // before this hop lands; its status must not be reported then.
+        guard configurationManager.isCurrent(generation: generation) else {
+            return
+        }
         
-        sendConfigurationFinished(status: configurationManager.statusForAnalytics)
+        sendConfigurationFinished(status: analyticsStatus(of: configurationManager))
         self.delegate?.coreConfigurationFinished(result: result)
-        networkMonitor.stopMonitoring()
+        // The configuration handlers (China no-internet flow) are done; the monitor stays up for analytics.
+        networkMonitor.removeInternetHandlers()
     }
 }
 
 // MARK: Support
 extension CoreManager {
+    /// `appsflyerSession` tells apart why `appsflyerWeb2AppHandled` is `not finished`.
+    func analyticsStatus(of configurationManager: AppConfigurationManager) -> [String: String] {
+        var status = configurationManager.statusForAnalytics
+        status["appsflyerSession"] = (appsflyerManager?.appsflyerSession ?? .notStarted).rawValue
+        return status
+    }
+
     func checkIsNoInternetHandledOrIgnored() -> Bool {
         guard AppEnvironment.isChina else {
             return true

@@ -6,6 +6,10 @@ public protocol AppfslyerManagerProtocol {
     var deeplinkResult: [String: String]? { get }
     var delegate: AppsflyerManagerDelegate? { get set }
     var deeplinkError: Error? { get }
+    /// Derived from the `start()` completions of this process, for analytics only.
+    var appsflyerSession: AppsFlyerSessionState { get }
+    /// `true` once a successful conversion result was delivered in this process.
+    var didDeliverConversionData: Bool { get }
     
     func application( _ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] )
     func application(_ application: UIApplication, continue userActivity: NSUserActivity,

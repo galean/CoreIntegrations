@@ -11,13 +11,14 @@ extension CoreManager: AppsflyerManagerDelegate {
 
     public func coreConfiguration(handleDeeplinkError error: Error) {
         delegate?.coreConfiguration(handleDeeplinkError: error)
-        if appsflyerConfigurationOutcomePolicy.shouldAcceptConversionResult {
-            InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted(error: error)
-        }
+        InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted(error: error)
+    }
+
+    public func appsflyerSessionStartAttemptFailed(_ error: Error, attempt: AppsFlyerStartAttempt) {
+        sendAppsflyerStartFailed(error: error, attempt: attempt)
     }
 
     public func appsflyerSessionStartFailed(_ error: Error, shouldReport: Bool) {
-        appsflyerConfigurationOutcomePolicy.recordSessionStartFailure()
         /*
          The domain doubles as the Sentry inbound filter handle, so keep it stable and do not
          rename it: `capture(error:)` maps the domain to `exception.type`, and an inbound
@@ -36,22 +37,11 @@ extension CoreManager: AppsflyerManagerDelegate {
         if shouldReport {
             sentryManager.log(reportedError)
         }
-
-        /*
-         Without a session there will never be a conversion data callback, so completing
-         the event with an error is what keeps configuration from hanging until the timeout.
-         It also puts the failure into `framework_attribution` / `framework_finished` as
-         `appsflyerWeb2AppHandled: error: 1002` - a dedicated code, so it is not confused
-         with a conversion data failure, which reports the SDK error code instead.
-         */
-        InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted(error: reportedError)
     }
     
     public func handledDeeplink(_ result: [String : String]) {
 //        sendDeepLinkUserProperties(deepLinkResult: result)
         handlePossibleAttributionUpdate()
-        if appsflyerConfigurationOutcomePolicy.shouldAcceptConversionResult {
-            InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted()
-        }
+        InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted()
     }
 }

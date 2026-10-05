@@ -2,6 +2,10 @@
 
 Міграція `CoreIntegrations` з AppsFlyer 6.14.0 на 7.0.1.
 
+**Оновлено для 3.0.4.** Правила про старт сесії та про `appsflyerWeb2AppHandled` змінені після
+фіксу дублювання `start()`: тепер 1 наш `start()` на foreground-цикл, а результат старту більше не
+впливає на крок атрибуції. Виміряна поведінка SDK 7.0.1, на якій це тримається, — у розділі 1.
+
 Усі рядки логів нижче **вилучені зі самого бінарника** `AppsFlyerLib.framework` 7.0.1
 (`strings`), а не з документації — тобто вони гарантовано існують у цій версії.
 
@@ -36,11 +40,19 @@
 `[START] Initial start of the application` — це і є доказ, що `start()` дійшов до SDK.
 Якщо його немає — сесія не пішла, гейти не зійшлися. Дивись діагностику нижче.
 
-У межах **однієї активації** `[START] Initial start of the application` мусить з'явитися
-рівно один раз. Два `[START]` поспіль для одного `didBecomeActive` — блокер: це означає,
-що UIKit lifecycle і session-ready listener незалежно відкрили один і той самий session cycle.
-`minTimeBetweenSessions` може приховати другий HTTP-запит, але не робить подвійний виклик
-`start()` коректним.
+**Правило старту: не більше 1 нашого виклику `start()` на foreground-цикл.** Кожен наш виклик
+SDK логує рівно 1 рядком `[START] isFirstLaunch: ...` — і прийнятий, і відхилений; далі для
+прийнятого йде `Initial start of the application` або `Time from last start(session): <X>`, для
+відхиленого — `[WARNING] Skip launch`. Рахувати треба саме рядки `isFirstLaunch:` між виходом
+у фон і наступним виходом у фон: 2 такі рядки в одному циклі — блокер.
+
+Чому так. SDK 7.0.1 викликає session-ready listener на **кожному** `didBecomeActive` того самого
+foreground-циклу — закриття ATT-алерту, Control Center, системне вікно, — а не 1 раз на цикл, як
+обіцяє його хедер. До 3.0.4 кожен такий виклик відкривав новий `start()`, і другий виклик у межах
+`minTimeBetweenSessions` (5 с від попереднього відправленого старту) SDK відхиляв локально:
+`com.appsflyer.sdk.event / 10`, `Skip launch`. З 3.0.4 listener лише позначає готовність, а
+можливість старту відкриває тільки перехід через фон. Повторний listener без фону нового
+старту давати **не повинен**.
 
 **Червоні прапорці:**
 
@@ -58,20 +70,40 @@
 | session ready (SDK) | внутрішній таймаут SDK | `[SRD] WARNING: deeplink timed out` показує, що SDK свій таймаут відпрацював |
 | customer user ID | **бекстопу немає** | Sentry: `coreintegrations.appsflyer.noCustomerUserID` |
 
-Якщо ж `start()` дійшов до SDK, але відправка провалилась, це видно **без Sentry** — в
-івентах `framework_attribution` / `framework_finished` буде
-`appsflyerWeb2AppHandled: error: 1002` (виділений код, щоб не плутати з провалом conversion
-data, який репортить код помилки самого SDK).
+Якщо ж `start()` дійшов до SDK, але completion повернув помилку, це видно **без Sentry** —
+окремою Amplitude-подією `framework_appsflyer_start_failed` на **кожен** такий completion, у будь-який
+момент життя процесу:
+
+| Поле | Значення |
+|---|---|
+| `kind` | `rate_limited` — пара `com.appsflyer.sdk.event` / 10, очікуване обмеження SDK; `error` — усе інше |
+| `error_domain`, `error_code`, `error_description` | сирі дані помилки SDK |
+| `attempt` | номер виклику `start()` у процесі, з 1 |
+| `seconds_since_previous_attempt` | інтервал від попереднього нашого виклику; немає для першого |
+| `connection`, `connection_type` | стан мережі в момент події |
+
+Результат старту **не завершує** крок `appsflyerWeb2AppHandled` і не блокує GCD — крок завершують
+лише GCD або таймер конфігурації. Значення `error: 1002` у `framework_attribution` /
+`framework_finished` з 3.0.4 не існує: якщо воно з'явилось — це регресія.
+
+Відомі коди в completion `start()` (виміряно на 7.0.1):
+
+| Domain / code | `error_description` | Що означає |
+|---|---|---|
+| `com.appsflyer.sdk.event` / 10 | `Event timeout. Check minTimeBetweenSessions param` | виклик раніше ніж через 5 с після попереднього відправленого старту; локально, без мережі; `kind = rate_limited` |
+| `com.appsflyer.sdk.network` / 40 | `Status code failure: <HTTP>` | сервер відповів помилкою; запит з кешу видалено, остаточно |
+| `com.appsflyer.sdk.network` / 40 | `Network failure` | транспортний збій; launch лишається в кеші SDK і досилається з наступним `start()` або подією; completion для наступних стартів може прийти через десятки секунд або не прийти, доки кеш не досланий |
 
 **Скільки разів це летить у Sentry.** Максимум **один раз на інстал**, і тільки поки
 AppsFlyer жодного разу не стартував успішно. Щойно сесія хоч раз пройшла — подальші провали
 в Sentry не йдуть узагалі. Стан персистентний (`UserDefaults`), тобто перезапуск його не
 скидає; повторний репорт можливий лише після перевстановлення апки.
 
-Важливо для QA: **в аналітиці сигнал лишається повним**. `appsflyerWeb2AppHandled: error: 1002`
-в `framework_attribution` / `framework_finished` йде на **кожному** провалі — обмежений
-тільки Sentry-канал. Тобто якщо Sentry молчить, а в аналітиці `error: 1002` — це не
-суперечність, а очікувана робота дедуплікації.
+Важливо для QA: **в аналітиці сигнал лишається повним** — `framework_appsflyer_start_failed`
+іде на кожен completion з помилкою, обмежений тільки Sentry-канал, і `kind = rate_limited` у Sentry
+не йде ніколи. Тобто якщо Sentry мовчить, а в аналітиці є подія — це не суперечність, а очікувана
+робота дедуплікації. Поява в Sentry `Appsflyer_session_start_error` з underlying
+`com.appsflyer.sdk.event / 10` — регресія.
 
 **Kill switch для Sentry.** Помилка старту сесії летить у Sentry з типом
 `Appsflyer_session_start_error`. Якщо навіть один репорт на інстал виявиться завеликим
@@ -108,14 +140,19 @@ Sentry-подія `coreintegrations.appsflyer.noCustomerUserID` є **єдини�
 [START] Time from last start(session): <X>
 ```
 
-Це перевіряє скидання гейта старту, яке зроблено **з самого листенера** SDK
-([AppfslyerManager.swift:75](Sources/AppsflyerIntegration/AppfslyerManager.swift#L75)),
-а не з нашого відстежування foreground-переходів. **Якщо warm-start сесій немає — це тиха
-регресія, блокер.** На кожне розгортання має бути рівно один `[START]`. Повторити 2-3 рази.
+Це перевіряє скидання гейта старту, яке з 3.0.4 робить **лише** перехід через фон
+(`didEnterBackground`, `AppsFlyerSessionStartPolicy.sessionBecameUnavailable()`); listener SDK
+тільки позначає готовність. **Якщо warm-start сесій немає — це тиха регресія, блокер.** На кожне
+розгортання після фону має бути рівно 1 рядок `[START] isFirstLaunch:`. Повторити 2-3 рази.
 
-**Окремо перевірити «короткий» вихід з фокусу:** потягнути шторку нотифікацій / прийняти
-дзвінок, потримати апку неактивною >5 с, повернутися. Сесія мусить піти. Це найтонший кейс
-скидання циклу.
+**Швидке повернення з фону (менше ніж через 5 с після попереднього відправленого старту):** наш
+`start()` іде, SDK відхиляє його локально — `Skip launch`, подія `framework_appsflyer_start_failed`
+з `kind = rate_limited`. Це очікувано; 1002 і Sentry бути не повинно.
+
+**«Короткий» вихід з фокусу без фону** — шторка нотифікацій, Control Center, дзвінок, системний
+алерт, навіть довше 5 с: нового старту **не буде**. Це свідома зміна 3.0.4: до неї така активація
+давала ще одну сесію AppsFlyer, тепер сесія 1 на foreground-цикл. Другий рядок
+`[START] isFirstLaunch:` у такому сценарії — блокер.
 
 ---
 
@@ -247,7 +284,9 @@ Loading conversion data
 з трьох, що гейтять завершення конфігурації, і **точно одне** з
 `onConversionDataSuccess` / `onConversionDataFail` мусить її закрити. Якщо перший екран
 з'являється рівно через `configurationTimeout` (дефолт 6 с) — жодного колбека не прийшло,
-конфігурація доїхала по таймауту. Це регресія.
+конфігурація доїхала по таймауту. Причину дивитись у `appsflyerSession` (нижче): при живій мережі
+й `appsflyerSession: started` це регресія; при `failed` з мережевою помилкою в
+`framework_appsflyer_start_failed` — очікувана поведінка, так само працювала 3.0.1.
 
 **Перевірка статусів модулів в аналітиці (обов'язкова).** В івентах `framework_attribution`
 і `framework_finished` подивитися значення ключа `appsflyerWeb2AppHandled`:
@@ -255,9 +294,21 @@ Loading conversion data
 | Значення | Що означає |
 |---|---|
 | `finished` | ✅ норма — GCD прийшов |
-| `error: 1002` | 🔴 сесія не відправилась (`start()` провалився) |
-| `error: <інший код>` | 🟡 GCD провалився, код помилки SDK |
-| `not finished` | 🔴 жодного колбека не було, конфігурація доїхала по таймауту |
+| `error: <код SDK>` | 🟡 GCD провалився, код помилки SDK |
+| `not finished` | GCD не встиг до таймера — причину каже `appsflyerSession` |
+| `error: 1002` | 🔴 з 3.0.4 не існує; поява = регресія |
+
+Поруч у тих самих івентах з 3.0.4 є ключ `appsflyerSession` — стан наших викликів `start()` у
+цьому процесі на момент відправки івента:
+
+| `appsflyerSession` | Що означає | Разом з `not finished` |
+|---|---|---|
+| `started` | хоча б 1 completion без помилки | 🟡 сесія є, GCD не встиг — дивитись мережу й `[GCD-...]` |
+| `starting` | є виклик без відповіді, успішних ще немає | 🟡 completion відстає; при живій мережі й повторюваності — розбиратись |
+| `failed` | усі виклики завершились помилкою, включно з `rate_limited` | 🔴 якщо `kind = error` з живою мережею; ⚪️ якщо мережі не було |
+| `not started` | жодного виклику `start()` не було | 🔴 гейт не зійшовся — див. діагностику 3 гейтів у розділі 1 |
+
+Нюанс: `finished` разом із `starting` можливий у нормі — GCD прийшов раніше за completion старту.
 
 **Функціональна перевірка `CoreUserSource`:** пройти по OneLink з `media_source=Full_Access`
 і перевірити, що юзер отримує `test_premium`. Це наскрізь перевіряє
@@ -283,23 +334,36 @@ Loading conversion data
 
 ---
 
+## Прийняті обмеження 3.0.4 (не репортити як баги)
+
+- Активації без переходу через фон — ATT, дозволи, Control Center, дзвінок — нової сесії AppsFlyer
+  не дають. Кількість сесій у дашбордах AppsFlyer може бути меншою, ніж у 2.6.0.
+- Після мережевого збою launch досилає сам SDK — з наступним `start()` (наступний foreground-цикл)
+  або подією, наприклад покупкою. Власних повторів немає.
+- Китай, «немає інтернету», реконфігурація без виходу у фон: нового `start()` немає, крок чекає
+  GCD наступного циклу; вже отриманий у цьому процесі успішний GCD використовується повторно.
+
 ## Зведена таблиця «блокер / не блокер»
 
 | Симптом | Вердикт |
 |---|---|
 | Немає `[START]` при cold start | 🔴 блокер |
-| Два `[START]` для однієї активації | 🔴 блокер |
+| 2 рядки `[START] isFirstLaunch:` в одному foreground-циклі | 🔴 блокер |
 | Немає `[START]` при cold start без відповіді на ATT (через 5 с) | 🔴 блокер |
 | Порожній / нульовий `advertiserId` при Allow до 5-секундного fallback | 🔴 блокер |
 | Порожній / нульовий `advertiserId` при Allow після fallback | ⚪️ прийнятий компроміс |
 | `[START]` раніше за `[ATT] ... newStatus` | ⚪️ довідково, не блокер |
 | Немає warm-start `[START] Time from last start` | 🔴 блокер |
-| Немає сесії після короткої втрати фокуса (>5 с) | 🔴 блокер |
+| Немає сесії після короткої втрати фокуса без фону | ⚪️ очікувано з 3.0.4: 1 старт на цикл |
+| `Skip launch` і подія `kind = rate_limited` при поверненні з фону раніше ніж через 5 с | ✅ норма |
 | `devKey and appleAppID must be set before...` | 🔴 блокер |
 | `[GCD-E01] Delegate is 'nil'...` | 🔴 блокер |
-| Перший екран рівно через 6 с | 🔴 блокер |
-| `appsflyerWeb2AppHandled: error: 1002` в `framework_finished` | 🔴 блокер |
-| `appsflyerWeb2AppHandled: not finished` в `framework_finished` | 🔴 блокер |
+| Перший екран рівно через 6 с при живій мережі й `appsflyerSession: started` | 🔴 блокер |
+| `appsflyerWeb2AppHandled: error: 1002` в `framework_finished` | 🔴 регресія: значення з 3.0.4 не існує |
+| `appsflyerWeb2AppHandled: not finished` з `appsflyerSession: not started` | 🔴 блокер |
+| `appsflyerWeb2AppHandled: not finished` з `appsflyerSession: started` / `starting` при живій мережі | 🟡 розбиратись |
+| `framework_appsflyer_start_failed` з `kind = error` при живій мережі на першому запуску | 🔴 блокер |
+| Sentry `Appsflyer_session_start_error` з underlying `com.appsflyer.sdk.event / 10` | 🔴 регресія |
 | Порожній `appsflyerToken` на першому запуску | 🟡 потрібне рішення |
 | `[DDL] Delegate doesn't respond to didResolveDeepLink:` | ✅ норма |
 | `[SRD] WARNING: deeplink timed out` на органічному запуску | ✅ норма |
