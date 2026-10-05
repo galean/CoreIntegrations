@@ -57,7 +57,7 @@ extension CoreManager {
 
         var isReconfigured = false
         // Both triggers decide on main, one after the other, so the first attempt is started
-        // exactly once; the network handler itself runs on the monitor's queue.
+        // exactly once; the monitor delivers on main, so the hop is a no-op kept as a safety net.
         networkMonitor.monitorInternetChanges { [weak self] isEnabled in
             MainQueueExecutor.perform {
                 guard isEnabled, isReconfigured == false else {
