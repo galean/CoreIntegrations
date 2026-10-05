@@ -550,16 +550,19 @@ extension CoreManager {
 // MARK: Attrubution Update
 extension CoreManager {
     func handlePossibleAttributionUpdate() {
-        guard let configurationManager = AppConfigurationManager.shared else {
-            assertionFailure()
-            return
+        MainQueueExecutor.perform { [weak self] in
+            guard let self else { return }
+            guard let configurationManager = AppConfigurationManager.shared else {
+                assertionFailure()
+                return
+            }
+
+            guard configurationManager.attributionFinishHandled else {
+                return
+            }
+
+            self.handleAttributionFinish(isUpdated: true)
         }
-        
-        guard configurationManager.attributionFinishHandled else {
-            return
-        }
-        
-        handleAttributionFinish(isUpdated: true)
     }
 }
 
@@ -576,9 +579,9 @@ extension CoreManager {
         }
     }
     
-    // The configuration timer fires on a global queue, while the AppsFlyer session tally read
-    // below is written on main. Same hop as `handleAttributionFinish`, which also puts the
-    // delegate callback on main.
+    // `AppConfigurationManager` now delivers its finish callbacks on main, so this hop runs
+    // synchronously. It is kept in the same shape as `handleAttributionFinish`, as a no-op
+    // safety net that keeps the session tally read and the delegate callback on main.
     func handleConfigurationFinish(result: CoreManagerResult, generation: Int) {
         MainQueueExecutor.perform { [weak self] in
             self?.handleConfigurationFinishOnMain(result: result, generation: generation)

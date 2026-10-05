@@ -8,6 +8,8 @@ import Foundation
 //    func onAttributionTimeout()
 //}
 
+/// Main thread only. `handleCompleted(event:error:)` and the timeout timer are the only entry
+/// points that may be reached from other threads; both hop to main via `MainQueueExecutor`.
 class AppConfigurationManager {
     public static var shared: AppConfigurationManager?
 //    public var delegate: ConfigurationManagerDelegate?
@@ -25,7 +27,17 @@ class AppConfigurationManager {
     
     private var attributionCallback: (() -> Void)?
     
-    var attributionFinishHandled = false
+    private var isAttributionFinishHandled = false
+
+    private(set) var attributionFinishHandled: Bool {
+        get {
+            assertMainThread()
+            return isAttributionFinishHandled
+        }
+        set {
+            isAttributionFinishHandled = newValue
+        }
+    }
     
     var configurationFinishHandled = false
 
@@ -33,6 +45,7 @@ class AppConfigurationManager {
     private(set) var generation = 0
 
     var statusForAnalytics: [String: String] {
+        assertMainThread()
         return model.statusDescription
     }
     
@@ -51,6 +64,7 @@ class AppConfigurationManager {
     }
     
     public func reset() {
+        assertMainThread()
         model.completedEvents.removeAll()
         model.completionErrors.removeAll()
         isTimerFinished = false
@@ -66,6 +80,7 @@ class AppConfigurationManager {
     }
     
     public func startTimoutTimer() {
+        assertMainThread()
         guard self.isConfigurationFinished == false else {
             return
         }
@@ -76,7 +91,8 @@ class AppConfigurationManager {
         
         isTimerStarted = true
         
-        DispatchQueue.global().asyncAfter(deadline: .now() + TimeInterval(timout)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(timout)) { [weak self] in
+            guard let self else { return }
             guard self.isConfigurationFinished == false else {
                 return
             }
@@ -87,20 +103,24 @@ class AppConfigurationManager {
     }
     
     public func handleCompleted(event: any ConfigurationEvent, error: Error?) {
-        if !model.completedEvents.contains(where: { $0.key == event.key }) {
-            model.completedEvents.append(event)
+        MainQueueExecutor.perform { [weak self] in
+            guard let self else { return }
+            if !self.model.completedEvents.contains(where: { $0.key == event.key }) {
+                self.model.completedEvents.append(event)
+            }
+            if let error {
+                self.model.completionErrors[event.key] = error
+            } else {
+                self.model.completionErrors.removeValue(forKey: event.key)
+            }
+            self.checkConfiguration()
+            self.checkATTConfiguration()
+            self.checkAttributionFinished()
         }
-        if let error {
-            model.completionErrors[event.key] = error
-        } else {
-            model.completionErrors.removeValue(forKey: event.key)
-        }
-        checkConfiguration()
-        checkATTConfiguration()
-        checkAttributionFinished()
     }
     
     public func signForConfigurationEnd(_ callback: @escaping (ConfigurationResult, Int) -> Void) {
+        assertMainThread()
         let generation = self.generation
         guard !isConfigurationFinished else {
             let configurationResult: ConfigurationResult = model.checkRequiredEventsFinished() ? .completed : .requiredFailed
@@ -113,12 +133,14 @@ class AppConfigurationManager {
     }
     
     // A finish signed in an earlier generation must not be reported once `reset()` has started
-    // the next one, and a hop to main may land after that reset.
+    // the next one; the guard stays as a safety net for such a finish.
     func isCurrent(generation: Int) -> Bool {
-        self.generation == generation
+        assertMainThread()
+        return self.generation == generation
     }
     
     public func signForAttAndConfigLoaded(_ callback: @escaping () -> Void) {
+        assertMainThread()
         guard !configurationAttFinishHandled else {
             callback()
             return
@@ -127,6 +149,7 @@ class AppConfigurationManager {
     }
     
     public func signForAttributionFinished(_ callback: @escaping () -> Void) {
+        assertMainThread()
         guard !model.checkAttributionFinished() else {
             callback()
             return
@@ -168,9 +191,15 @@ class AppConfigurationManager {
             return
         }
         
+        let generation = self.generation
         if attributionFinishHandled == false {
             attributionFinishHandled = true
             attributionCallback?()
+        }
+        // The attribution callback can reset (no-internet flow) and re-sign the next generation;
+        // that generation finishes on its own events or timer, not with this one's result.
+        guard generation == self.generation else {
+            return
         }
         
         configurationFinishHandled = true
@@ -180,5 +209,10 @@ class AppConfigurationManager {
             callback(configurationResult)
         }
         waitingCallbacks.removeAll()
+    }
+
+    // Debug builds only: catches a caller that bypasses the hop to main.
+    private func assertMainThread() {
+        assert(Thread.isMainThread, "AppConfigurationManager is main-thread only")
     }
 }
