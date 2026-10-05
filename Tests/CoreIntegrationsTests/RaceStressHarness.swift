@@ -102,8 +102,11 @@ private struct RaceStressHarness {
                 drainMain()
                 require(nextCore.finishes == 0,
                         "Completions of the reset generation must not finish the next one")
-                require(order.allSatisfy { m.statusForAnalytics[$0.key] == "not finished" },
+                require(order.filter { $0 != .attConcentGiven }.allSatisfy { m.statusForAnalytics[$0.key] == "not finished" },
                         "Completions of the reset generation must not mark the next one's events")
+                // The ATT answer is given once per process, so `reset()` keeps it by design.
+                require(m.statusForAnalytics[InternalConfigurationEvent.attConcentGiven.key] == "finished",
+                        "The ATT answer must survive the reset")
 
                 // The next generation must still finish on its own completions.
                 let nextGeneration = m.generation

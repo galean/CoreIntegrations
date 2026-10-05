@@ -76,8 +76,12 @@ class AppConfigurationManager {
     
     public func reset() {
         assertMainThread()
-        model.completedEvents.removeAll()
-        model.completionErrors.removeAll()
+        // The ATT answer and app-defined events are given once per process and nobody repeats
+        // them for the next generation, so they survive with their errors; the rest is redone.
+        model.completedEvents.removeAll { !outlivesAttempt($0) }
+        model.completionErrors = model.completionErrors.filter { key, _ in
+            model.completedEvents.contains { $0.key == key }
+        }
         isTimerFinished = false
         configurationFinishHandled = false
         configurationAttFinishHandled = false
@@ -238,6 +242,10 @@ class AppConfigurationManager {
             callback(configurationResult)
         }
         waitingCallbacks.removeAll()
+    }
+
+    private func outlivesAttempt(_ event: any ConfigurationEvent) -> Bool {
+        !(event is InternalConfigurationEvent) || event.key == InternalConfigurationEvent.attConcentGiven.key
     }
 
     // Debug builds only: catches a caller that bypasses the hop to main.

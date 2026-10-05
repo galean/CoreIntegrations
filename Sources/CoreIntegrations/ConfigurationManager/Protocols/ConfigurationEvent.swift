@@ -14,6 +14,7 @@ public extension ConfigurationEvent {
     }
     
     /// Any thread. The completion is credited to the configuration that is current when it lands on main.
+    /// Mark an app-defined event once per process: it is kept when a configuration retry resets the rest.
     func markAsCompleted() {
         MainQueueExecutor.perform {
             guard let configurationManager = AppConfigurationManager.shared else {

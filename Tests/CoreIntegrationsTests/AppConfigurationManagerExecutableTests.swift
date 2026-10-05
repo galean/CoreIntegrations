@@ -16,6 +16,23 @@ private func require(_ condition: @autoclosure () -> Bool, _ message: String) {
     }
 }
 
+// An app-defined event: the app marks it once per process through the public API.
+private enum TestAppEvent: String, ConfigurationEvent {
+    case appReady
+
+    var key: String {
+        rawValue
+    }
+
+    var isFirstStartOnly: Bool {
+        false
+    }
+
+    var isRequiredToContunue: Bool {
+        false
+    }
+}
+
 @main
 private struct AppConfigurationManagerExecutableTests {
     static func main() {
@@ -199,6 +216,38 @@ private struct AppConfigurationManagerExecutableTests {
         }
         require(resetTimerFinishes == [1],
                 "The next generation's timer must finish it exactly once")
+
+        // Events given once per process - the ATT answer with its error and app-defined events -
+        // survive a reset; the next generation finishes without anyone repeating them.
+        let appEventEvents: [any ConfigurationEvent] = allEvents + TestAppEvent.allCases.map { $0 }
+        let appEventConfiguration = AppConfigurationManager(
+            model: CoreConfigurationModel(allConfigurationEvents: appEventEvents, isFirstStart: true)
+        )
+        AppConfigurationManager.shared = appEventConfiguration
+        let attTimeoutError = NSError(domain: "test", code: 6456)
+        appEventConfiguration.handleCompleted(event: InternalConfigurationEvent.attConcentGiven, error: attTimeoutError)
+        TestAppEvent.appReady.markAsCompleted()
+        let attemptEvents: [InternalConfigurationEvent] = [.remoteConfigUpdated, .remoteConfigLoaded,
+                                                           .appsflyerWeb2AppHandled, .attributionServerHandled]
+        attemptEvents.forEach { appEventConfiguration.handleCompleted(event: $0, error: nil) }
+        appEventConfiguration.reset()
+        let appEventStatus = appEventConfiguration.statusForAnalytics
+        require(appEventStatus[InternalConfigurationEvent.attConcentGiven.key] == "error: 6456",
+                "A reset must keep the ATT answer with its error")
+        require(appEventStatus[TestAppEvent.appReady.key] == "finished",
+                "A reset must keep an app-defined event")
+        require(attemptEvents.allSatisfy { appEventStatus[$0.key] == "not finished" },
+                "A reset must clear every event tied to the attempt")
+        require(appEventConfiguration.generation == 1,
+                "The reset must start the next generation")
+
+        var appEventFinishes = [Int]()
+        appEventConfiguration.signForConfigurationEnd { _, generation in
+            appEventFinishes.append(generation)
+        }
+        attemptEvents.forEach { appEventConfiguration.handleCompleted(event: $0, error: nil) }
+        require(appEventFinishes == [1],
+                "The next generation must finish once without the kept events being marked again")
 
         print("AppConfigurationManagerExecutableTests: PASS")
     }
