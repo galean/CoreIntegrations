@@ -228,20 +228,22 @@ private struct AppsFlyerMigrationExecutableTests {
             let backgroundCompletionsQueued = DispatchSemaphore(value: 0)
             if let onMainAfterBackgroundFinish {
                 // Enqueued before the background finish starts, so it runs on main ahead of that
-                // finish's hop. It waits until `handleCompleted` has returned, so it never races
-                // the background `checkConfiguration()`.
+                // finish's hop. It waits until every completion is queued, so all of them land
+                // on main after it.
                 DispatchQueue.main.async {
                     backgroundFinishReturned.wait()
                     onMainAfterBackgroundFinish(configuration)
                 }
             }
+            let generation = configuration.generation
             DispatchQueue.global().async {
-                allEvents.forEach { configuration.handleCompleted(event: $0, error: nil) }
+                allEvents.forEach { configuration.handleCompleted(event: $0, error: nil, generation: generation) }
                 backgroundFinishReturned.signal()
                 backgroundCompletionsQueued.signal()
             }
 
-            // The background completions hop to main; let every one of them land before counting.
+            // The background completions hop to main, where those of a reset generation are dropped;
+            // let every one of them land before counting.
             while backgroundCompletionsQueued.wait(timeout: .now()) != .success {
                 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
             }

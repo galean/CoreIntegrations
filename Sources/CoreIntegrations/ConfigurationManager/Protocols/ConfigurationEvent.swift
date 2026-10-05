@@ -13,11 +13,14 @@ public extension ConfigurationEvent {
         return lhs.key == rhs.key
     }
     
+    /// Any thread. The completion is credited to the configuration that is current when it lands on main.
     func markAsCompleted() {
-        guard let configurationManager = AppConfigurationManager.shared else {
-            assertionFailure()
-            return
+        MainQueueExecutor.perform {
+            guard let configurationManager = AppConfigurationManager.shared else {
+                assertionFailure()
+                return
+            }
+            configurationManager.handleCompleted(event: self, error: nil)
         }
-        configurationManager.handleCompleted(event: self, error: nil)
     }
 }

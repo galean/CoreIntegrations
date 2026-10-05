@@ -266,6 +266,12 @@ public class CoreManager {
     
     func reconfigure() {
         resetConfigurationGeneration()
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        // Captured right after the reset above: the reload below belongs to the new generation.
+        let generation = configurationManager.generation
         signForAttributionInstall()
         signForAttributionFinish()
         signForConfigurationFinish()
@@ -280,8 +286,11 @@ public class CoreManager {
         }
         
         remoteConfigManager?.updateRemoteConfig([:]) { [ weak self] in
-            self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
-                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+            configurationManager.perform(in: generation) {
+                self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
+                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError,
+                                                                                  generation: generation)
+                }
             }
         }
     }
@@ -359,8 +368,15 @@ public class CoreManager {
                 analyticsManager?.setUserID(id)
             }
             self.delegate?.coreInitialConfigurationFinished()
+            // Captured on main: a response that lands after a reset must not complete the next generation.
+            let generation = AppConfigurationManager.shared?.generation
             remoteConfigManager?.configure(configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
-                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                if let generation {
+                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError,
+                                                                                  generation: generation)
+                } else {
+                    assertionFailure()
+                }
                 self?.delegate?.coreInitialRemoteConfigurationFinished()
             }
             
@@ -426,9 +442,16 @@ extension CoreManager {
             }
         }
         
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        let generation = configurationManager.generation
         AttributionServerManager.shared.syncOnAppStart { result in
-            self.handlePossibleAttributionUpdate()
-            InternalConfigurationEvent.attributionServerHandled.markAsCompleted(error: AttributionServerManager.shared.installError)
+            configurationManager.perform(in: generation) {
+                self.handlePossibleAttributionUpdate()
+                InternalConfigurationEvent.attributionServerHandled.markAsCompleted(error: AttributionServerManager.shared.installError)
+            }
         }
     }
 }
@@ -457,6 +480,8 @@ extension CoreManager {
             assertionFailure()
             return
         }
+        // The remote config updates below finish on a background thread, possibly after a reset.
+        let generation = configurationManager.generation
         
         let isInternetError = checkIsNoInternetError()
         
@@ -490,13 +515,17 @@ extension CoreManager {
                     }
                     
                     remoteConfigManager?.updateRemoteConfig(["ipat": "\(ipat)"]) { [weak self] in
-                        InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                        configurationManager.perform(in: generation) {
+                            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                        }
                     }
                 } else {
                     sendUserAttribution(userAttribution: [:], status: analyticsStatus(of: configurationManager))
                     
                     remoteConfigManager?.updateRemoteConfig([:]) { [weak self] in
-                        InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                        configurationManager.perform(in: generation) {
+                            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                        }
                     }
                 }
             } else {
@@ -507,9 +536,11 @@ extension CoreManager {
                 }
                 
                 remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
-                    InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
-                    if isUpdated {
-                        self?.delegate?.coreConfigurationUpdated()
+                    configurationManager.perform(in: generation) {
+                        InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                        if isUpdated {
+                            self?.delegate?.coreConfigurationUpdated()
+                        }
                     }
                 }
             }
@@ -550,19 +581,17 @@ extension CoreManager {
 // MARK: Attrubution Update
 extension CoreManager {
     func handlePossibleAttributionUpdate() {
-        MainQueueExecutor.perform { [weak self] in
-            guard let self else { return }
-            guard let configurationManager = AppConfigurationManager.shared else {
-                assertionFailure()
-                return
-            }
-
-            guard configurationManager.attributionFinishHandled else {
-                return
-            }
-
-            self.handleAttributionFinish(isUpdated: true)
+        assert(Thread.isMainThread, "handlePossibleAttributionUpdate is main-thread only")
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
         }
+        
+        guard configurationManager.attributionFinishHandled else {
+            return
+        }
+        
+        handleAttributionFinish(isUpdated: true)
     }
 }
 

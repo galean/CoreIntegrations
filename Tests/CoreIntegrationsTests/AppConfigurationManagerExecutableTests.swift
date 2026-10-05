@@ -44,6 +44,7 @@ private struct AppConfigurationManagerExecutableTests {
 
         // A completion delivered on a background queue is applied on main.
         let backgroundConfiguration = makeConfiguration()
+        let backgroundGeneration = backgroundConfiguration.generation
         var backgroundFinishCount = 0
         var backgroundFinishRanOnMain = false
         backgroundConfiguration.signForConfigurationEnd { _, _ in
@@ -52,7 +53,9 @@ private struct AppConfigurationManagerExecutableTests {
         }
         let backgroundCompletionReturned = DispatchSemaphore(value: 0)
         DispatchQueue.global().async {
-            order.forEach { backgroundConfiguration.handleCompleted(event: $0, error: nil) }
+            order.forEach {
+                backgroundConfiguration.handleCompleted(event: $0, error: nil, generation: backgroundGeneration)
+            }
             backgroundCompletionReturned.signal()
         }
         // Main is blocked here, so a completion applied on the background thread would already
@@ -107,6 +110,95 @@ private struct AppConfigurationManagerExecutableTests {
         order.forEach { resetConfiguration.handleCompleted(event: $0, error: nil) }
         require(nextGenerationFinishes == [1],
                 "The next generation must finish once on its own events")
+
+        // Completions queued on main before a reset belong to the reset generation and are dropped.
+        let queuedConfiguration = makeConfiguration()
+        let queuedGeneration = queuedConfiguration.generation
+        let queuedCompletionsReturned = DispatchSemaphore(value: 0)
+        DispatchQueue.global().async {
+            order.forEach {
+                queuedConfiguration.handleCompleted(event: $0, error: nil, generation: queuedGeneration)
+            }
+            queuedCompletionsReturned.signal()
+        }
+        // Main is blocked until every completion is queued, so all of them land after the reset.
+        queuedCompletionsReturned.wait()
+        queuedConfiguration.reset()
+        var queuedNextGenerationFinishCount = 0
+        queuedConfiguration.signForConfigurationEnd { _, _ in
+            queuedNextGenerationFinishCount += 1
+        }
+        drainMainQueue()
+        require(queuedNextGenerationFinishCount == 0,
+                "Completions queued before a reset must not finish the next generation")
+        require(queuedConfiguration.generation == 1,
+                "The reset must start the next generation")
+        require(order.allSatisfy { queuedConfiguration.statusForAnalytics[$0.key] == "not finished" },
+                "Completions queued before a reset must not mark the next generation's events")
+
+        // A late response to a request of the reset generation is dropped; one of the current
+        // generation is applied.
+        let lateConfiguration = makeConfiguration()
+        let staleGeneration = lateConfiguration.generation
+        lateConfiguration.reset()
+        let lateEvent = InternalConfigurationEvent.remoteConfigLoaded
+        lateConfiguration.handleCompleted(event: lateEvent, error: nil, generation: staleGeneration)
+        require(lateConfiguration.statusForAnalytics[lateEvent.key] == "not finished",
+                "A late response of the reset generation must be dropped")
+        lateConfiguration.handleCompleted(event: lateEvent, error: nil, generation: lateConfiguration.generation)
+        require(lateConfiguration.statusForAnalytics[lateEvent.key] == "finished",
+                "A response of the current generation must be applied")
+
+        // `perform(in:)` runs the block on main only while its generation is current.
+        let performConfiguration = makeConfiguration()
+        let performStaleGeneration = performConfiguration.generation
+        performConfiguration.reset()
+        let performCurrentGeneration = performConfiguration.generation
+        var staleBlockRuns = 0
+        var currentBlockRuns = 0
+        var currentBlockRanOnMain = false
+        let performsQueued = DispatchSemaphore(value: 0)
+        DispatchQueue.global().async {
+            performConfiguration.perform(in: performStaleGeneration) {
+                staleBlockRuns += 1
+            }
+            performConfiguration.perform(in: performCurrentGeneration) {
+                currentBlockRuns += 1
+                currentBlockRanOnMain = Thread.isMainThread
+            }
+            performsQueued.signal()
+        }
+        performsQueued.wait()
+        drainMainQueue()
+        require(staleBlockRuns == 0,
+                "A block of a reset generation must never run")
+        require(currentBlockRuns == 1 && currentBlockRanOnMain,
+                "A block of the current generation must run on main exactly once")
+
+        // A timer started before a reset must not finish the next generation; the next
+        // generation's own timer does.
+        let resetTimerConfiguration = makeConfiguration(timeout: 1)
+        resetTimerConfiguration.startTimoutTimer()
+        resetTimerConfiguration.reset()
+        var resetTimerFinishes = [Int]()
+        resetTimerConfiguration.signForConfigurationEnd { _, generation in
+            resetTimerFinishes.append(generation)
+        }
+        // Past the 1-second timeout of the reset generation's timer.
+        let staleTimerDeadline = Date(timeIntervalSinceNow: 2)
+        while Date() < staleTimerDeadline {
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
+        }
+        require(resetTimerFinishes.isEmpty,
+                "A timer of a reset generation must not finish the next one")
+
+        resetTimerConfiguration.startTimoutTimer()
+        let resetTimerDeadline = Date(timeIntervalSinceNow: 3)
+        while resetTimerFinishes.isEmpty, Date() < resetTimerDeadline {
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
+        }
+        require(resetTimerFinishes == [1],
+                "The next generation's timer must finish it exactly once")
 
         print("AppConfigurationManagerExecutableTests: PASS")
     }

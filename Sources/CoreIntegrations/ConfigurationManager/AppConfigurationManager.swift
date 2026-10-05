@@ -8,8 +8,9 @@ import Foundation
 //    func onAttributionTimeout()
 //}
 
-/// Main thread only. `handleCompleted(event:error:)` and the timeout timer are the only entry
-/// points that may be reached from other threads; both hop to main via `MainQueueExecutor`.
+/// Main thread only. Results from other threads enter through `perform(in:_:)`,
+/// `handleCompleted(event:error:generation:)` and the timeout timer, each tied to the generation
+/// it was started in and dropped on main if `reset()` has started the next one since.
 class AppConfigurationManager {
     public static var shared: AppConfigurationManager?
 //    public var delegate: ConfigurationManagerDelegate?
@@ -41,8 +42,18 @@ class AppConfigurationManager {
     
     var configurationFinishHandled = false
 
+    private var currentGeneration = 0
+
     // Advanced by every `reset()`; each finish callback is handed the generation it was signed in.
-    private(set) var generation = 0
+    private(set) var generation: Int {
+        get {
+            assertMainThread()
+            return currentGeneration
+        }
+        set {
+            currentGeneration = newValue
+        }
+    }
 
     var statusForAnalytics: [String: String] {
         assertMainThread()
@@ -91,8 +102,13 @@ class AppConfigurationManager {
         
         isTimerStarted = true
         
+        let generation = self.generation
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(timout)) { [weak self] in
             guard let self else { return }
+            // A timer of a reset generation must not finish the next one.
+            guard self.generation == generation else {
+                return
+            }
             guard self.isConfigurationFinished == false else {
                 return
             }
@@ -102,20 +118,33 @@ class AppConfigurationManager {
         }
     }
     
-    public func handleCompleted(event: any ConfigurationEvent, error: Error?) {
+    // Checks the generation once, on main, before `work` runs; an asynchronous step started
+    // inside `work` needs its own check.
+    func perform(in generation: Int, _ work: @escaping () -> Void) {
         MainQueueExecutor.perform { [weak self] in
-            guard let self else { return }
-            if !self.model.completedEvents.contains(where: { $0.key == event.key }) {
-                self.model.completedEvents.append(event)
-            }
-            if let error {
-                self.model.completionErrors[event.key] = error
-            } else {
-                self.model.completionErrors.removeValue(forKey: event.key)
-            }
-            self.checkConfiguration()
-            self.checkATTConfiguration()
-            self.checkAttributionFinished()
+            guard let self, self.generation == generation else { return }
+            work()
+        }
+    }
+    
+    public func handleCompleted(event: any ConfigurationEvent, error: Error?) {
+        assertMainThread()
+        if !model.completedEvents.contains(where: { $0.key == event.key }) {
+            model.completedEvents.append(event)
+        }
+        if let error {
+            model.completionErrors[event.key] = error
+        } else {
+            model.completionErrors.removeValue(forKey: event.key)
+        }
+        checkConfiguration()
+        checkATTConfiguration()
+        checkAttributionFinished()
+    }
+    
+    func handleCompleted(event: any ConfigurationEvent, error: Error?, generation: Int) {
+        perform(in: generation) {
+            self.handleCompleted(event: event, error: error)
         }
     }
     
