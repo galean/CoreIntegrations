@@ -453,9 +453,10 @@ extension CoreManager {
         }
         let generation = configurationManager.generation
         AttributionServerManager.shared.syncOnAppStart { result in
+            let error = AttributionServerManager.shared.installError
             configurationManager.perform(in: generation) {
                 self.handlePossibleAttributionUpdate()
-                InternalConfigurationEvent.attributionServerHandled.markAsCompleted(error: AttributionServerManager.shared.installError)
+                InternalConfigurationEvent.attributionServerHandled.markAsCompleted(error: error)
             }
         }
     }
@@ -520,16 +521,18 @@ extension CoreManager {
                     }
                     
                     remoteConfigManager?.updateRemoteConfig(["ipat": "\(ipat)"]) { [weak self] in
+                        let error = self?.remoteConfigManager?.remoteError
                         configurationManager.perform(in: generation) {
-                            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: error)
                         }
                     }
                 } else {
                     sendUserAttribution(userAttribution: [:], status: analyticsStatus(of: configurationManager))
                     
                     remoteConfigManager?.updateRemoteConfig([:]) { [weak self] in
+                        let error = self?.remoteConfigManager?.remoteError
                         configurationManager.perform(in: generation) {
-                            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: error)
                         }
                     }
                 }
@@ -541,8 +544,9 @@ extension CoreManager {
                 }
                 
                 remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
+                    let error = self?.remoteConfigManager?.remoteError
                     configurationManager.perform(in: generation) {
-                        InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                        InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: error)
                         if isUpdated {
                             self?.delegate?.coreConfigurationUpdated()
                         }
