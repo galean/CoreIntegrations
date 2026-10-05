@@ -3,10 +3,11 @@
 // enter through `handleCompleted(event:error:generation:)`, tagged with the generation captured on main.
 //
 // mode "reset":       the completions arrive on a global queue (attribution server / remote config
-//                     thread); the attribution callback hops to main, where CoreManager's no-internet
-//                     branch calls reset() and reconfigure() re-signs - against the tail of
-//                     checkConfiguration() for the last completion. Each iteration then completes the
-//                     next generation and requires exactly one finish for it.
+//                     thread); the last one's attribution callback runs CoreManager's no-internet branch
+//                     synchronously inside checkConfiguration() on main, which calls reset() and
+//                     reconfigure() re-signs. Each iteration requires that the interrupted generation
+//                     never finishes, that a late completion of it is dropped, and that the next
+//                     generation finishes exactly once on its own completions.
 // mode "two-threads": two completions arrive on two global-queue threads at once, no reset at all
 //                     (attribution server completion vs remote config completion). Each iteration
 //                     requires exactly one finish.
@@ -89,17 +90,30 @@ private struct RaceStressHarness {
                 let nextCore = MiniCoreManager()
                 var didReset = false
                 m.signForAttributionFinished {
-                    // CoreManager.handleAttributionFinish -> MainQueueExecutor.perform -> no-internet branch
-                    DispatchQueue.main.async { m.reset(); nextCore.sign(); didReset = true }
+                    // Same hop as CoreManager.handleAttributionFinish, so the reset runs synchronously
+                    // inside checkConfiguration() on main.
+                    MainQueueExecutor.perform { m.reset(); nextCore.sign(); didReset = true }
                 }
                 DispatchQueue.global().async {
                     order.forEach { m.handleCompleted(event: $0, error: nil, generation: g) }
                     done.signal()
                 }
+                // The last completion's hop is queued before `done`, so the reset has run once main is drained.
                 waitAndDrainMain(done)
-                // The reset is queued from the last completion's hop, so it may land after the sentinel.
-                while !didReset { RunLoop.main.run(mode: .default, before: .distantPast) }
-                drainMain()
+                require(didReset,
+                        "The last completion of the interrupted generation must reset it")
+                require(core.finishes == 0,
+                        "The interrupted generation must not finish: the reset dropped its callbacks")
+
+                // A late completion of the interrupted generation is dropped.
+                let lateDone = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async {
+                    m.handleCompleted(event: InternalConfigurationEvent.remoteConfigLoaded, error: nil, generation: g)
+                    lateDone.signal()
+                }
+                waitAndDrainMain(lateDone)
+                require(m.statusForAnalytics[InternalConfigurationEvent.remoteConfigLoaded.key] == "not finished",
+                        "A late completion of the interrupted generation must be dropped")
                 require(nextCore.finishes == 0,
                         "Completions of the reset generation must not finish the next one")
                 require(order.filter { $0 != .attConcentGiven }.allSatisfy { m.statusForAnalytics[$0.key] == "not finished" },
