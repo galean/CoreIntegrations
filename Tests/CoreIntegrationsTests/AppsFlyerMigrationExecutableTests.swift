@@ -225,6 +225,7 @@ private struct AppsFlyerMigrationExecutableTests {
             signForConfigurationFinish()
 
             let backgroundFinishReturned = DispatchSemaphore(value: 0)
+            let backgroundCompletionsQueued = DispatchSemaphore(value: 0)
             if let onMainAfterBackgroundFinish {
                 // Enqueued before the background finish starts, so it runs on main ahead of that
                 // finish's hop. It waits until `handleCompleted` has returned, so it never races
@@ -237,6 +238,19 @@ private struct AppsFlyerMigrationExecutableTests {
             DispatchQueue.global().async {
                 allEvents.forEach { configuration.handleCompleted(event: $0, error: nil) }
                 backgroundFinishReturned.signal()
+                backgroundCompletionsQueued.signal()
+            }
+
+            // The background completions hop to main; let every one of them land before counting.
+            while backgroundCompletionsQueued.wait(timeout: .now()) != .success {
+                RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
+            }
+            var completionsLanded = false
+            DispatchQueue.main.async {
+                completionsLanded = true
+            }
+            while completionsLanded == false {
+                RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
             }
 
             // Generous on purpose: the loop ends as soon as the hops land, and the first
@@ -250,15 +264,16 @@ private struct AppsFlyerMigrationExecutableTests {
             return deliveredFinishes
         }
 
-        // The no-internet flow resets on main before the background finish's hop lands.
-        let staleDeliveries = countDeliveredFinishes(expectedHops: 1) { configuration in
+        // The no-internet flow resets on main before the background completions land there: the
+        // reset drops the signed finish, so it is never invoked.
+        let staleDeliveries = countDeliveredFinishes(expectedHops: 0) { configuration in
             configuration.reset()
         }
         require(staleDeliveries == 0,
                 "A finish whose generation was reset before its hop landed must be dropped")
 
-        // The next generation finishes on main before the stale hop lands.
-        let replacedDeliveries = countDeliveredFinishes(expectedHops: 2) { configuration in
+        // The next generation finishes on main before the background completions land there.
+        let replacedDeliveries = countDeliveredFinishes(expectedHops: 1) { configuration in
             configuration.reset()
             signForConfigurationFinish()
             finishAllEvents(of: configuration)
