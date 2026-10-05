@@ -291,9 +291,10 @@ public class CoreManager {
         }
         
         remoteConfigManager?.updateRemoteConfig([:]) { [ weak self] in
+            let error = self?.remoteConfigManager?.remoteError
             configurationManager.perform(in: generation) {
-                self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
-                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError,
+                self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) {
+                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: error,
                                                                                   generation: generation)
                 }
             }
