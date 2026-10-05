@@ -296,7 +296,7 @@ extension AppfslyerManager: AppsFlyerLibDelegate {
         handleConversionResult(.failure(error))
     }
 
-    // Kept for API compatibility; removal tracked separately.
+    // Kept for API compatibility; removal tracked in ClickUp 869fc9tyv.
     @available(*, deprecated, message: "AppsFlyer 7 removed this delegate callback; use conversion-data callbacks instead.")
     public func onAppOpenAttributionFailure(_ error: Error) {
         handleConversionResult(.failure(error))
