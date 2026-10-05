@@ -474,7 +474,8 @@ extension CoreManager {
         }
         let generation = configurationManager.generation
         AttributionServerManager.shared.syncOnAppStart { result in
-            let error = AttributionServerManager.shared.installError
+            // A non-nil result is a confirmed success; the shared `installError` may belong to another request.
+            let error = result == nil ? AttributionServerManager.shared.installError : nil
             configurationManager.perform(in: generation) {
                 self.handlePossibleAttributionUpdate()
                 InternalConfigurationEvent.attributionServerHandled.markAsCompleted(error: error)

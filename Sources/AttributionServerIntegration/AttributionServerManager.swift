@@ -2,6 +2,7 @@ import Foundation
 import AdSupport
 import AdServices
 import AppTrackingTransparency
+import LoggingIntegration
 
 extension AttributionServerManager: AttributionServerManagerProtocol {
     public var savedUserUUID: String? {
@@ -60,6 +61,22 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
                 sendInstallData(installData, authToken: authorizationToken, completion: completion)
             }
             return
+        }
+        
+        /*
+         The install is already registered - on an earlier launch or attempt, or by a purchase or an
+         external authorization in between - so this completes with the saved result. Deferred to
+         main, so the completion never runs synchronously, nested in the caller.
+         */
+        let installResult = installResultData
+        if installResult == nil {
+            DebugLogger.log("AttributionServerManager: server user ID is saved without an install result")
+        }
+        DispatchQueue.main.async {
+            // The install is registered: an error another install request wrote meanwhile - even after
+            // this call returned - must not be reported for it. Cleared here, right before delivery.
+            self.installError = nil
+            completion(installResult)
         }
         
         checkAndSendSavedPurchase(userId: userID)
