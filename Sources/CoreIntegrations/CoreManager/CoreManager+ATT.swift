@@ -55,15 +55,19 @@ extension CoreManager {
         sendConfigurationDelayed(status: [:])
 
         var isReconfigured = false
+        // Both triggers decide on main, one after the other, so the first attempt is started
+        // exactly once; the network handler itself runs on the monitor's queue.
         networkMonitor.monitorInternetChanges { [weak self] isEnabled in
-            guard isEnabled, isReconfigured == false else {
-                return
+            MainQueueExecutor.perform {
+                guard isEnabled, isReconfigured == false else {
+                    return
+                }
+                isReconfigured = true
+                self?.reconfigureAfterATT(status, error: error)
             }
-            isReconfigured = true
-            self?.reconfigureAfterATT(status, error: error)
         }
 
-        DispatchQueue.global().asyncAfter(deadline: .now() + 6) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6) { [weak self] in
             guard isReconfigured == false else {
                 return
             }
