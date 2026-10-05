@@ -73,6 +73,8 @@ public class CoreManager {
     
     var handledNoInternetAlert: Bool = false
     var shouldReconfigure = false
+    /// The ATT answer, kept for configuration retries: the system gives it once per process.
+    var attAnswer: ATTAnswer?
     
     var networkMonitor = NetworkManager()
     
@@ -266,9 +268,18 @@ public class CoreManager {
     
     func reconfigure() {
         resetConfigurationGeneration()
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        // Captured right after the reset above: the reload below belongs to the new generation.
+        let generation = configurationManager.generation
         signForAttributionInstall()
         signForAttributionFinish()
         signForConfigurationFinish()
+        // A retry is a full attempt - timer and ATT event - because the ATT answer is not given
+        // again; without them the new generation cannot finish on its events.
+        startConfigurationAttempt()
 
         /*
          A reconfiguration does not start a session by itself - whether a start follows depends
@@ -280,8 +291,12 @@ public class CoreManager {
         }
         
         remoteConfigManager?.updateRemoteConfig([:]) { [ weak self] in
-            self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
-                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+            let error = self?.remoteConfigManager?.remoteError
+            configurationManager.perform(in: generation) {
+                self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) {
+                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: error,
+                                                                                  generation: generation)
+                }
             }
         }
     }
@@ -359,8 +374,15 @@ public class CoreManager {
                 analyticsManager?.setUserID(id)
             }
             self.delegate?.coreInitialConfigurationFinished()
+            // Captured on main: a response that lands after a reset must not complete the next generation.
+            let generation = AppConfigurationManager.shared?.generation
             remoteConfigManager?.configure(configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
-                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                if let generation {
+                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError,
+                                                                                  generation: generation)
+                } else {
+                    assertionFailure()
+                }
                 self?.delegate?.coreInitialRemoteConfigurationFinished()
             }
             
@@ -426,9 +448,17 @@ extension CoreManager {
             }
         }
         
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        let generation = configurationManager.generation
         AttributionServerManager.shared.syncOnAppStart { result in
-            self.handlePossibleAttributionUpdate()
-            InternalConfigurationEvent.attributionServerHandled.markAsCompleted(error: AttributionServerManager.shared.installError)
+            let error = AttributionServerManager.shared.installError
+            configurationManager.perform(in: generation) {
+                self.handlePossibleAttributionUpdate()
+                InternalConfigurationEvent.attributionServerHandled.markAsCompleted(error: error)
+            }
         }
     }
 }
@@ -457,6 +487,8 @@ extension CoreManager {
             assertionFailure()
             return
         }
+        // The remote config updates below finish on a background thread, possibly after a reset.
+        let generation = configurationManager.generation
         
         let isInternetError = checkIsNoInternetError()
         
@@ -490,13 +522,19 @@ extension CoreManager {
                     }
                     
                     remoteConfigManager?.updateRemoteConfig(["ipat": "\(ipat)"]) { [weak self] in
-                        InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                        let error = self?.remoteConfigManager?.remoteError
+                        configurationManager.perform(in: generation) {
+                            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: error)
+                        }
                     }
                 } else {
                     sendUserAttribution(userAttribution: [:], status: analyticsStatus(of: configurationManager))
                     
                     remoteConfigManager?.updateRemoteConfig([:]) { [weak self] in
-                        InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                        let error = self?.remoteConfigManager?.remoteError
+                        configurationManager.perform(in: generation) {
+                            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: error)
+                        }
                     }
                 }
             } else {
@@ -507,9 +545,12 @@ extension CoreManager {
                 }
                 
                 remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
-                    InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
-                    if isUpdated {
-                        self?.delegate?.coreConfigurationUpdated()
+                    let error = self?.remoteConfigManager?.remoteError
+                    configurationManager.perform(in: generation) {
+                        InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: error)
+                        if isUpdated {
+                            self?.delegate?.coreConfigurationUpdated()
+                        }
                     }
                 }
             }
@@ -550,6 +591,7 @@ extension CoreManager {
 // MARK: Attrubution Update
 extension CoreManager {
     func handlePossibleAttributionUpdate() {
+        assert(Thread.isMainThread, "handlePossibleAttributionUpdate is main-thread only")
         guard let configurationManager = AppConfigurationManager.shared else {
             assertionFailure()
             return
@@ -576,9 +618,9 @@ extension CoreManager {
         }
     }
     
-    // The configuration timer fires on a global queue, while the AppsFlyer session tally read
-    // below is written on main. Same hop as `handleAttributionFinish`, which also puts the
-    // delegate callback on main.
+    // `AppConfigurationManager` now delivers its finish callbacks on main, so this hop runs
+    // synchronously. It is kept in the same shape as `handleAttributionFinish`, as a no-op
+    // safety net that keeps the session tally read and the delegate callback on main.
     func handleConfigurationFinish(result: CoreManagerResult, generation: Int) {
         MainQueueExecutor.perform { [weak self] in
             self?.handleConfigurationFinishOnMain(result: result, generation: generation)
