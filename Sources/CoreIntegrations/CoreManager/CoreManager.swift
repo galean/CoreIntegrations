@@ -73,6 +73,8 @@ public class CoreManager {
     
     var handledNoInternetAlert: Bool = false
     var shouldReconfigure = false
+    /// The ATT answer, kept for configuration retries: the system gives it once per process.
+    var attAnswer: ATTAnswer?
     
     var networkMonitor = NetworkManager()
     
@@ -275,6 +277,9 @@ public class CoreManager {
         signForAttributionInstall()
         signForAttributionFinish()
         signForConfigurationFinish()
+        // A retry is a full attempt - timer and ATT event - because the ATT answer is not given
+        // again; without them the new generation cannot finish on its events.
+        startConfigurationAttempt()
 
         /*
          A reconfiguration does not start a session by itself - whether a start follows depends

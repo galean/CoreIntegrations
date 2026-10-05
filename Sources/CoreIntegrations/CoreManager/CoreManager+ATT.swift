@@ -2,6 +2,11 @@ import AppTrackingTransparency
 import Foundation
 
 extension CoreManager {
+    struct ATTAnswer {
+        let status: ATTrackingManager.AuthorizationStatus
+        let error: Error?
+    }
+
     func makeATTResolutionCoordinator() -> ATTResolutionCoordinator<ATTrackingManager.AuthorizationStatus> {
         ATTResolutionCoordinator(
             notDetermined: ATTrackingManager.AuthorizationStatus.notDetermined,
@@ -67,11 +72,22 @@ extension CoreManager {
         }
     }
 
-    private func finishConfigurationAfterATT(_ status: ATTrackingManager.AuthorizationStatus,
-                                             error: Error?) {
+    /// Every configuration attempt, the first one and each retry, starts here.
+    func startConfigurationAttempt() {
+        assert(Thread.isMainThread, "startConfigurationAttempt is main-thread only")
+        guard let attAnswer else {
+            assertionFailure("A configuration attempt needs the ATT answer")
+            return
+        }
         sendConfigurationStarted(status: [:])
         AppConfigurationManager.shared?.startTimoutTimer()
-        InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
+        InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: attAnswer.error)
+    }
+
+    private func finishConfigurationAfterATT(_ status: ATTrackingManager.AuthorizationStatus,
+                                             error: Error?) {
+        attAnswer = ATTAnswer(status: status, error: error)
+        startConfigurationAttempt()
         facebookManager?.configureATT(isAuthorized: status == .authorized)
         appsflyerManager?.handleATTResolved()
     }
@@ -85,10 +101,8 @@ extension CoreManager {
             return
         }
 
-        sendConfigurationStarted(status: [:])
+        attAnswer = ATTAnswer(status: status, error: error)
         reconfigure()
-        AppConfigurationManager.shared?.startTimoutTimer()
-        InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
         facebookManager?.configureATT(isAuthorized: status == .authorized)
         appsflyerManager?.handleATTResolved()
         appsflyerManager?.startAppsflyer()
