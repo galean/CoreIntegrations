@@ -2,8 +2,9 @@ import AppTrackingTransparency
 import Foundation
 
 extension CoreManager {
+    // Only the error is replayed on a retry (a nil error is still an answer); the status is
+    // consumed once, by the handlers that receive it.
     struct ATTAnswer {
-        let status: ATTrackingManager.AuthorizationStatus
         let error: Error?
     }
 
@@ -90,7 +91,7 @@ extension CoreManager {
 
     private func finishConfigurationAfterATT(_ status: ATTrackingManager.AuthorizationStatus,
                                              error: Error?) {
-        attAnswer = ATTAnswer(status: status, error: error)
+        attAnswer = ATTAnswer(error: error)
         startConfigurationAttempt()
         facebookManager?.configureATT(isAuthorized: status == .authorized)
         appsflyerManager?.handleATTResolved()
@@ -105,7 +106,7 @@ extension CoreManager {
             return
         }
 
-        attAnswer = ATTAnswer(status: status, error: error)
+        attAnswer = ATTAnswer(error: error)
         reconfigure()
         facebookManager?.configureATT(isAuthorized: status == .authorized)
         appsflyerManager?.handleATTResolved()
