@@ -44,7 +44,11 @@ extension CoreManager {
 
     private func handleATTAnswered(_ status: ATTrackingManager.AuthorizationStatus,
                                    error: Error? = nil) {
-        if AppEnvironment.isChina {
+        // The China path waits for the network and restarts the configuration because the system asks
+        // for network permission on the first launch. On a later launch the configuration does not need
+        // the ATT answer and can already be finished when it arrives; restarting it then finished it
+        // twice. Same first-launch gate as the `.noInternet` result in `checkIsNoInternetHandledOrIgnored`.
+        if AppEnvironment.isChina && configuration?.appSettings.isFirstLaunch == true {
             handleChinaATTAnswer(status, error: error)
         } else {
             finishConfigurationAfterATT(status, error: error)
