@@ -515,6 +515,9 @@ extension CoreManager {
         
         if isInternetError && checkIsNoInternetHandledOrIgnored() == false && isUpdated == false {
             shouldReconfigure = true
+            // We are inside the attribution callback of `checkConfiguration()` for this generation. The
+            // reset advances the generation, so that call stops before it delivers the finish callbacks:
+            // `.noInternet` is the only result of this attempt, `.finished` follows the retry.
             resetConfigurationGeneration()
             delegate?.coreConfigurationFinished(result: .noInternet)
             networkMonitor.monitorInternetChanges { [weak self] _ in

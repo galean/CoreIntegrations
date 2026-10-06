@@ -99,12 +99,9 @@ extension CoreManager {
 
     private func reconfigureAfterATT(_ status: ATTrackingManager.AuthorizationStatus,
                                      error: Error?) {
-        guard Thread.isMainThread else {
-            DispatchQueue.main.async { [weak self] in
-                self?.reconfigureAfterATT(status, error: error)
-            }
-            return
-        }
+        // Both callers in `handleChinaATTAnswer` already run on main: the monitor handler through
+        // `MainQueueExecutor`, the fallback through `DispatchQueue.main.asyncAfter`.
+        assert(Thread.isMainThread, "reconfigureAfterATT is main-thread only")
 
         attAnswer = ATTAnswer(error: error)
         reconfigure()

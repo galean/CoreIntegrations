@@ -37,6 +37,13 @@ public protocol CoreManagerProtocol {
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
     
     func handleATTPermission(_ status: ATTrackingManager.AuthorizationStatus)
+    /// Tells the framework that the app has shown its "no internet" alert after
+    /// `coreConfigurationFinished(result: .noInternet)`. The retry itself does not depend on it: after
+    /// `.noInternet` the configuration is retried exactly once, automatically, when the app is active and
+    /// the network is available (also when the user returns from Settings). Returning from Settings while
+    /// still offline does not retry and does not finish; the attempt waits for the network. If the retry
+    /// fails too, it ends with `.finished` and errors, never with a second `.noInternet`. Calling this
+    /// before any `.noInternet` suppresses the no-internet result: the first failure then ends as `.finished`.
     func handleNoInternetAlertWasShown()
 
     func handleCustomFirebaseConfigured()

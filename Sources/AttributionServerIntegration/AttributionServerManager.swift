@@ -43,6 +43,10 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
                                                tokensPath: config.tokensPath)
     }
     
+    /// Registers the install if it is not registered yet, otherwise resends the pending purchase, app
+    /// transaction and external authorization. The completion runs exactly once, never synchronously: on
+    /// the request's completion thread with the server result or `nil` on failure, or, when the install is
+    /// already registered, on main with the saved result (`nil` for legacy data without a saved result).
     public func syncOnAppStart(_ completion: @escaping (AttributionManagerResult?) -> Void) {
         guard validateToken(authorizationToken) else {
             assertionFailure("No token")
