@@ -73,6 +73,11 @@ public class CoreManager {
     
     var handledNoInternetAlert: Bool = false
     var shouldReconfigure = false
+    /// Set by either retry trigger. Lives for the whole process and is NOT reset by a configuration reset:
+    /// after one retry a second failure ends as `.finished` with errors, never as a second `.noInternet`.
+    var didRetryAfterNoInternet = false
+    /// The ATT answer, kept for configuration retries: the system gives it once per process.
+    var attAnswer: ATTAnswer?
     
     var networkMonitor = NetworkManager()
     
@@ -266,9 +271,18 @@ public class CoreManager {
     
     func reconfigure() {
         resetConfigurationGeneration()
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        // Captured right after the reset above: the reload below belongs to the new generation.
+        let generation = configurationManager.generation
         signForAttributionInstall()
         signForAttributionFinish()
         signForConfigurationFinish()
+        // A retry is a full attempt - timer and ATT event - because the ATT answer is not given
+        // again; without them the new generation cannot finish on its events.
+        startConfigurationAttempt()
 
         /*
          A reconfiguration does not start a session by itself - whether a start follows depends
@@ -280,8 +294,12 @@ public class CoreManager {
         }
         
         remoteConfigManager?.updateRemoteConfig([:]) { [ weak self] in
-            self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
-                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+            let error = self?.remoteConfigManager?.remoteError
+            configurationManager.perform(in: generation) {
+                self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) {
+                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: error,
+                                                                                  generation: generation)
+                }
             }
         }
     }
@@ -312,10 +330,7 @@ public class CoreManager {
     @objc public func applicationDidBecomeActive() {
         configureID()
         
-        if shouldReconfigure && handledNoInternetAlert {
-            shouldReconfigure = false
-            reconfigure()
-        }
+        retryAfterNoInternet()
         
         if appsflyerManager?.customerUserID != nil {
             appsflyerManager?.startAppsflyer()
@@ -330,6 +345,26 @@ public class CoreManager {
         Task {
             await purchaseManager?.updateProductStatus()
         }
+    }
+    
+    /*
+     The one retry after `.noInternet`, whichever trigger comes first: the network returning, or the
+     app becoming active. Both run on main and clear `shouldReconfigure`, so the other one finds
+     nothing to do. Until the app is active and connected the retry waits with `shouldReconfigure`
+     set: its timer and requests would not survive suspension, and without network it would fail.
+     Deliberately, `handleNoInternetAlertWasShown()` does not let activation retry without network:
+     returning from Settings offline keeps waiting for the network, it does not finish the configuration.
+     */
+    private func retryAfterNoInternet() {
+        assert(Thread.isMainThread, "retryAfterNoInternet is main-thread only")
+        guard shouldReconfigure,
+              UIApplication.shared.applicationState == .active,
+              networkMonitor.isConnected else {
+            return
+        }
+        shouldReconfigure = false
+        didRetryAfterNoInternet = true
+        reconfigure()
     }
     
     @MainActor
@@ -359,8 +394,15 @@ public class CoreManager {
                 analyticsManager?.setUserID(id)
             }
             self.delegate?.coreInitialConfigurationFinished()
+            // Captured on main: a response that lands after a reset must not complete the next generation.
+            let generation = AppConfigurationManager.shared?.generation
             remoteConfigManager?.configure(configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
-                InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                if let generation {
+                    InternalConfigurationEvent.remoteConfigLoaded.markAsCompleted(error: self?.remoteConfigManager?.remoteError,
+                                                                                  generation: generation)
+                } else {
+                    assertionFailure()
+                }
                 self?.delegate?.coreInitialRemoteConfigurationFinished()
             }
             
@@ -426,9 +468,18 @@ extension CoreManager {
             }
         }
         
+        guard let configurationManager = AppConfigurationManager.shared else {
+            assertionFailure()
+            return
+        }
+        let generation = configurationManager.generation
         AttributionServerManager.shared.syncOnAppStart { result in
-            self.handlePossibleAttributionUpdate()
-            InternalConfigurationEvent.attributionServerHandled.markAsCompleted(error: AttributionServerManager.shared.installError)
+            // A non-nil result is a confirmed success; the shared `installError` may belong to another request.
+            let error = result == nil ? AttributionServerManager.shared.installError : nil
+            configurationManager.perform(in: generation) {
+                self.handlePossibleAttributionUpdate()
+                InternalConfigurationEvent.attributionServerHandled.markAsCompleted(error: error)
+            }
         }
     }
 }
@@ -457,13 +508,25 @@ extension CoreManager {
             assertionFailure()
             return
         }
+        // The remote config updates below finish on a background thread, possibly after a reset.
+        let generation = configurationManager.generation
         
         let isInternetError = checkIsNoInternetError()
         
         if isInternetError && checkIsNoInternetHandledOrIgnored() == false && isUpdated == false {
             shouldReconfigure = true
+            // We are inside the attribution callback of `checkConfiguration()` for this generation. The
+            // reset advances the generation, so that call stops before it delivers the finish callbacks:
+            // `.noInternet` is the only result of this attempt, `.finished` follows the retry.
             resetConfigurationGeneration()
             delegate?.coreConfigurationFinished(result: .noInternet)
+            networkMonitor.monitorInternetChanges { [weak self] _ in
+                // The subscription reports the current state synchronously, and we are inside the finish of the
+                // previous attempt: the next attempt must not start nested in it. Re-read the state after the hop.
+                DispatchQueue.main.async {
+                    self?.retryAfterNoInternet()
+                }
+            }
             return
         }
         
@@ -490,13 +553,19 @@ extension CoreManager {
                     }
                     
                     remoteConfigManager?.updateRemoteConfig(["ipat": "\(ipat)"]) { [weak self] in
-                        InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                        let error = self?.remoteConfigManager?.remoteError
+                        configurationManager.perform(in: generation) {
+                            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: error)
+                        }
                     }
                 } else {
                     sendUserAttribution(userAttribution: [:], status: analyticsStatus(of: configurationManager))
                     
                     remoteConfigManager?.updateRemoteConfig([:]) { [weak self] in
-                        InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
+                        let error = self?.remoteConfigManager?.remoteError
+                        configurationManager.perform(in: generation) {
+                            InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: error)
+                        }
                     }
                 }
             } else {
@@ -507,9 +576,12 @@ extension CoreManager {
                 }
                 
                 remoteConfigManager?.updateRemoteConfig(attributionDict) { [weak self] in
-                    InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: self?.remoteConfigManager?.remoteError)
-                    if isUpdated {
-                        self?.delegate?.coreConfigurationUpdated()
+                    let error = self?.remoteConfigManager?.remoteError
+                    configurationManager.perform(in: generation) {
+                        InternalConfigurationEvent.remoteConfigUpdated.markAsCompleted(error: error)
+                        if isUpdated {
+                            self?.delegate?.coreConfigurationUpdated()
+                        }
                     }
                 }
             }
@@ -550,6 +622,7 @@ extension CoreManager {
 // MARK: Attrubution Update
 extension CoreManager {
     func handlePossibleAttributionUpdate() {
+        assert(Thread.isMainThread, "handlePossibleAttributionUpdate is main-thread only")
         guard let configurationManager = AppConfigurationManager.shared else {
             assertionFailure()
             return
@@ -576,9 +649,9 @@ extension CoreManager {
         }
     }
     
-    // The configuration timer fires on a global queue, while the AppsFlyer session tally read
-    // below is written on main. Same hop as `handleAttributionFinish`, which also puts the
-    // delegate callback on main.
+    // `AppConfigurationManager` now delivers its finish callbacks on main, so this hop runs
+    // synchronously. It is kept in the same shape as `handleAttributionFinish`, as a no-op
+    // safety net that keeps the session tally read and the delegate callback on main.
     func handleConfigurationFinish(result: CoreManagerResult, generation: Int) {
         MainQueueExecutor.perform { [weak self] in
             self?.handleConfigurationFinishOnMain(result: result, generation: generation)
@@ -623,6 +696,11 @@ extension CoreManager {
         
         let noInternetCanBeShown = !handledNoInternetAlert
         guard noInternetCanBeShown else {
+            return true
+        }
+        
+        // One retry per process: if it fails too, it finishes with its errors.
+        guard didRetryAfterNoInternet == false else {
             return true
         }
         

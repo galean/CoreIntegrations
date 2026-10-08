@@ -2,6 +2,12 @@ import AppTrackingTransparency
 import Foundation
 
 extension CoreManager {
+    // Only the error is replayed on a retry (a nil error is still an answer); the status is
+    // consumed once, by the handlers that receive it.
+    struct ATTAnswer {
+        let error: Error?
+    }
+
     func makeATTResolutionCoordinator() -> ATTResolutionCoordinator<ATTrackingManager.AuthorizationStatus> {
         ATTResolutionCoordinator(
             notDetermined: ATTrackingManager.AuthorizationStatus.notDetermined,
@@ -38,7 +44,11 @@ extension CoreManager {
 
     private func handleATTAnswered(_ status: ATTrackingManager.AuthorizationStatus,
                                    error: Error? = nil) {
-        if AppEnvironment.isChina {
+        // The China path waits for the network and restarts the configuration because the system asks
+        // for network permission on the first launch. On a later launch the configuration does not need
+        // the ATT answer and can already be finished when it arrives; restarting it then finished it
+        // twice. Same first-launch gate as the `.noInternet` result in `checkIsNoInternetHandledOrIgnored`.
+        if AppEnvironment.isChina && configuration?.appSettings.isFirstLaunch == true {
             handleChinaATTAnswer(status, error: error)
         } else {
             finishConfigurationAfterATT(status, error: error)
@@ -50,15 +60,19 @@ extension CoreManager {
         sendConfigurationDelayed(status: [:])
 
         var isReconfigured = false
+        // Both triggers decide on main, one after the other, so the first attempt is started
+        // exactly once; the monitor delivers on main, so the hop is a no-op kept as a safety net.
         networkMonitor.monitorInternetChanges { [weak self] isEnabled in
-            guard isEnabled, isReconfigured == false else {
-                return
+            MainQueueExecutor.perform {
+                guard isEnabled, isReconfigured == false else {
+                    return
+                }
+                isReconfigured = true
+                self?.reconfigureAfterATT(status, error: error)
             }
-            isReconfigured = true
-            self?.reconfigureAfterATT(status, error: error)
         }
 
-        DispatchQueue.global().asyncAfter(deadline: .now() + 6) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6) { [weak self] in
             guard isReconfigured == false else {
                 return
             }
@@ -67,28 +81,34 @@ extension CoreManager {
         }
     }
 
-    private func finishConfigurationAfterATT(_ status: ATTrackingManager.AuthorizationStatus,
-                                             error: Error?) {
+    /// Every configuration attempt, the first one and each retry, starts here.
+    func startConfigurationAttempt() {
+        assert(Thread.isMainThread, "startConfigurationAttempt is main-thread only")
+        guard let attAnswer else {
+            assertionFailure("A configuration attempt needs the ATT answer")
+            return
+        }
         sendConfigurationStarted(status: [:])
         AppConfigurationManager.shared?.startTimoutTimer()
-        InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
+        InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: attAnswer.error)
+    }
+
+    private func finishConfigurationAfterATT(_ status: ATTrackingManager.AuthorizationStatus,
+                                             error: Error?) {
+        attAnswer = ATTAnswer(error: error)
+        startConfigurationAttempt()
         facebookManager?.configureATT(isAuthorized: status == .authorized)
         appsflyerManager?.handleATTResolved()
     }
 
     private func reconfigureAfterATT(_ status: ATTrackingManager.AuthorizationStatus,
                                      error: Error?) {
-        guard Thread.isMainThread else {
-            DispatchQueue.main.async { [weak self] in
-                self?.reconfigureAfterATT(status, error: error)
-            }
-            return
-        }
+        // Both callers in `handleChinaATTAnswer` already run on main: the monitor handler through
+        // `MainQueueExecutor`, the fallback through `DispatchQueue.main.asyncAfter`.
+        assert(Thread.isMainThread, "reconfigureAfterATT is main-thread only")
 
-        sendConfigurationStarted(status: [:])
+        attAnswer = ATTAnswer(error: error)
         reconfigure()
-        AppConfigurationManager.shared?.startTimoutTimer()
-        InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
         facebookManager?.configureATT(isAuthorized: status == .authorized)
         appsflyerManager?.handleATTResolved()
         appsflyerManager?.startAppsflyer()
