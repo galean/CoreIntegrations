@@ -111,22 +111,6 @@ extension CoreManager {
         analyticsManager?.forceEventsUpload()
     }
     
-    func sendAppsflyerStartFailed(error: Error, attempt: AppsFlyerStartAttempt) {
-        let internetStatus = ["connection": "\(networkMonitor.isConnected)", "connection_type": networkMonitor.currentConnectionType?.description ?? "unexpected"]
-        let error = error as NSError
-        
-        var parameters = ["error_domain": error.domain,
-                          "error_code": "\(error.code)",
-                          "error_description": error.localizedDescription,
-                          "kind": attempt.isRateLimited ? "rate_limited" : "error",
-                          "attempt": "\(attempt.number)"]
-        if let secondsSincePreviousAttempt = attempt.secondsSincePreviousAttempt {
-            parameters["seconds_since_previous_attempt"] = String(format: "%.1f", secondsSincePreviousAttempt)
-        }
-        
-        InternalAnalyticsEvent.framework_appsflyer_start_failed.log(parameters: parameters+internetStatus)
-        analyticsManager?.forceEventsUpload()
-    }
     
     
     

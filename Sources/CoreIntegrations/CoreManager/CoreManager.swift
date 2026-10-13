@@ -293,9 +293,7 @@ public class CoreManager {
             reconfigure()
         }
         
-        if appsflyerManager?.customerUserID != nil {
-            appsflyerManager?.startAppsflyer()
-        } else {
+        if appsflyerManager?.customerUserID == nil {
             sentryManager.log(NSError(domain: "coreintegrations.appsflyer.noCustomerUserID", code: 1001))
         }
         

@@ -2,11 +2,6 @@ import UIKit
 import AppsFlyerLib
 
 public class AppfslyerManager: NSObject {
-    private enum ConversionResult {
-        case success([AnyHashable: Any])
-        case failure(Error)
-    }
-
     public var delegate: AppsflyerManagerDelegate?
     public var deeplinkError: Error? = nil
     public var deeplinkResult: [String: String]? {
@@ -21,45 +16,11 @@ public class AppfslyerManager: NSObject {
             UserDefaults.standard.set(newValue, forKey: deepLinkResultUDKey)
         }
     }
+    public private(set) var sessionStatus = "not started"
 
-    private var deepLinkResultUDKey = "coreintegrations_appsflyer_deeplinkResult"
-
-    /// `true` once a successful conversion result was delivered in this process. Unlike
-    /// `deeplinkResult` it is not persisted, and a conversion failure does not set it.
-    public private(set) var didDeliverConversionData = false
-
-    /*
-     SDK 7 no longer starts the session for us. `waitForATTUserAuthorization` used to
-     hold the first session inside the SDK until ATT resolved; in 7.x the SDK explicitly
-     does not manage ATT timing, so the session must be started by us once every
-     precondition is met. The three gates below are those preconditions - see
-     `startSessionIfReady()`. All of them are mutated on the main queue only.
-     */
-    private var isATTResolved = false
+    private let deepLinkResultUDKey = "coreintegrations_appsflyer_deeplinkResult"
+    private var startGate = AppsFlyerStartGate()
     private var isAdPartnersDataSharingEnabled = true
-    private var isUserIDReady = false
-    private var sessionStartPolicy = AppsFlyerSessionStartPolicy()
-    private var sessionTally = AppsFlyerSessionTally()
-
-    /*
-     A failed start is worth exactly one report per install, and only while the SDK has never
-     managed to start at all. The failure is entirely on the AppsFlyer side, so a broken
-     `start` would otherwise have every user reporting on every cold launch; and once a
-     session has ever gone through, later failures are not interesting. Both flags are
-     persisted - surviving relaunches is the whole point.
-     */
-    private let didStartSuccessfullyUDKey = "coreintegrations_appsflyer_didStartSuccessfully"
-    private let didReportStartFailureUDKey = "coreintegrations_appsflyer_didReportStartFailure"
-
-    private var didEverStartSuccessfully: Bool {
-        get { UserDefaults.standard.bool(forKey: didStartSuccessfullyUDKey) }
-        set { UserDefaults.standard.set(newValue, forKey: didStartSuccessfullyUDKey) }
-    }
-
-    private var didReportStartFailure: Bool {
-        get { UserDefaults.standard.bool(forKey: didReportStartFailureUDKey) }
-        set { UserDefaults.standard.set(newValue, forKey: didReportStartFailureUDKey) }
-    }
 
     public init(config: AppsflyerConfigData,
                 launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) {
@@ -73,23 +34,16 @@ public class AppfslyerManager: NSObject {
         AppsFlyerLib.shared().initialize(devKey: config.appsFlyerDevKey, appId: config.appleAppID)
         AppsFlyerLib.shared().delegate = self
 
-        // Launch options have to be handed over before the session ready listener is
-        // registered, otherwise a cold start Universal Link is not resolved before
-        // readiness fires.
+        // Launch options go in before the ready listener, so a cold start Universal Link is resolved first.
         AppsFlyerLib.shared().handleLaunchOptions(launchOptions)
         AppsFlyerLib.shared().registerSessionReadyListener { [weak self] in
-            self?.updateGates {
-                // AppsFlyer 7 owns lifecycle readiness. The listener re-fires on every activation
-                // of the same foreground cycle, so it only marks readiness - see the start policy.
-                $0.sessionStartPolicy.sessionBecameReady()
-            }
+            self?.updateGate { $0.isSessionReady = true }
         }
 
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(applicationDidEnterBackground),
                                                name: UIApplication.didEnterBackgroundNotification,
                                                object: nil)
-
     }
 
     deinit {
@@ -97,18 +51,10 @@ public class AppfslyerManager: NSObject {
     }
 
     @objc private func applicationDidEnterBackground() {
-        updateGates {
-            $0.sessionStartPolicy.sessionBecameUnavailable()
-        }
+        updateGate { $0.enteredBackground() }
     }
 
-    private func updateGates(_ mutation: @escaping (AppfslyerManager) -> Void) {
-        let work = { [weak self] in
-            guard let self else { return }
-            mutation(self)
-            self.startSessionIfReady()
-        }
-
+    private static func onMain(_ work: @escaping () -> Void) {
         if Thread.isMainThread {
             work()
         } else {
@@ -116,19 +62,37 @@ public class AppfslyerManager: NSObject {
         }
     }
 
-    private func startSessionIfReady() {
-        guard isATTResolved, isUserIDReady,
-              sessionStartPolicy.claimStart() else {
+    private func updateGate(_ change: @escaping (inout AppsFlyerStartGate) -> Void) {
+        AppfslyerManager.onMain { [weak self] in
+            guard let self else { return }
+            change(&self.startGate)
+            self.startSessionIfAllowed()
+        }
+    }
+
+    private func startSessionIfAllowed() {
+        guard startGate.claimStart(hasCustomerUserID: AppsFlyerLib.shared().customerUserID != nil) else {
             return
         }
         applySharingFilter()
-
-        // Taken before the call: a late completion must not get the number of a newer start.
-        let attempt = sessionTally.beginStart(at: Date())
+        if sessionStatus != "started" {
+            sessionStatus = "starting"
+        }
         AppsFlyerLib.shared().start { [weak self] _, error in
-            self?.handleStartCompletion(error,
-                                        attempt: attempt.number,
-                                        secondsSincePreviousAttempt: attempt.secondsSincePreviousAttempt)
+            AppfslyerManager.onMain { [weak self] in
+                self?.recordStartResult(error)
+            }
+        }
+    }
+
+    // A session that went through once stays `started` for this process; later failures do not undo it.
+    private func recordStartResult(_ error: Error?) {
+        if let error = error as NSError? {
+            if sessionStatus != "started" {
+                sessionStatus = "error: \(error.domain) \(error.code)"
+            }
+        } else {
+            sessionStatus = "started"
         }
     }
 
@@ -137,70 +101,21 @@ public class AppfslyerManager: NSObject {
         AppsFlyerLib.shared().setSharingFilterForPartners(isAdPartnersDataSharingEnabled ? nil : ["all"])
     }
 
-    /*
-     Diagnostics only. A completion is not final for the session and may belong to an earlier
-     foreground cycle, so it never touches the start permission or the conversion result.
-     */
-    private func handleStartCompletion(_ error: Error?,
-                                       attempt number: Int,
-                                       secondsSincePreviousAttempt: TimeInterval?) {
-        guard Thread.isMainThread else {
-            DispatchQueue.main.async { [weak self] in
-                self?.handleStartCompletion(error,
-                                            attempt: number,
-                                            secondsSincePreviousAttempt: secondsSincePreviousAttempt)
+    private func handleConversion(_ result: Result<[AnyHashable: Any], Error>) {
+        AppfslyerManager.onMain { [weak self] in
+            guard let self else { return }
+            switch result {
+            case .success(let conversionInfo):
+                self.deeplinkError = nil
+                let deepLinkInfo = self.parseDeepLink(conversionInfo)
+                self.deeplinkResult = deepLinkInfo
+                self.delegate?.handledDeeplink(deepLinkInfo)
+                self.delegate?.coreConfiguration(didReceive: conversionInfo)
+            case .failure(let error):
+                self.deeplinkError = error
+                self.delegate?.coreConfiguration(handleDeeplinkError: error)
             }
-            return
         }
-
-        sessionTally.finishStart(succeeded: error == nil)
-        guard let error else {
-            didEverStartSuccessfully = true
-            return
-        }
-
-        let attempt = AppsFlyerStartAttempt(number: number,
-                                            secondsSincePreviousAttempt: secondsSincePreviousAttempt,
-                                            error: error)
-        delegate?.appsflyerSessionStartAttemptFailed(error, attempt: attempt)
-        // Classified before the token is consumed: a rate limited start is expected and must
-        // not use up the one report per install.
-        guard attempt.isRateLimited == false else {
-            return
-        }
-        delegate?.appsflyerSessionStartFailed(error,
-                                              shouldReport: consumeStartFailureReport())
-    }
-
-    private func handleConversionResult(_ result: ConversionResult) {
-        guard Thread.isMainThread else {
-            DispatchQueue.main.async { [weak self] in
-                self?.handleConversionResult(result)
-            }
-            return
-        }
-
-        switch result {
-        case .success(let conversionInfo):
-            deeplinkError = nil
-            didDeliverConversionData = true
-            let deepLinkInfo = parseDeepLink(conversionInfo)
-            deeplinkResult = deepLinkInfo
-            delegate?.handledDeeplink(deepLinkInfo)
-            delegate?.coreConfiguration(didReceive: conversionInfo)
-        case .failure(let error):
-            deeplinkError = error
-            delegate?.coreConfiguration(handleDeeplinkError: error)
-        }
-    }
-
-    /// One shot token: `true` at most once per install, and never once a session has started.
-    private func consumeStartFailureReport() -> Bool {
-        guard didEverStartSuccessfully == false, didReportStartFailure == false else {
-            return false
-        }
-        didReportStartFailure = true
-        return true
     }
 
     private func parseDeepLink(_ conversionInfo: [AnyHashable : Any]) -> [String: String] {
@@ -236,17 +151,13 @@ extension AppfslyerManager: AppfslyerManagerProtocol {
         AppsFlyerLib.shared().getAppsFlyerUID()
     }
 
-    /// Main thread only: the tally behind it is written on main.
-    public var appsflyerSession: AppsFlyerSessionState {
-        sessionTally.state
-    }
-
     public var customerUserID: String? {
         get {
             return AppsFlyerLib.shared().customerUserID
         }
         set {
             AppsFlyerLib.shared().customerUserID = newValue
+            updateGate { _ in }
         }
     }
 
@@ -267,18 +178,14 @@ extension AppfslyerManager: AppfslyerManagerProtocol {
         AppsFlyerLib.shared().handlePushNotification(userInfo)
     }
 
-    public func startAppsflyer() {
-        updateGates { $0.isUserIDReady = true }
-    }
-
     public func handleATTResolved() {
-        updateGates { $0.isATTResolved = true }
+        updateGate { $0.isATTResolved = true }
     }
 
     public func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {
-        updateGates {
-            $0.isAdPartnersDataSharingEnabled = isEnabled
-            $0.applySharingFilter()
+        AppfslyerManager.onMain { [weak self] in
+            self?.isAdPartnersDataSharingEnabled = isEnabled
+            self?.applySharingFilter()
         }
     }
 
@@ -289,16 +196,10 @@ extension AppfslyerManager: AppfslyerManagerProtocol {
 
 extension AppfslyerManager: AppsFlyerLibDelegate {
     public func onConversionDataSuccess(_ conversionInfo: [AnyHashable : Any]) {
-        handleConversionResult(.success(conversionInfo))
+        handleConversion(.success(conversionInfo))
     }
 
     public func onConversionDataFail(_ error: Error) {
-        handleConversionResult(.failure(error))
-    }
-
-    @available(*, deprecated, message: "AppsFlyer 7 removed this delegate callback; use conversion-data callbacks instead.")
-    public func onAppOpenAttributionFailure(_ error: Error) {
-        self.deeplinkError = error
-        delegate?.coreConfiguration(handleDeeplinkError: error)
+        handleConversion(.failure(error))
     }
 }

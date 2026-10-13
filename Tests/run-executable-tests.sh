@@ -26,3 +26,7 @@ run ConfigurationAttempt \
     "$CONFIGURATION/Models/ConfigurationResult.swift" \
     "$CONFIGURATION/Protocols/ConfigurationEvent.swift" \
     "$TESTS/ConfigurationAttemptExecutableTests.swift"
+
+run AppsFlyerStartGate \
+    "$ROOT/Sources/AppsflyerIntegration/AppsFlyerStartGate.swift" \
+    "$TESTS/AppsFlyerStartGateExecutableTests.swift"

@@ -126,6 +126,5 @@ extension CoreManager {
         startConfigurationAttempt()
         facebookManager?.configureATT(isAuthorized: answer.status == .authorized)
         appsflyerManager?.handleATTResolved()
-        appsflyerManager?.startAppsflyer()
     }
 }

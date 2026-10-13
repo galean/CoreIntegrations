@@ -47,7 +47,7 @@ extension CoreManager {
 
     func analyticsStatus(of attempt: ConfigurationAttempt) -> [String: String] {
         var status = attempt.statusForAnalytics
-        status["appsflyerSession"] = (appsflyerManager?.appsflyerSession ?? .notStarted).rawValue
+        status["appsflyerSession"] = appsflyerManager?.sessionStatus ?? "not started"
         return status
     }
 }
