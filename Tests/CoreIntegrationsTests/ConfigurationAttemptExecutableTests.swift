@@ -47,6 +47,7 @@ private struct ConfigurationAttemptExecutableTests {
         timerOfCancelledAttemptDoesNotFinishNewOne()
         alreadyCompletedEventsAreKept()
         cancellingInAttributionCallbackStopsFinish()
+        completionInsideAttributionCallbackFinishesOnce()
         detectsNetworkErrors()
         print("ConfigurationAttemptExecutableTests: PASS")
     }
@@ -143,6 +144,22 @@ private struct ConfigurationAttemptExecutableTests {
         attempt.onFinished = { _ in finished = true }
         completeAll(attempt)
         require(finished == false, "A cancel inside the attribution callback must stop the finish")
+    }
+
+    static func completionInsideAttributionCallbackFinishesOnce() {
+        let attempt = makeAttempt()
+        var finishes = 0
+        attempt.onAttributionFinished = {
+            attempt.complete(InternalConfigurationEvent.remoteConfigUpdated, error: nil)
+        }
+        attempt.onFinished = { _ in finishes += 1 }
+        attempt.complete(AppEvent.onboardingLoaded, error: nil)
+        [InternalConfigurationEvent.attConcentGiven, .remoteConfigLoaded,
+         .appsflyerWeb2AppHandled].forEach { attempt.complete($0, error: nil) }
+        require(finishes == 0, "Attribution is not finished yet")
+        // The last attribution event fires the callback, whose completion is the last missing event.
+        attempt.complete(InternalConfigurationEvent.attributionServerHandled, error: nil)
+        require(finishes == 1, "A completion inside the attribution callback must finish the attempt exactly once")
     }
 
     static func detectsNetworkErrors() {
