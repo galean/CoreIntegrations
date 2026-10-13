@@ -68,8 +68,7 @@ extension CoreManager {
             delayConfigurationForChina(answer)
         } else {
             startConfigurationAttempt()
-            facebookManager?.configureATT(isAuthorized: answer.status == .authorized)
-            appsflyerManager?.handleATTResolved()
+            configureATTConsumers(answer)
         }
     }
 
@@ -123,8 +122,11 @@ extension CoreManager {
     }
 
     private func restartConfigurationAfterATT(_ answer: ATTAnswer) {
-        reconfigure()
-        startConfigurationAttempt()
+        restartConfiguration()
+        configureATTConsumers(answer)
+    }
+
+    private func configureATTConsumers(_ answer: ATTAnswer) {
         facebookManager?.configureATT(isAuthorized: answer.status == .authorized)
         appsflyerManager?.handleATTResolved()
     }

@@ -33,8 +33,8 @@ extension CoreManager {
         configurationAttempt?.complete(event, error: error)
     }
 
-    /// A new attempt with the remote config reloaded. The caller decides whether it starts (timer, ATT event).
-    func reconfigure() {
+    /// Starts a new attempt with the remote config reloaded: the China restart and the retry after `.noInternet`.
+    func restartConfiguration() {
         let attempt = beginConfigurationAttempt()
         remoteConfigManager?.updateRemoteConfig([:]) { [weak self] in
             self?.remoteConfigManager?.configure(self?.configuration?.remoteConfigDataSource.allConfigs ?? []) { [weak self] in
@@ -44,6 +44,7 @@ extension CoreManager {
                 }
             }
         }
+        startConfigurationAttempt()
     }
 
     func analyticsStatus(of attempt: ConfigurationAttempt) -> [String: String] {
@@ -68,8 +69,7 @@ extension CoreManager {
         guard noInternetRetry.claimRetry() else {
             return
         }
-        reconfigure()
-        startConfigurationAttempt()
+        restartConfiguration()
     }
 }
 
