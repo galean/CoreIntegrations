@@ -63,7 +63,8 @@ extension CoreManager {
     }
 
     func applyATTAnswer(_ answer: ATTAnswer) {
-        if AppEnvironment.isChina {
+        // Only the first launch meets the system network prompt; later launches take the plain path.
+        if AppEnvironment.isChina && configuration?.appSettings.isFirstLaunch == true {
             delayConfigurationForChina(answer)
         } else {
             startConfigurationAttempt()
