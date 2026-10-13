@@ -29,8 +29,8 @@ extension NWInterface.InterfaceType: @retroactive CustomStringConvertible {
     }
 }
 
+/// Main thread only: path updates are delivered on main, where every reader and writer lives.
 final class NetworkManager {
-    private let queue = DispatchQueue(label: "CoreNetworkConnectivityMonitor")
     private let monitor: NWPathMonitor
 
     private(set) var isConnected = false
@@ -51,7 +51,7 @@ final class NetworkManager {
 
     func startMonitoring() {
         isConnected = monitor.currentPath.status != .unsatisfied
-        monitor.start(queue: queue)
+        monitor.start(queue: .main)
     }
 
     /*
