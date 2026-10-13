@@ -52,7 +52,8 @@ public class CoreManager {
         }
     }
     
-    lazy var attResolutionCoordinator = makeATTResolutionCoordinator()
+    var attAnswer: ATTAnswer?
+    var isATTRequestInFlight = false
     var isConfigured: Bool = false
     
     var configuration: CoreConfigurationProtocol?
@@ -259,6 +260,10 @@ public class CoreManager {
         NotificationCenter.default.addObserver(self, selector: #selector(handleFCMTokenUpdate),
                                                name: NSNotification.Name("FCMTokenUpdated"),
                                                object: nil)
+        
+        if let attAnswer {
+            applyATTAnswer(attAnswer)
+        }
     }
     
     func internalHanleAuthID(_ authID: String?) {

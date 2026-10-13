@@ -17,12 +17,6 @@ run() {
     "$OUT/$name"
 }
 
-run ATTResolutionPolicy \
-    "$CORE/CoreManager/ATTResolutionPolicy.swift" \
-    "$CORE/CoreManager/ATTResolutionCoordinator.swift" \
-    "$CORE/CoreManager/MainQueueExecutor.swift" \
-    "$TESTS/ATTResolutionPolicyExecutableTests.swift"
-
 CONFIGURATION="$CORE/ConfigurationManager"
 
 run ConfigurationAttempt \

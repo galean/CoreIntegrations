@@ -193,7 +193,9 @@ extension CoreManager: CoreManagerProtocol {
     }
     
     public func handleATTPermission(_ status: ATTrackingManager.AuthorizationStatus) {
-        attResolutionCoordinator.resolveExternally(status)
+        MainQueueExecutor.perform { [weak self] in
+            self?.resolveATT(status, source: .external)
+        }
     }
     
     public func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {
