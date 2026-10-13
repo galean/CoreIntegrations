@@ -3,6 +3,7 @@ import Foundation
 
 public protocol CoreManagerDelegate: AnyObject {
     func coreInitialConfigurationFinished()
+    /// Called on main.
     func coreInitialRemoteConfigurationFinished()
     
     /// Called on main. `.noInternet` (China, first launch, both backend requests failed) is not final:

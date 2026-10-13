@@ -336,8 +336,8 @@ public class CoreManager {
                 let error = self?.remoteConfigManager?.remoteError
                 MainQueueExecutor.perform {
                     attempt?.complete(InternalConfigurationEvent.remoteConfigLoaded, error: error)
+                    self?.delegate?.coreInitialRemoteConfigurationFinished()
                 }
-                self?.delegate?.coreInitialRemoteConfigurationFinished()
             }
             
         }
