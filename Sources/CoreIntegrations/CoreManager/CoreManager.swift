@@ -393,8 +393,9 @@ extension CoreManager {
             }
         }
         
-        AttributionServerManager.shared.syncOnAppStart { [weak self] _ in
-            let error = AttributionServerManager.shared.installError
+        AttributionServerManager.shared.syncOnAppStart { [weak self] result in
+            // A non-nil result is a success; the shared installError may belong to another request.
+            let error = result == nil ? AttributionServerManager.shared.installError : nil
             MainQueueExecutor.perform {
                 self?.handlePossibleAttributionUpdate()
                 attempt.complete(InternalConfigurationEvent.attributionServerHandled, error: error)

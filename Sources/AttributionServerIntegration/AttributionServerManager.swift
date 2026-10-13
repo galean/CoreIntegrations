@@ -42,6 +42,8 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
                                                tokensPath: config.tokensPath)
     }
     
+    /// Completes once: with the server result (`nil` on failure) for a new install, or on main with the
+    /// saved result for an install that is already registered (`nil` for legacy data without one).
     public func syncOnAppStart(_ completion: @escaping (AttributionManagerResult?) -> Void) {
         guard validateToken(authorizationToken) else {
             assertionFailure("No token")
@@ -60,6 +62,14 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
                 sendInstallData(installData, authToken: authorizationToken, completion: completion)
             }
             return
+        }
+        
+        // Already registered: complete with the saved result, on main and never nested in the caller.
+        // No request is made, so an error left by an earlier request must not be reported for it.
+        let installResult = installResultData
+        DispatchQueue.main.async {
+            self.installError = nil
+            completion(installResult)
         }
         
         checkAndSendSavedPurchase(userId: userID)

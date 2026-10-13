@@ -11,6 +11,8 @@ public protocol AttributionServerManagerProtocol {
 
     func configure(config: AttributionConfigData)
     func configureURLs(config: AttributionConfigURLs)
+    /// Completes once: with the server result (`nil` on failure) for a new install, or on main with the
+    /// saved result for an install that is already registered (`nil` for legacy data without one).
     func syncOnAppStart(_ completion: @escaping (AttributionManagerResult?) -> Void)
     func sendExternalAuthorization(externalAuthID: String)
     func syncPurchase(data: AttributionPurchaseModel)
