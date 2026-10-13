@@ -1,2 +1,12 @@
 # CoreIntegrations
-Framework version - 3.0.3rc
+Framework version - 3.1.0
+
+## No internet on the first launch in China
+
+On the first launch, iOS in China asks for network access per app, so the first requests often fail.
+
+- After the ATT answer the framework waits for the network (up to 6 s) and restarts the configuration.
+- If the remote config and the attribution server both fail, `coreConfigurationFinished(result: .noInternet)` is delivered. The app may show a "no internet" alert.
+- The framework then retries once, when the app becomes active again or the network appears, and delivers `coreConfigurationFinished(result: .finished)` within the configuration timeout, with or without network.
+- `handleNoInternetAlertWasShown()` called before any `.noInternet` opts out: failures finish as `.finished` without a retry.
+- Later launches and other regions never get `.noInternet`.
