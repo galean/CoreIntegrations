@@ -16,7 +16,7 @@ Real device, clean install for every first-launch scenario. Watch Xcode console 
 ## China (device region CN)
 
 6. First launch, network access denied in the system prompt → `framework_start_delayed`, `.noInternet` delivered. Go to Settings, keep network off, return → `.finished` within ~6 s, one `framework_finished`.
-7. First launch offline, then enable network while the app stays in the foreground → retry starts, one `framework_finished` and one `framework_attribution`.
+7. First launch offline, then enable network while the app stays in the foreground → retry starts, one `framework_finished` and one `framework_attribution`. A retry in the same foreground cycle starts no new AppsFlyer session; that is expected.
 8. Second launch → one `framework_finished`, no `framework_start_delayed`, no `.noInternet`.
 9. App that calls `handleNoInternetAlertWasShown()` in `didFinishLaunching` → first launch offline ends with `.finished`, no `.noInternet`, no retry.
 

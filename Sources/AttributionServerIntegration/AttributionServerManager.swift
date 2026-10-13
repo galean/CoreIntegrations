@@ -42,7 +42,7 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
                                                tokensPath: config.tokensPath)
     }
     
-    /// Completes once: with the server result (`nil` on failure) for a new install, or on main with the
+    /// Completes at most once (never without an authorization token): with the server result (`nil` on failure) for a new install, or on main with the
     /// saved result for an install that is already registered (`nil` for legacy data without one).
     public func syncOnAppStart(_ completion: @escaping (AttributionManagerResult?) -> Void) {
         guard validateToken(authorizationToken) else {
