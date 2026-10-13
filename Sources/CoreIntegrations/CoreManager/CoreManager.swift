@@ -72,8 +72,7 @@ public class CoreManager {
         
     var idConfigured = false
     
-    var handledNoInternetAlert: Bool = false
-    var shouldReconfigure = false
+    var noInternetRetry = NoInternetRetry()
     
     var networkMonitor = NetworkManager()
     var configurationEvents: [any ConfigurationEvent] = []
@@ -242,7 +241,9 @@ public class CoreManager {
                 let result = handleTestEnvironment(envVariables: environmentVariables)
                 
                 remoteConfigManager?.configure(configuration.remoteConfigDataSource.allConfigs) { [weak self] in
-                    self?.delegate?.coreConfigurationFinished(result: result)
+                    MainQueueExecutor.perform {
+                        self?.delegate?.coreConfigurationFinished(result: result)
+                    }
                 }
             } else {
                 let result = handleTestEnvironment(envVariables: environmentVariables)
@@ -288,10 +289,7 @@ public class CoreManager {
     @objc public func applicationDidBecomeActive() {
         configureID()
         
-        if shouldReconfigure && handledNoInternetAlert {
-            shouldReconfigure = false
-            reconfigure()
-        }
+        retryAfterNoInternet(trigger: .activation)
         
         if appsflyerManager?.customerUserID == nil {
             sentryManager.log(NSError(domain: "coreintegrations.appsflyer.noCustomerUserID", code: 1001))
@@ -413,12 +411,19 @@ extension CoreManager {
             return
         }
         
-        let isInternetError = checkIsNoInternetError()
-        
-        if isInternetError && checkIsNoInternetHandledOrIgnored() == false && isUpdated == false {
-            shouldReconfigure = true
+        if isUpdated == false,
+           noInternetRetry.shouldDeliverNoInternet(isChina: AppEnvironment.isChina,
+                                                   isFirstLaunch: configuration?.appSettings.isFirstLaunch == true,
+                                                   completedWithNetworkErrors: attempt.completedWithNetworkErrors) {
             attempt.cancel()
             delegate?.coreConfigurationFinished(result: .noInternet)
+            networkMonitor.monitorInternetChanges { [weak self] isConnected in
+                guard isConnected else { return }
+                // Reported synchronously on subscription, inside this attempt's finish: retry after it.
+                DispatchQueue.main.async {
+                    self?.retryAfterNoInternet(trigger: .network)
+                }
+            }
             return
         }
         
@@ -528,33 +533,6 @@ extension CoreManager {
         delegate?.coreConfigurationFinished(result: .finished)
         // The configuration handlers (China flows) are done; the monitor stays up for analytics.
         networkMonitor.removeInternetHandlers()
-    }
-}
-
-// MARK: Support
-extension CoreManager {
-    func checkIsNoInternetHandledOrIgnored() -> Bool {
-        guard AppEnvironment.isChina else {
-            return true
-        }
-        
-        guard configuration?.appSettings.isFirstLaunch == true else {
-            return true
-        }
-        
-        let noInternetCanBeShown = !handledNoInternetAlert
-        guard noInternetCanBeShown else {
-            return true
-        }
-        
-        return false
-    }
-    
-    func checkIsNoInternetError() -> Bool {
-        let attrError = AttributionServerManager.shared.installError
-        let remoteError = remoteConfigManager?.remoteError
-
-        return attrError != nil && remoteError != nil
     }
 }
 

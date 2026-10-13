@@ -30,3 +30,7 @@ run ConfigurationAttempt \
 run AppsFlyerStartGate \
     "$ROOT/Sources/AppsflyerIntegration/AppsFlyerStartGate.swift" \
     "$TESTS/AppsFlyerStartGateExecutableTests.swift"
+
+run NoInternetRetry \
+    "$CORE/CoreManager/NoInternetRetry.swift" \
+    "$TESTS/NoInternetRetryExecutableTests.swift"

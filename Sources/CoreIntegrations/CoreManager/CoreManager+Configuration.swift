@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 extension CoreManager {
     /// Cancels the current attempt and starts a new one that already carries the process facts.
@@ -49,6 +50,26 @@ extension CoreManager {
         var status = attempt.statusForAnalytics
         status["appsflyerSession"] = appsflyerManager?.sessionStatus ?? "not started"
         return status
+    }
+}
+
+extension CoreManager {
+    enum NoInternetRetryTrigger {
+        case activation, network
+    }
+
+    /// The one retry after `.noInternet`: the app becoming active (with or without network) or the
+    /// network appearing while it is active, whichever comes first. It always ends in `.finished`.
+    func retryAfterNoInternet(trigger: NoInternetRetryTrigger) {
+        assert(Thread.isMainThread, "retryAfterNoInternet is main-thread only")
+        if trigger == .network, UIApplication.shared.applicationState != .active {
+            return
+        }
+        guard noInternetRetry.claimRetry() else {
+            return
+        }
+        reconfigure()
+        startConfigurationAttempt()
     }
 }
 

@@ -216,7 +216,9 @@ extension CoreManager: CoreManagerProtocol {
     }
     
     public func handleNoInternetAlertWasShown() {
-        handledNoInternetAlert = true
+        MainQueueExecutor.perform { [weak self] in
+            self?.noInternetRetry.optOut()
+        }
     }
     
     public func setExternalAuthId(_ externalAuthId: String?) {
