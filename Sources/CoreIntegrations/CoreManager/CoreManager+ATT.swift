@@ -70,8 +70,8 @@ extension CoreManager {
     private func finishConfigurationAfterATT(_ status: ATTrackingManager.AuthorizationStatus,
                                              error: Error?) {
         sendConfigurationStarted(status: [:])
-        AppConfigurationManager.shared?.startTimoutTimer()
-        InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
+        configurationAttempt?.startTimer()
+        recordProcessEvent(InternalConfigurationEvent.attConcentGiven, error: error)
         facebookManager?.configureATT(isAuthorized: status == .authorized)
         appsflyerManager?.handleATTResolved()
     }
@@ -87,8 +87,8 @@ extension CoreManager {
 
         sendConfigurationStarted(status: [:])
         reconfigure()
-        AppConfigurationManager.shared?.startTimoutTimer()
-        InternalConfigurationEvent.attConcentGiven.markAsCompleted(error: error)
+        configurationAttempt?.startTimer()
+        recordProcessEvent(InternalConfigurationEvent.attConcentGiven, error: error)
         facebookManager?.configureATT(isAuthorized: status == .authorized)
         appsflyerManager?.handleATTResolved()
         appsflyerManager?.startAppsflyer()

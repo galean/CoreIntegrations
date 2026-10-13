@@ -11,7 +11,7 @@ extension CoreManager: AppsflyerManagerDelegate {
 
     public func coreConfiguration(handleDeeplinkError error: Error) {
         delegate?.coreConfiguration(handleDeeplinkError: error)
-        InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted(error: error)
+        configurationAttempt?.complete(InternalConfigurationEvent.appsflyerWeb2AppHandled, error: error)
     }
 
     public func appsflyerSessionStartAttemptFailed(_ error: Error, attempt: AppsFlyerStartAttempt) {
@@ -42,6 +42,7 @@ extension CoreManager: AppsflyerManagerDelegate {
     public func handledDeeplink(_ result: [String : String]) {
 //        sendDeepLinkUserProperties(deepLinkResult: result)
         handlePossibleAttributionUpdate()
-        InternalConfigurationEvent.appsflyerWeb2AppHandled.markAsCompleted()
+        // A success is a fact of the process: a later attempt does not start a new session to get it again.
+        recordProcessEvent(InternalConfigurationEvent.appsflyerWeb2AppHandled, error: nil)
     }
 }

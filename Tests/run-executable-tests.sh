@@ -22,3 +22,13 @@ run ATTResolutionPolicy \
     "$CORE/CoreManager/ATTResolutionCoordinator.swift" \
     "$CORE/CoreManager/MainQueueExecutor.swift" \
     "$TESTS/ATTResolutionPolicyExecutableTests.swift"
+
+CONFIGURATION="$CORE/ConfigurationManager"
+
+run ConfigurationAttempt \
+    "$CONFIGURATION/ConfigurationAttempt.swift" \
+    "$CONFIGURATION/Models/CoreConfigurationModel.swift" \
+    "$CONFIGURATION/Models/InternalConfigurationEvent.swift" \
+    "$CONFIGURATION/Models/ConfigurationResult.swift" \
+    "$CONFIGURATION/Protocols/ConfigurationEvent.swift" \
+    "$TESTS/ConfigurationAttemptExecutableTests.swift"
