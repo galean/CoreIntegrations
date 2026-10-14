@@ -16,10 +16,13 @@ public class AppfslyerManager: NSObject {
             UserDefaults.standard.set(newValue, forKey: deepLinkResultUDKey)
         }
     }
-    public private(set) var sessionStatus = "not started"
+    public var sessionStatus: String {
+        session.value
+    }
 
     private let deepLinkResultUDKey = "coreintegrations_appsflyer_deeplinkResult"
     private var startGate = AppsFlyerStartGate()
+    private var session = AppsFlyerSessionStatus()
     private var isAdPartnersDataSharingEnabled = true
 
     public init(config: AppsflyerConfigData,
@@ -75,24 +78,11 @@ public class AppfslyerManager: NSObject {
             return
         }
         applySharingFilter()
-        if sessionStatus != "started" {
-            sessionStatus = "starting"
-        }
+        session.startBegan()
         AppsFlyerLib.shared().start { [weak self] _, error in
             AppfslyerManager.onMain { [weak self] in
-                self?.recordStartResult(error)
+                self?.session.startFinished(error: error)
             }
-        }
-    }
-
-    // A session that went through once stays `started` for this process; later failures do not undo it.
-    private func recordStartResult(_ error: Error?) {
-        if let error = error as NSError? {
-            if sessionStatus != "started" {
-                sessionStatus = "error: \(error.domain) \(error.code)"
-            }
-        } else {
-            sessionStatus = "started"
         }
     }
 

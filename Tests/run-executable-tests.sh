@@ -31,6 +31,10 @@ run AppsFlyerStartGate \
     "$ROOT/Sources/AppsflyerIntegration/AppsFlyerStartGate.swift" \
     "$TESTS/AppsFlyerStartGateExecutableTests.swift"
 
+run AppsFlyerSessionStatus \
+    "$ROOT/Sources/AppsflyerIntegration/AppsFlyerSessionStatus.swift" \
+    "$TESTS/AppsFlyerSessionStatusExecutableTests.swift"
+
 run NoInternetRetry \
     "$CORE/CoreManager/NoInternetRetry.swift" \
     "$TESTS/NoInternetRetryExecutableTests.swift"
