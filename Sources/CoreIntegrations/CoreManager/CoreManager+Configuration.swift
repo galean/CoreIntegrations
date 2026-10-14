@@ -55,8 +55,8 @@ extension CoreManager {
 }
 
 extension CoreManager {
-    /// The one retry after `.noInternet`: the app returning from the background (with or without
-    /// network) or the network appearing while it is active, whichever comes first. It always ends in `.finished`.
+    /// The one retry after `.noInternet`: the network being available while the app is active, or the app
+    /// returning from the background without network, whichever comes first. It always ends in `.finished`.
     func retryAfterNoInternet(trigger: NoInternetRetry.Trigger) {
         assert(Thread.isMainThread, "retryAfterNoInternet is main-thread only")
         if trigger == .network, UIApplication.shared.applicationState != .active {

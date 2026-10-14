@@ -7,8 +7,9 @@ public protocol CoreManagerDelegate: AnyObject {
     func coreInitialRemoteConfigurationFinished()
     
     /// Called on main. `.noInternet` (China, first launch, both backend requests failed) is not final:
-    /// the framework retries once, when the app returns from the background (e.g. from Settings) or the network appears while it is active, and then
-    /// calls this with `.finished` within the configuration timeout, with or without network.
+    /// the framework retries once, when the app returns from the background (e.g. from Settings) or the
+    /// network appears while it is active, and then calls this with `.finished` within the configuration
+    /// timeout, with or without network.
     func coreConfigurationFinished(result: CoreManagerResult)
     /// Called on main.
     func coreConfigurationUpdated()

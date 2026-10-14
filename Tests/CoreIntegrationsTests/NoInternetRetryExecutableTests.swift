@@ -37,7 +37,6 @@ private struct NoInternetRetryExecutableTests {
         require(late.claimRetry(for: .network), "The retry still happens after a late hook")
 
         var dialog = NoInternetRetry()
-        dialog.enteredBackground()
         _ = dialog.shouldDeliverNoInternet(isChina: true, isFirstLaunch: true, completedWithNetworkErrors: true)
         require(dialog.claimRetry(for: .activation) == false,
                 "An activation without a trip to the background (a system dialog) does not retry")
@@ -47,10 +46,17 @@ private struct NoInternetRetryExecutableTests {
 
         var beforeFailure = NoInternetRetry()
         beforeFailure.enteredBackground()
+        beforeFailure.becameActive()
         _ = beforeFailure.shouldDeliverNoInternet(isChina: true, isFirstLaunch: true, completedWithNetworkErrors: true)
         require(beforeFailure.claimRetry(for: .activation) == false,
-                "A background trip before .noInternet does not count")
+                "A finished background trip before .noInternet does not count")
         require(beforeFailure.claimRetry(for: .network), "The network trigger needs no background trip")
+
+        var inBackground = NoInternetRetry()
+        inBackground.enteredBackground()
+        _ = inBackground.shouldDeliverNoInternet(isChina: true, isFirstLaunch: true, completedWithNetworkErrors: true)
+        require(inBackground.claimRetry(for: .activation),
+                ".noInternet delivered while in the background counts as already away")
 
         print("NoInternetRetryExecutableTests: PASS")
     }

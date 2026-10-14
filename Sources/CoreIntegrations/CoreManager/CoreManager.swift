@@ -296,7 +296,8 @@ public class CoreManager {
     @objc public func applicationDidBecomeActive() {
         configureID()
         
-        retryAfterNoInternet(trigger: .activation)
+        retryAfterNoInternet(trigger: networkMonitor.isConnected ? .network : .activation)
+        noInternetRetry.becameActive()
         
         if appsflyerManager?.customerUserID == nil {
             sentryManager.log(NSError(domain: "coreintegrations.appsflyer.noCustomerUserID", code: 1001))
