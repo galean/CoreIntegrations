@@ -55,18 +55,14 @@ extension CoreManager {
 }
 
 extension CoreManager {
-    enum NoInternetRetryTrigger {
-        case activation, network
-    }
-
-    /// The one retry after `.noInternet`: the app becoming active (with or without network) or the
-    /// network appearing while it is active, whichever comes first. It always ends in `.finished`.
-    func retryAfterNoInternet(trigger: NoInternetRetryTrigger) {
+    /// The one retry after `.noInternet`: the app returning from the background (with or without
+    /// network) or the network appearing while it is active, whichever comes first. It always ends in `.finished`.
+    func retryAfterNoInternet(trigger: NoInternetRetry.Trigger) {
         assert(Thread.isMainThread, "retryAfterNoInternet is main-thread only")
         if trigger == .network, UIApplication.shared.applicationState != .active {
             return
         }
-        guard noInternetRetry.claimRetry() else {
+        guard noInternetRetry.claimRetry(for: trigger) else {
             return
         }
         restartConfiguration()

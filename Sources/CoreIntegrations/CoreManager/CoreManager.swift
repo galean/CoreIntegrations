@@ -257,6 +257,9 @@ public class CoreManager {
         NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive),
                                                name: UIApplication.didBecomeActiveNotification,
                                                object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(applicationDidEnterBackground),
+                                               name: UIApplication.didEnterBackgroundNotification,
+                                               object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleFCMTokenUpdate),
                                                name: NSNotification.Name("FCMTokenUpdated"),
@@ -283,6 +286,10 @@ public class CoreManager {
             return
         }
         AttributionServerManager.shared.sendExternalAuthorization(externalAuthID: authID)
+    }
+    
+    @objc func applicationDidEnterBackground() {
+        noInternetRetry.enteredBackground()
     }
     
     @MainActor
