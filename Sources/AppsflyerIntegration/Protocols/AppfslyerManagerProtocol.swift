@@ -2,14 +2,13 @@ import UIKit
 
 public protocol AppfslyerManagerProtocol {
     var appsflyerID: String { get }
+    /// A non-nil value lets the session start (one of its conditions).
     var customerUserID: String? { get set }
     var deeplinkResult: [String: String]? { get }
     var delegate: AppsflyerManagerDelegate? { get set }
     var deeplinkError: Error? { get }
-    /// Derived from the `start()` completions of this process, for analytics only.
-    var appsflyerSession: AppsFlyerSessionState { get }
-    /// `true` once a successful conversion result was delivered in this process.
-    var didDeliverConversionData: Bool { get }
+    /// `not started` / `starting` / `started` / `error: <domain> <code>`, for the configuration status. Main thread only.
+    var sessionStatus: String { get }
     
     func application( _ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] )
     func application(_ application: UIApplication, continue userActivity: NSUserActivity,
@@ -17,9 +16,7 @@ public protocol AppfslyerManagerProtocol {
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data)
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
     
-    /// Signals that the customer user ID is set, i.e. the session may be sent.
-    func startAppsflyer()
-    /// Signals that the ATT decision is known, i.e. the session may be sent.
+    /// The ATT decision is known: one of the session start conditions.
     func handleATTResolved()
     func setAdPartnersDataSharingEnabled(_ isEnabled: Bool)
     func logTrialPurchase()

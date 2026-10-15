@@ -37,6 +37,8 @@ public protocol CoreManagerProtocol {
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
     
     func handleATTPermission(_ status: ATTrackingManager.AuthorizationStatus)
+    /// Opts out of `.noInternet` when called before it: failures then finish as `.finished` and are
+    /// not retried. Called after `.noInternet`, it has no effect; the retry is automatic.
     func handleNoInternetAlertWasShown()
 
     func handleCustomFirebaseConfigured()

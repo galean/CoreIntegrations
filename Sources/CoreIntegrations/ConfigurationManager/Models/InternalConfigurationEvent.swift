@@ -24,12 +24,4 @@ enum InternalConfigurationEvent: String, ConfigurationEvent {
     var key: String {
         return rawValue
     }
-
-    func markAsCompleted(error: Error? = nil) {
-        guard let configurationManager = AppConfigurationManager.shared else {
-            assertionFailure()
-            return
-        }
-        configurationManager.handleCompleted(event: self, error: error)
-    }
 }
