@@ -600,4 +600,18 @@ extension CoreManager {
             self.appsflyerManager?.logTrialPurchase()
         }
     }
+    
+    func sendPurchaseToFirebase(_ purchase: PurchaseDetails) {
+        let product = purchase.product
+        let introductoryOffer = product.subscription?.introductoryOffer
+        let isTrial = introductoryOffer != nil
+        let trialPrice = NSDecimalNumber(decimal: introductoryOffer?.price ?? 0).doubleValue
+        let price = NSDecimalNumber(decimal: product.price).doubleValue
+        let currencyCode = product.priceFormatStyle.currencyCode
+        let analData = FirebasePurchaseData(isTrial: isTrial,
+                                        subscriptionID: product.id,
+                                        trialPrice: trialPrice, price: price,
+                                        currencyCode: currencyCode)
+        self.firebaseManager.sendPurchaseAnalytics(analData)
+    }
 }

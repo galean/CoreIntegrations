@@ -29,9 +29,8 @@ extension CoreManager: CoreManagerProtocol {
                 self.sendSubscriptionTypeUserProperty(identifier: details.productId)
             }
             
-            self.sendPurchaseToAttributionServer(details)
-            self.sendPurchaseToFacebook(details)
-            self.sendPurchaseToAppsflyer(details)
+            self.sendPurchaseDetails(details)
+            
             return .success(details: details)
         case .pending:
             return .pending
@@ -59,9 +58,8 @@ extension CoreManager: CoreManagerProtocol {
                 self.sendSubscriptionTypeUserProperty(identifier: details.productId)
             }
             
-            self.sendPurchaseToAttributionServer(details)
-            self.sendPurchaseToFacebook(details)
-            self.sendPurchaseToAppsflyer(details)
+            self.sendPurchaseDetails(details)
+            
             return .success(details: details)
         case .pending:
             return .pending
@@ -188,5 +186,12 @@ extension CoreManager: CoreManagerProtocol {
     
     public func handleNoInternetAlertWasShown() {
         handledNoInternetAlert = true
+    }
+    
+    private func sendPurchaseDetails(_ details: PurchaseDetails) {
+        self.sendPurchaseToAttributionServer(details)
+        self.sendPurchaseToFacebook(details)
+        self.sendPurchaseToAppsflyer(details)
+        self.sendPurchaseToFirebase(details)
     }
 }
