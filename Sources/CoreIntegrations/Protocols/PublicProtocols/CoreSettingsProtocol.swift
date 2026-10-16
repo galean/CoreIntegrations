@@ -5,7 +5,6 @@ public protocol CoreSettingsProtocol: AnyObject {
     var appID: String { get }
     var appsFlyerKey: String { get }
     var attributionServerSecret: String { get }
-    var subscriptionsSecret: String { get }
     
     var amplitudeSecret: String { get }
     var amplitudeDeploymentKey: String { get }
