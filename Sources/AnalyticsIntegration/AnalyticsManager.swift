@@ -80,6 +80,11 @@ public class AnalyticsManager {
     }
     
     func amplitudeLog(event: String, with properties: [String: Any] = [String: Any]()) {
+        guard amplitude != nil else {
+            logDropped("event \(event.uppercased())")
+            return
+        }
+        
         if properties.isEmpty {
             amplitude?.track(eventType: event)
         } else {
@@ -101,6 +106,11 @@ public class AnalyticsManager {
     }
     
     func amplitudeIdentify(key: String, value: NSObject) {
+        guard amplitude != nil else {
+            logDropped("user property \(key.uppercased())")
+            return
+        }
+        
         let identify = Identify().set(property: key, value: value)
         amplitude?.identify(identify: identify)
         
@@ -110,6 +120,11 @@ public class AnalyticsManager {
     }
     
     func amplitudeIncrement(key: String, value: NSObject) {
+        guard amplitude != nil else {
+            logDropped("increment of user property \(key.uppercased())")
+            return
+        }
+        
         let identify = Identify().add(property: key, value: value as? Int ?? 0)
         amplitude?.identify(identify: identify)
         
@@ -119,6 +134,11 @@ public class AnalyticsManager {
     }
     
     func amplitudeUnset(key: String) {
+        guard amplitude != nil else {
+            logDropped("unset of user property \(key.uppercased())")
+            return
+        }
+        
         let identify = Identify().unset(property: key)
         amplitude?.identify(identify: identify)
         
@@ -128,6 +148,17 @@ public class AnalyticsManager {
     }
     
     func setUserProperties(_ userProperties: [String: Any]) {
+        guard amplitude != nil else {
+            logDropped("user properties \(userProperties.keys.sorted())")
+            return
+        }
+        
         amplitude?.identify(userProperties: userProperties)
+    }
+    
+    private func logDropped(_ what: String) {
+        if printDebugAnalytics {
+            DebugLogger.log("Amplitude is not configured yet, dropped \(what)")
+        }
     }
 }
