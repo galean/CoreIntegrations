@@ -14,6 +14,7 @@ public struct SentryConfigData {
     let handledDomains: [String]?
     var diagnosticLevel: UInt
     var swizzleClassNameExcludes: Set<String>
+    var enableMetricKit: Bool
 
     public init(
         dsn: String,
@@ -27,7 +28,8 @@ public struct SentryConfigData {
         httpCodesRange: NSRange = NSMakeRange(202, 599),
         handledDomains: [String]? = nil,
         diagnosticLevel: UInt = 0,
-        swizzleClassNameExcludes: Set<String> = []
+        swizzleClassNameExcludes: Set<String> = [],
+        enableMetricKit: Bool = false
     ) {
         self.dsn = dsn
         self.debug = debug
@@ -41,5 +43,6 @@ public struct SentryConfigData {
         self.diagnosticLevel = diagnosticLevel
         self.enableLogs = enableLogs
         self.swizzleClassNameExcludes = swizzleClassNameExcludes
+        self.enableMetricKit = enableMetricKit
     }
 }

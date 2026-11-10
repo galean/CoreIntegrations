@@ -18,6 +18,7 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
             options.appHangTimeoutInterval = data.appHangTimeoutInterval
             options.enableAppHangTracking = data.enableAppHangTracking
             options.swizzleClassNameExcludes = data.swizzleClassNameExcludes
+            options.enableMetricKit = data.enableMetricKit
 #if DEBUG
             options.environment = "debug"
 #else

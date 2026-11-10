@@ -11,6 +11,7 @@ public protocol SentryDataSourceProtocol: AnyObject {
     var handledDomains: [String]? { get }
     var diagnosticLevel: UInt { get }
     var swizzleClassNameExcludes: Set<String> { get }
+    var enableMetricKit: Bool { get }
 }
 
 public extension SentryDataSourceProtocol {
@@ -44,5 +45,9 @@ public extension SentryDataSourceProtocol {
     
     var swizzleClassNameExcludes: Set<String> {
         return []
+    }
+    
+    var enableMetricKit: Bool {
+        return false
     }
 }

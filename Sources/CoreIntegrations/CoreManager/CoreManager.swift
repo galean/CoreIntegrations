@@ -140,7 +140,8 @@ public class CoreManager {
                                                     shouldCaptureHttpRequests: sentryDataSource.shouldCaptureHttpRequests,
                                                     httpCodesRange: sentryDataSource.httpCodesRange,
                                                     handledDomains: sentryDataSource.handledDomains,
-                                                    swizzleClassNameExcludes: sentryDataSource.swizzleClassNameExcludes)
+                                                    swizzleClassNameExcludes: sentryDataSource.swizzleClassNameExcludes,
+                                                    enableMetricKit: sentryDataSource.enableMetricKit)
                 sentryManager.configure(sentryConfig)
             }
             
