@@ -118,6 +118,15 @@ public class AnalyticsManager {
         }
     }
     
+    func amplitudeUnset(key: String) {
+        let identify = Identify().unset(property: key)
+        amplitude?.identify(identify: identify)
+        
+        if printDebugAnalytics {
+            DebugLogger.log("Amplitude unset property: \(key.uppercased())")
+        }
+    }
+    
     func setUserProperties(_ userProperties: [String: Any]) {
         amplitude?.identify(userProperties: userProperties)
     }
