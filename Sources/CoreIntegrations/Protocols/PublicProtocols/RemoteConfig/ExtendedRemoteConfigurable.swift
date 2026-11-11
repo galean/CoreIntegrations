@@ -11,9 +11,16 @@ public protocol ExtendedRemoteConfigurable: RemoteConfigurable {
     var boolValue: Bool { get }
     func updateValue(_ newValue: String?)
     func updatePayload(_ newValue: [String: Any]?)
+    /// Whether reading `value`, `payload` or `boolValue` sends the exposure event. Defaults to `true`.
+    /// Return `false` to send it only with `trackExposure()`.
+    var automaticExposureTracking: Bool { get }
 }
 
 public extension ExtendedRemoteConfigurable {
+    var automaticExposureTracking: Bool {
+        return true
+    }
+    
     var value: String {
         get {
             updateExposure()
@@ -30,13 +37,33 @@ public extension ExtendedRemoteConfigurable {
         return internalPayload
     }
     
+    /// Sends the exposure event unless the current value has already been exposed.
+    func trackExposure() {
+        guard CoreManager.internalShared.remoteConfigManager != nil else {
+            return
+        }
+        
+        updateStickyBucketing()
+        sendExposureIfNeeded()
+    }
+    
     private func updateExposure() {
+        updateStickyBucketing()
+        
+        if automaticExposureTracking {
+            sendExposureIfNeeded()
+        }
+    }
+    
+    private func updateStickyBucketing() {
         if stickyBucketed && stickyBuckettedValue == nil {
             setStickyBuckettedValue(with: remoteValue)
         } else if !stickyBucketed && stickyBuckettedValue != nil {
             setStickyBuckettedValue(with: nil)
         }
-        
+    }
+    
+    private func sendExposureIfNeeded() {
         let value = internalValue
         
         if lastExposedValue != value {
