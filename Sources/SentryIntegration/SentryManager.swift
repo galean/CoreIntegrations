@@ -48,7 +48,7 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
                     }
                 }
                 
-                if let exception = event.exceptions?.first, exception.type == "App Hanging" {
+                if event.level == .error, event.exceptions?.first?.mechanism?.type == "AppHang" {
                     event.level = .warning
                 }
                 
