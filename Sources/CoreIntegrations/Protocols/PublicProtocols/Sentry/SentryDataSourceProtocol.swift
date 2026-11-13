@@ -1,4 +1,5 @@
 import Foundation
+import Sentry
 
 public protocol SentryDataSourceProtocol: AnyObject {
     var dsn: String { get }
@@ -12,6 +13,9 @@ public protocol SentryDataSourceProtocol: AnyObject {
     var diagnosticLevel: UInt { get }
     var swizzleClassNameExcludes: Set<String> { get }
     var enableMetricKit: Bool { get }
+    
+    /// Called for each Sentry event before it is sent: return `true` to send it, `false` to drop it.
+    var shouldSendEvent: ((Sentry.Event) -> Bool)? { get }
 }
 
 public extension SentryDataSourceProtocol {
@@ -49,5 +53,9 @@ public extension SentryDataSourceProtocol {
     
     var enableMetricKit: Bool {
         return false
+    }
+    
+    var shouldSendEvent: ((Sentry.Event) -> Bool)? {
+        return nil
     }
 }

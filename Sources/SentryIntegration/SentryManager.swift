@@ -52,6 +52,10 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
                     event.level = .warning
                 }
                 
+                guard data.shouldSendEvent?(event) ?? true else {
+                    return nil
+                }
+                
                 return event
             }
             

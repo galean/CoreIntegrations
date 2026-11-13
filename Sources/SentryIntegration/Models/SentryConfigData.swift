@@ -1,5 +1,6 @@
 
 import Foundation
+import Sentry
 
 public struct SentryConfigData {
     let dsn: String
@@ -15,6 +16,7 @@ public struct SentryConfigData {
     var diagnosticLevel: UInt
     var swizzleClassNameExcludes: Set<String>
     var enableMetricKit: Bool
+    var shouldSendEvent: ((Sentry.Event) -> Bool)?
 
     public init(
         dsn: String,
@@ -29,7 +31,8 @@ public struct SentryConfigData {
         handledDomains: [String]? = nil,
         diagnosticLevel: UInt = 0,
         swizzleClassNameExcludes: Set<String> = [],
-        enableMetricKit: Bool = false
+        enableMetricKit: Bool = false,
+        shouldSendEvent: ((Sentry.Event) -> Bool)? = nil
     ) {
         self.dsn = dsn
         self.debug = debug
@@ -44,5 +47,6 @@ public struct SentryConfigData {
         self.enableLogs = enableLogs
         self.swizzleClassNameExcludes = swizzleClassNameExcludes
         self.enableMetricKit = enableMetricKit
+        self.shouldSendEvent = shouldSendEvent
     }
 }

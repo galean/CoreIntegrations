@@ -141,7 +141,8 @@ public class CoreManager {
                                                     httpCodesRange: sentryDataSource.httpCodesRange,
                                                     handledDomains: sentryDataSource.handledDomains,
                                                     swizzleClassNameExcludes: sentryDataSource.swizzleClassNameExcludes,
-                                                    enableMetricKit: sentryDataSource.enableMetricKit)
+                                                    enableMetricKit: sentryDataSource.enableMetricKit,
+                                                    shouldSendEvent: sentryDataSource.shouldSendEvent)
                 sentryManager.configure(sentryConfig)
             }
             
