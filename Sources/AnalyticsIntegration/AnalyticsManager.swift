@@ -80,15 +80,15 @@ public class AnalyticsManager {
     }
     
     func amplitudeLog(event: String, with properties: [String: Any] = [String: Any]()) {
-        guard amplitude != nil else {
+        guard let amplitude else {
             logDropped("event \(event.uppercased())")
             return
         }
         
         if properties.isEmpty {
-            amplitude?.track(eventType: event)
+            amplitude.track(eventType: event)
         } else {
-            amplitude?.track(
+            amplitude.track(
                 eventType: event,
                 eventProperties: properties
             )
@@ -102,17 +102,17 @@ public class AnalyticsManager {
             }
         }
         
-        amplitude?.flush()
+        amplitude.flush()
     }
     
     func amplitudeIdentify(key: String, value: NSObject) {
-        guard amplitude != nil else {
+        guard let amplitude else {
             logDropped("user property \(key.uppercased())")
             return
         }
         
         let identify = Identify().set(property: key, value: value)
-        amplitude?.identify(identify: identify)
+        amplitude.identify(identify: identify)
         
         if printDebugAnalytics {
             DebugLogger.log("Amplitude identified property: \(key.uppercased()), value: \(value)")
@@ -120,13 +120,13 @@ public class AnalyticsManager {
     }
     
     func amplitudeIncrement(key: String, value: NSObject) {
-        guard amplitude != nil else {
+        guard let amplitude else {
             logDropped("increment of user property \(key.uppercased())")
             return
         }
         
         let identify = Identify().add(property: key, value: value as? Int ?? 0)
-        amplitude?.identify(identify: identify)
+        amplitude.identify(identify: identify)
         
         if printDebugAnalytics {
             DebugLogger.log("Analytics incremented property: \(key.uppercased()), value: \(value)")
@@ -134,13 +134,13 @@ public class AnalyticsManager {
     }
     
     func amplitudeUnset(key: String) {
-        guard amplitude != nil else {
+        guard let amplitude else {
             logDropped("unset of user property \(key.uppercased())")
             return
         }
         
         let identify = Identify().unset(property: key)
-        amplitude?.identify(identify: identify)
+        amplitude.identify(identify: identify)
         
         if printDebugAnalytics {
             DebugLogger.log("Amplitude unset property: \(key.uppercased())")
@@ -148,12 +148,12 @@ public class AnalyticsManager {
     }
     
     func setUserProperties(_ userProperties: [String: Any]) {
-        guard amplitude != nil else {
+        guard let amplitude else {
             logDropped("user properties \(userProperties.keys.sorted())")
             return
         }
         
-        amplitude?.identify(userProperties: userProperties)
+        amplitude.identify(userProperties: userProperties)
     }
     
     private func logDropped(_ what: String) {
