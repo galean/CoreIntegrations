@@ -13,6 +13,7 @@ public protocol SentryDataSourceProtocol: AnyObject {
     var diagnosticLevel: UInt { get }
     var swizzleClassNameExcludes: Set<String> { get }
     var enableMetricKit: Bool { get }
+    var enableAppHangTracking: Bool { get }
     
     /// Called for each Sentry event before it is sent: return `true` to send it, `false` to drop it.
     var shouldSendEvent: ((Sentry.Event) -> Bool)? { get }
@@ -53,6 +54,10 @@ public extension SentryDataSourceProtocol {
     
     var enableMetricKit: Bool {
         return false
+    }
+    
+    var enableAppHangTracking: Bool {
+        return true
     }
     
     var shouldSendEvent: ((Sentry.Event) -> Bool)? {
