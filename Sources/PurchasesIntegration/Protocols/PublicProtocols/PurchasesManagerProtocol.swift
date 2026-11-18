@@ -13,6 +13,8 @@ public protocol PurchasesManagerProtocol {
     func listenForPendingPurchases(_ result: @escaping (Transaction?, (any Error)?) -> Void)
     func purchase(_ product: Product, activeController: UIViewController?) async throws -> SKPurchaseResult
     func purchase(_ product: Product, promoOffer:SKPromoOffer, activeController: UIViewController?) async throws -> SKPurchaseResult
+    func purchase(_ product: Product, options: SKPurchaseOptions, activeController: UIViewController?) async throws -> SKPurchaseResult
+    func purchase(_ product: Product, promoOffer:SKPromoOffer, options: SKPurchaseOptions, activeController: UIViewController?) async throws -> SKPurchaseResult
     func restore() async -> SKRestoreResult
     func restoreAll() async -> SKRestoreResult
     func verifyPremium() async -> SKVerifyPremiumResult

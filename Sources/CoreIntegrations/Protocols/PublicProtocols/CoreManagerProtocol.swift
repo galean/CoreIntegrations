@@ -55,6 +55,10 @@ public protocol CoreManagerProtocol {
     func purchase(_ purchase: Purchase, activeController: UIViewController?) async throws -> PurchasesPurchaseResult
     
     func purchase(_ purchase: Purchase, promoOffer: PromoOffer, activeController: UIViewController?) async throws -> PurchasesPurchaseResult
+    
+    func purchase(_ purchase: Purchase, options: PurchaseOptions, activeController: UIViewController?) async throws -> PurchasesPurchaseResult
+    
+    func purchase(_ purchase: Purchase, promoOffer: PromoOffer, options: PurchaseOptions, activeController: UIViewController?) async throws -> PurchasesPurchaseResult
         
     func handleSuccessfulPurchase(product: Product, purchaseInfo: SKPurchaseInfo)
     
