@@ -25,8 +25,13 @@ extension CoreManager: CoreManagerProtocol {
     
     @MainActor
     public func purchase(_ purchase: Purchase, activeController: UIViewController?) async throws -> PurchasesPurchaseResult {
+        return try await self.purchase(purchase, options: PurchaseOptions(), activeController: activeController)
+    }
+    
+    @MainActor
+    public func purchase(_ purchase: Purchase, options: PurchaseOptions, activeController: UIViewController?) async throws -> PurchasesPurchaseResult {
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
-        let result = try await purchaseManager.purchase(purchase.product, activeController: activeController)
+        let result = try await purchaseManager.purchase(purchase.product, options: skPurchaseOptions(options), activeController: activeController)
 
         switch result {
         case .success(let purchaseInfo):
@@ -51,9 +56,14 @@ extension CoreManager: CoreManagerProtocol {
     
     @MainActor
     public func purchase(_ purchase: Purchase, promoOffer: PromoOffer, activeController: UIViewController?) async throws -> PurchasesPurchaseResult {
+        return try await self.purchase(purchase, promoOffer: promoOffer, options: PurchaseOptions(), activeController: activeController)
+    }
+    
+    @MainActor
+    public func purchase(_ purchase: Purchase, promoOffer: PromoOffer, options: PurchaseOptions, activeController: UIViewController?) async throws -> PurchasesPurchaseResult {
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
         let skOffer = SKPromoOffer(offerID: promoOffer.offerID, keyID: promoOffer.keyID, nonce: promoOffer.nonce, signature: promoOffer.signature, timestamp: promoOffer.timestamp)
-        let result = try await purchaseManager.purchase(purchase.product, promoOffer: skOffer, activeController: activeController)
+        let result = try await purchaseManager.purchase(purchase.product, promoOffer: skOffer, options: skPurchaseOptions(options), activeController: activeController)
         
         switch result {
         case .success(let purchaseInfo):
@@ -82,6 +92,18 @@ extension CoreManager: CoreManagerProtocol {
         self.sendPurchaseToAttributionServer(details)
         self.sendPurchaseToFacebook(details)
         self.sendPurchaseToAppsflyer(details)
+    }
+    
+    private func skPurchaseOptions(_ options: PurchaseOptions) -> SKPurchaseOptions {
+        guard #available(iOS 26.4, *) else {return SKPurchaseOptions()}
+        switch options.billingPlanType {
+        case .monthly:
+            return SKPurchaseOptions(billingPlanType: .monthly)
+        case .upFront:
+            return SKPurchaseOptions(billingPlanType: .upFront)
+        case nil:
+            return SKPurchaseOptions()
+        }
     }
     
     private func groupFor(_ productId: String) -> any CorePurchaseGroup {

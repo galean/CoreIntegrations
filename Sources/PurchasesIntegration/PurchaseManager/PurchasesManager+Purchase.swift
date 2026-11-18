@@ -6,17 +6,20 @@ import LoggingIntegration
 
 extension PurchasesManager {
     public func purchase(_ product: Product, activeController: UIViewController?) async throws -> SKPurchaseResult {
+        return try await purchase(product, options: SKPurchaseOptions(), activeController: activeController)
+    }
+
+    public func purchase(_ product: Product, options purchaseOptions: SKPurchaseOptions, activeController: UIViewController?) async throws -> SKPurchaseResult {
         DebugLogger.log("🏦 purchase ⚈ ⚈ ⚈ Purchasing product \(product.displayName)... ⚈ ⚈ ⚈")
 
-        var options:Set<Product.PurchaseOption> = []
-        if let userId = UUID(uuidString: self.userId) {
-            options = [.appAccountToken(userId)]
-        }
-
-        return try await performPurchase(product, options: options, activeController: activeController)
+        return try await performPurchase(product, options: makeStoreKitOptions(purchaseOptions), activeController: activeController)
     }
     
     public func purchase(_ product: Product, promoOffer:SKPromoOffer, activeController: UIViewController?) async throws -> SKPurchaseResult {
+        return try await purchase(product, promoOffer: promoOffer, options: SKPurchaseOptions(), activeController: activeController)
+    }
+
+    public func purchase(_ product: Product, promoOffer:SKPromoOffer, options purchaseOptions: SKPurchaseOptions, activeController: UIViewController?) async throws -> SKPurchaseResult {
         let promoOption = Product.PurchaseOption.promotionalOffer(
             offerID: promoOffer.offerID,
             keyID: promoOffer.keyID,
@@ -24,13 +27,26 @@ extension PurchasesManager {
             signature: promoOffer.signature,
             timestamp: promoOffer.timestamp
         )
-        var options:Set<Product.PurchaseOption> = [promoOption]
+        var options = makeStoreKitOptions(purchaseOptions)
+        options.insert(promoOption)
 
+        return try await performPurchase(product, options: options, activeController: activeController)
+    }
+
+    private func makeStoreKitOptions(_ purchaseOptions: SKPurchaseOptions) -> Set<Product.PurchaseOption> {
+        var options:Set<Product.PurchaseOption> = []
         if let userId = UUID(uuidString: self.userId) {
             options.insert(.appAccountToken(userId))
         }
-
-        return try await performPurchase(product, options: options, activeController: activeController)
+        if #available(iOS 26.4, *), let billingPlanType = purchaseOptions.billingPlanType {
+            switch billingPlanType {
+            case .monthly:
+                options.insert(.billingPlanType(.monthly))
+            case .upFront:
+                options.insert(.billingPlanType(.upFront))
+            }
+        }
+        return options
     }
 
     private func performPurchase(_ product: Product, options: Set<Product.PurchaseOption>, activeController: UIViewController?) async throws -> SKPurchaseResult {

@@ -17,4 +17,8 @@ public extension AmplitudeAnalyzableUserProperty {
     func identifyIncrement() {
         AnalyticsManager.shared.amplitudeIncrement(key: key, value: NSNumber(integerLiteral: 1))
     }
+    
+    func identifyUnset() {
+        AnalyticsManager.shared.amplitudeUnset(key: key)
+    }
 }

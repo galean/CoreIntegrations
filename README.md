@@ -1,5 +1,5 @@
 # CoreIntegrations
-Framework version - 3.1.1
+Framework version - 3.1.2
 
 ## No internet on the first launch in China
 

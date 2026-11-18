@@ -18,6 +18,7 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
             options.appHangTimeoutInterval = data.appHangTimeoutInterval
             options.enableAppHangTracking = data.enableAppHangTracking
             options.swizzleClassNameExcludes = data.swizzleClassNameExcludes
+            options.enableMetricKit = data.enableMetricKit
 #if DEBUG
             options.environment = "debug"
 #else
@@ -47,8 +48,12 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
                     }
                 }
                 
-                if let exception = event.exceptions?.first, exception.type == "App Hanging" {
+                if event.level == .error, event.exceptions?.first?.mechanism?.type == "AppHang" {
                     event.level = .warning
+                }
+                
+                guard data.shouldSendEvent?(event) ?? true else {
+                    return nil
                 }
                 
                 return event

@@ -137,10 +137,13 @@ public class CoreManager {
                                                     debug: sentryDataSource.debug,
                                                     enableLogs: sentryDataSource.enableLogs,
                                                     tracesSampleRate: sentryDataSource.tracesSampleRate,
+                                                    enableAppHangTracking: sentryDataSource.enableAppHangTracking,
                                                     shouldCaptureHttpRequests: sentryDataSource.shouldCaptureHttpRequests,
                                                     httpCodesRange: sentryDataSource.httpCodesRange,
                                                     handledDomains: sentryDataSource.handledDomains,
-                                                    swizzleClassNameExcludes: sentryDataSource.swizzleClassNameExcludes)
+                                                    swizzleClassNameExcludes: sentryDataSource.swizzleClassNameExcludes,
+                                                    enableMetricKit: sentryDataSource.enableMetricKit,
+                                                    shouldSendEvent: sentryDataSource.shouldSendEvent)
                 sentryManager.configure(sentryConfig)
             }
             
