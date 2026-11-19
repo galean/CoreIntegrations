@@ -16,6 +16,7 @@ public class SentryManager: InternalSentryManagerProtocol, PublicSentryManagerPr
             options.diagnosticLevel = SentryLevel(rawValue: data.diagnosticLevel) ?? .debug
             options.appHangTimeoutInterval = data.appHangTimeoutInterval
             options.enableAppHangTracking = data.enableAppHangTracking
+            options.swizzleClassNameExcludes = data.swizzleClassNameExcludes
 #if DEBUG
             options.environment = "debug"
 #else

@@ -116,7 +116,8 @@ public class CoreManager {
                                                     profilesSampleRate: sentryDataSource.profilesSampleRate,
                                                     shouldCaptureHttpRequests: sentryDataSource.shouldCaptureHttpRequests,
                                                     httpCodesRange: sentryDataSource.httpCodesRange,
-                                                    handledDomains: sentryDataSource.handledDomains)
+                                                    handledDomains: sentryDataSource.handledDomains,
+                                                    swizzleClassNameExcludes: sentryDataSource.swizzleClassNameExcludes)
                 sentryManager.configure(sentryConfig)
             }
             

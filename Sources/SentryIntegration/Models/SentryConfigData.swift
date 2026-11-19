@@ -12,8 +12,9 @@ public struct SentryConfigData {
     var httpCodesRange: NSRange = NSMakeRange(202, 599)
     let handledDomains:[String]?
     var diagnosticLevel: UInt = 0
+    var swizzleClassNameExcludes: Set<String> = []
 
-    public init(dsn: String, debug: Bool, tracesSampleRate: Float = 1.0, profilesSampleRate: Float = 1.0, appHangTimeoutInterval: TimeInterval = 2.0, enableAppHangTracking: Bool = true, shouldCaptureHttpRequests: Bool = true, httpCodesRange: NSRange = NSMakeRange(202, 599), handledDomains: [String]? = nil, diagnosticLevel: UInt = 0) {
+    public init(dsn: String, debug: Bool, tracesSampleRate: Float = 1.0, profilesSampleRate: Float = 1.0, appHangTimeoutInterval: TimeInterval = 2.0, enableAppHangTracking: Bool = true, shouldCaptureHttpRequests: Bool = true, httpCodesRange: NSRange = NSMakeRange(202, 599), handledDomains: [String]? = nil, diagnosticLevel: UInt = 0, swizzleClassNameExcludes: Set<String> = []) {
         self.dsn = dsn
         self.debug = debug
         self.tracesSampleRate = tracesSampleRate
@@ -24,5 +25,6 @@ public struct SentryConfigData {
         self.httpCodesRange = httpCodesRange
         self.handledDomains = handledDomains
         self.diagnosticLevel = diagnosticLevel
+        self.swizzleClassNameExcludes = swizzleClassNameExcludes
     }
 }
