@@ -228,7 +228,6 @@ extension CoreManager: CoreManagerProtocol {
             return
         }
         
-        isAdPartnersDataSharingEnabled = isEnabled
         appsflyerManager?.setAdPartnersDataSharingEnabled(isEnabled)
         firebaseManager.setAdPartnersDataSharingEnabled(isEnabled)
     }

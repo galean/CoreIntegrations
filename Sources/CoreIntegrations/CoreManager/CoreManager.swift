@@ -57,7 +57,6 @@ public class CoreManager {
     var isConfigured: Bool = false
     
     var configuration: CoreConfigurationProtocol?
-    var isAdPartnersDataSharingEnabled = true
     var appsflyerManager: AppfslyerManagerProtocol?
     var facebookManager: FacebookManagerProtocol?
     var purchaseManager: PurchasesManagerProtocol?
@@ -149,7 +148,7 @@ public class CoreManager {
             
             analyticsManager = AnalyticsManager.shared
             
-            isAdPartnersDataSharingEnabled = configuration.isAdPartnersDataSharingEnabled
+            let isAdPartnersDataSharingEnabled = configuration.isAdPartnersDataSharingEnabled
             
             if configuration.hasCustomFirebaseConfiguration {
                 firebaseManager.handle(event: FirebaseConfigurationStateMachine.Event.waitForExternalConfiguration)
