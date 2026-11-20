@@ -173,10 +173,8 @@ extension AppfslyerManager: AppfslyerManagerProtocol {
     }
 
     public func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {
-        AppfslyerManager.onMain { [weak self] in
-            self?.isAdPartnersDataSharingEnabled = isEnabled
-            self?.applySharingFilter()
-        }
+        isAdPartnersDataSharingEnabled = isEnabled
+        applySharingFilter()
     }
 
     public func logTrialPurchase() {
