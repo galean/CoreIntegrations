@@ -23,6 +23,7 @@ public class FirebaseConfigurationStateMachine: NSObject {
     private var savedID: String?
     
     private var isAdPartnersDataSharingEnabled = true
+    private var adConsent: FirebaseAdConsent?
 
     private var _fcmToken: String?
     private var _userId: String = ""
@@ -100,14 +101,31 @@ public class FirebaseConfigurationStateMachine: NSObject {
         }
     }
 
+    public func setAdConsent(_ consent: FirebaseAdConsent?) {
+        adConsent = consent
+
+        switch state {
+        case .notSet, .waitingForExternalConfiguration:
+            break
+        case .configuredInternally, .configuredExternally, .finishedConfigurationWithID:
+            applyConsent()
+        }
+    }
+
     private func applyConsent() {
         let advertisingConsent: ConsentStatus = isAdPartnersDataSharingEnabled ? .granted : .denied
+        let adUserDataConsent: ConsentStatus = isAdConsentGranted(adConsent?.isAdUserDataGranted) ? .granted : .denied
+        let adPersonalizationConsent: ConsentStatus = isAdConsentGranted(adConsent?.isAdPersonalizationGranted) ? .granted : .denied
         Analytics.setConsent([
             .adStorage: advertisingConsent,
-            .adUserData: advertisingConsent,
-            .adPersonalization: advertisingConsent,
+            .adUserData: adUserDataConsent,
+            .adPersonalization: adPersonalizationConsent,
             .analyticsStorage: .granted
         ])
+    }
+
+    private func isAdConsentGranted(_ appConsent: Bool?) -> Bool {
+        return isAdPartnersDataSharingEnabled && (appConsent ?? true)
     }
 
     private func configureFirebase() {

@@ -235,6 +235,21 @@ extension CoreManager: CoreManagerProtocol {
         }
     }
     
+    public func setAdConsent(_ consent: AdConsent) {
+        MainQueueExecutor.perform { [weak self] in
+            guard let self else { return }
+            guard self.isConfigured else {
+                if ProcessInfo.processInfo.environment["xctest_skip_config"] == nil {
+                    assertionFailure("Set the launch value through CoreConfigurationProtocol.adConsent - this setter only applies changes made after the framework is configured.")
+                }
+                return
+            }
+            
+            self.setAppsflyerAdConsent(consent)
+            self.setFirebaseAdConsent(consent)
+        }
+    }
+    
     public func handleCustomFirebaseConfigured() {
         handleExternalFirebaseConfigurationFinished()
     }

@@ -46,6 +46,9 @@ public protocol CoreManagerProtocol {
     /// The launch value comes from `CoreConfigurationProtocol.isAdPartnersDataSharingEnabled`;
     /// calling this before the framework is configured has no effect.
     func setAdPartnersDataSharingEnabled(_ isEnabled: Bool)
+    /// Updates the user's ad consent while the app is running.
+    /// The launch value comes from `CoreConfigurationProtocol.adConsent`; calls before configuration are ignored.
+    func setAdConsent(_ consent: AdConsent)
     
     func setExternalAuthId(_ externalAuthId: String?)
     

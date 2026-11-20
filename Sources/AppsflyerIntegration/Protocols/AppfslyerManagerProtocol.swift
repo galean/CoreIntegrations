@@ -19,5 +19,6 @@ public protocol AppfslyerManagerProtocol {
     /// The ATT decision is known: one of the session start conditions.
     func handleATTResolved()
     func setAdPartnersDataSharingEnabled(_ isEnabled: Bool)
+    func setAdConsent(_ consent: AppsflyerAdConsent?)
     func logTrialPurchase()
 }

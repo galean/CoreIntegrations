@@ -24,6 +24,7 @@ public class AppfslyerManager: NSObject {
     private var startGate = AppsFlyerStartGate()
     private var session = AppsFlyerSessionStatus()
     private var isAdPartnersDataSharingEnabled = true
+    private var adConsent: AppsflyerAdConsent?
 
     public init(config: AppsflyerConfigData,
                 launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) {
@@ -78,6 +79,7 @@ public class AppfslyerManager: NSObject {
             return
         }
         applySharingFilter()
+        applyAdConsent()
         session.startBegan()
         AppsFlyerLib.shared().start { [weak self] _, error in
             AppfslyerManager.onMain { [weak self] in
@@ -89,6 +91,14 @@ public class AppfslyerManager: NSObject {
     /// `nil` clears the filter, `["all"]` covers every current and future partner.
     private func applySharingFilter() {
         AppsFlyerLib.shared().setSharingFilterForPartners(isAdPartnersDataSharingEnabled ? nil : ["all"])
+    }
+
+    /// `nil` sends nothing, so the SDK keeps any consent sent earlier.
+    private func applyAdConsent() {
+        guard let adConsent else { return }
+        AppsFlyerLib.shared().setConsentData(AppsFlyerConsent(isUserSubjectToGDPR: true,
+                                                              hasConsentForDataUsage: NSNumber(value: adConsent.isAdUserDataGranted),
+                                                              hasConsentForAdsPersonalization: NSNumber(value: adConsent.isAdPersonalizationGranted)))
     }
 
     private func handleConversion(_ result: Result<[AnyHashable: Any], Error>) {
@@ -175,6 +185,11 @@ extension AppfslyerManager: AppfslyerManagerProtocol {
     public func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {
         isAdPartnersDataSharingEnabled = isEnabled
         applySharingFilter()
+    }
+
+    public func setAdConsent(_ consent: AppsflyerAdConsent?) {
+        adConsent = consent
+        applyAdConsent()
     }
 
     public func logTrialPurchase() {

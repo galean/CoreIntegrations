@@ -14,6 +14,8 @@ public protocol CoreConfigurationProtocol {
     var useDefaultATTRequest: Bool { get }
     var isFacebookEnabled: Bool { get }
     var isAdPartnersDataSharingEnabled: Bool { get }
+    /// The user's ad consent at launch. A value marks the user as subject to GDPR; return `nil` for everyone else.
+    var adConsent: AdConsent? { get }
     var hasExternalAuthorization: Bool { get }
     var hasCustomFirebaseConfiguration: Bool { get }
     var configurationTimeout: Int { get }
@@ -28,6 +30,8 @@ public extension CoreConfigurationProtocol {
     var isFacebookEnabled: Bool { return true }
     
     var isAdPartnersDataSharingEnabled: Bool { return true }
+    
+    var adConsent: AdConsent? { return nil }
     
     var useDefaultATTRequest: Bool { return true }
     
