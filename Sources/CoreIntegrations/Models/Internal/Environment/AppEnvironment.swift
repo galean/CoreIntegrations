@@ -36,4 +36,21 @@ public enum AppEnvironment: String {
             return Locale.current.regionCode == "CN"
         }
     }()
+
+    /// The App Store storefront is in the EEA, United Kingdom or Switzerland.
+    public static var isEU: Bool {
+        get async {
+            guard let storefront = await Storefront.current else {
+                return false
+            }
+
+            let countryCodes: Set<String> = [
+                "AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
+                "DEU", "GRC", "HUN", "ISL", "IRL", "ITA", "LVA", "LIE", "LTU", "LUX",
+                "MLT", "NLD", "NOR", "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE",
+                "GBR", "CHE"
+            ]
+            return countryCodes.contains(storefront.countryCode)
+        }
+    }
 }
