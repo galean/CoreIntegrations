@@ -22,6 +22,8 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
         self.appEnvironment = config.appEnvironment
         authorizationToken = config.authToken
         shouldAwaitExternalAuth = config.hasExternalAuth
+        isAdPartnersDataSharingEnabled = config.isAdPartnersDataSharingEnabled
+        adConsent = config.adConsent
         
         serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
                                                purchaseServerURLPath: config.purchaseServerURLPath,
@@ -98,6 +100,14 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
             self.checkAndSendExternalAuth(externalAuthID)
         }
     }
+    
+    public func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {
+        isAdPartnersDataSharingEnabled = isEnabled
+    }
+    
+    public func setAdConsent(_ consent: AttributionAdConsent?) {
+        adConsent = consent
+    }
 }
 
 open class AttributionServerManager {
@@ -117,6 +127,8 @@ open class AttributionServerManager {
     var appsflyerID: String? = nil
     var appEnvironment: String? = nil
     var shouldAwaitExternalAuth: Bool? = nil
+    var isAdPartnersDataSharingEnabled = true
+    var adConsent: AttributionAdConsent? = nil
         
     fileprivate func validateToken(_ token: AttributionServerToken?) -> Bool {
         guard authorizationToken != nil else {
@@ -177,8 +189,15 @@ open class AttributionServerManager {
                                                         environment: appEnvironment,
                                                         fb: fbFields, 
                                                         sa: saFields,
-                                                        externalAuthorization: shouldAwaitExternalAuth)
+                                                        externalAuthorization: shouldAwaitExternalAuth,
+                                                        consent: await getCurrentConsentFields())
         return parameters
+    }
+    
+    @MainActor
+    fileprivate func getCurrentConsentFields() -> AttributionConsentFields? {
+        return AttributionConsentFields(adConsent: adConsent,
+                                        isAdPartnersDataSharingEnabled: isAdPartnersDataSharingEnabled)
     }
     
     fileprivate func getCorrectUUID() -> String {

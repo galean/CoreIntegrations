@@ -228,7 +228,9 @@ public class CoreManager {
                                                                  appEnvironment: AppEnvironment.current.rawValue,
                                                                  facebookData: facebookData,
                                                                  tokensPath: tokensPath,
-                                                                 hasExternalAuth: configuration.hasExternalAuthorization)
+                                                                 hasExternalAuth: configuration.hasExternalAuthorization,
+                                                                 isAdPartnersDataSharingEnabled: isAdPartnersDataSharingEnabled,
+                                                                 adConsent: attributionAdConsent(adConsent))
             
             AttributionServerManager.shared.configure(config: attributionConfiguration)
         }
@@ -376,6 +378,12 @@ public class CoreManager {
                 isAdPersonalizationGranted: $0.isAdPersonalizationGranted
             )
         })
+    }
+    
+    func attributionAdConsent(_ consent: AdConsent?) -> AttributionAdConsent? {
+        guard let consent else { return nil }
+        return AttributionAdConsent(isAdUserDataGranted: consent.isAdUserDataGranted,
+                                    isAdPersonalizationGranted: consent.isAdPersonalizationGranted)
     }
     
 }

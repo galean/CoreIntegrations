@@ -15,11 +15,14 @@ public struct AttributionConfigData {
     let facebookData: AttributionFacebookModel?
     let tokensPath: String
     let hasExternalAuth: Bool?
+    let isAdPartnersDataSharingEnabled: Bool
+    let adConsent: AttributionAdConsent?
 
     public init(authToken: AttributionServerToken, installServerURLPath: String, purchaseServerURLPath: String, 
                 externalAuthServerURLPath: String, installPath: String, appTransactionPath: String = "/app-transaction",
                 externalAuthPath: String, purchasePath: String, appsflyerID: String?, appEnvironment: String?,
-                facebookData: AttributionFacebookModel?, tokensPath: String, hasExternalAuth: Bool?) {
+                facebookData: AttributionFacebookModel?, tokensPath: String, hasExternalAuth: Bool?,
+                isAdPartnersDataSharingEnabled: Bool, adConsent: AttributionAdConsent?) {
         self.authToken = authToken
         self.appsflyerID = appsflyerID
         self.facebookData = facebookData
@@ -33,6 +36,8 @@ public struct AttributionConfigData {
         self.appEnvironment = appEnvironment
         self.tokensPath = tokensPath
         self.hasExternalAuth = hasExternalAuth
+        self.isAdPartnersDataSharingEnabled = isAdPartnersDataSharingEnabled
+        self.adConsent = adConsent
     }
 }
 

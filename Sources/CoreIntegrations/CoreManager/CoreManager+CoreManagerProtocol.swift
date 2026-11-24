@@ -5,6 +5,7 @@ import AppTrackingTransparency
 import StoreKit
 #if !COCOAPODS
 import PurchasesIntegration
+import AttributionServerIntegration
 #endif
 
 extension CoreManager: CoreManagerProtocol {
@@ -232,6 +233,7 @@ extension CoreManager: CoreManagerProtocol {
             
             self.appsflyerManager?.setAdPartnersDataSharingEnabled(isEnabled)
             self.firebaseManager.setAdPartnersDataSharingEnabled(isEnabled)
+            AttributionServerManager.shared.setAdPartnersDataSharingEnabled(isEnabled)
         }
     }
     
@@ -247,6 +249,7 @@ extension CoreManager: CoreManagerProtocol {
             
             self.setAppsflyerAdConsent(consent)
             self.setFirebaseAdConsent(consent)
+            AttributionServerManager.shared.setAdConsent(self.attributionAdConsent(consent))
         }
     }
     
