@@ -20,4 +20,7 @@ internal protocol AttributionServerWorkerProtocol {
     func sendExternalAuthorization(parameters: AttributionExternalAuthRequestModel,
                                    authToken: AttributionServerToken,
                                    completion: @escaping ((Bool) -> Void))
+    func sendConsent(parameters: AttributionConsentRequestModel,
+                     authToken: AttributionServerToken,
+                     completion: @escaping ((Bool) -> Void))
 }

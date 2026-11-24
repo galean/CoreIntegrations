@@ -53,6 +53,12 @@ public class AttributionServerWorker {
         return urlOrNil
     }
     
+    fileprivate var consentURL: URL? {
+        let urlPath = "\(installServerURLPath)/consent"
+        let urlOrNil = URL(string: urlPath)
+        return urlOrNil
+    }
+    
     fileprivate var session: URLSession {
         let config = URLSessionConfiguration.default
         config.waitsForConnectivity = false
@@ -221,6 +227,36 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
             }
             
             guard let _ = data else{
+                completion(false)
+                return
+            }
+            
+            completion(true)
+        }
+        task.resume()
+    }
+    
+    func sendConsent(parameters: AttributionConsentRequestModel,
+                     authToken: AttributionServerToken,
+                     completion: @escaping ((Bool) -> Void)) {
+        let jsonDataOrNil = try? JSONEncoder().encode(parameters)
+        
+        guard let url = consentURL, let jsonData = jsonDataOrNil else {
+            DebugLogger.log("\n\n\nCONSENT SEND ERROR\n\n\n")
+            completion(false)
+            return
+        }
+        
+        let request = createRequest(url: url, body: jsonData, authToken: authToken)
+        
+        let task = waitingSession.dataTask(with: request) { (data, response, error) in
+            if let _ = error {
+                self.handleServerError()
+                completion(false)
+                return
+            }
+            
+            guard let _ = data else {
                 completion(false)
                 return
             }

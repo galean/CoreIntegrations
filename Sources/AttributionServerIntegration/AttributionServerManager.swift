@@ -102,11 +102,20 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
     }
     
     public func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {
+        guard isAdPartnersDataSharingEnabled != isEnabled else { return }
         isAdPartnersDataSharingEnabled = isEnabled
+        
+        guard adConsent == nil else { return }
+        let consentFields = AttributionConsentFields(isAdPartnersDataSharingEnabled: isEnabled)
+        sendConsent(consentFields)
     }
     
     public func setAdConsent(_ consent: AttributionAdConsent?) {
         adConsent = consent
+        
+        guard let consent else { return }
+        let consentFields = AttributionConsentFields(adConsent: consent)
+        sendConsent(consentFields)
     }
 }
 
@@ -198,6 +207,18 @@ open class AttributionServerManager {
     fileprivate func getCurrentConsentFields() -> AttributionConsentFields? {
         return AttributionConsentFields(adConsent: adConsent,
                                         isAdPartnersDataSharingEnabled: isAdPartnersDataSharingEnabled)
+    }
+    
+    fileprivate func sendConsent(_ consent: AttributionConsentFields) {
+        guard validateInstallAttributed() != nil,
+              let serverWorker,
+              let authorizationToken,
+              let appsflyerID, !appsflyerID.isEmpty else {
+            return
+        }
+        
+        let parameters = AttributionConsentRequestModel(appsflyerId: appsflyerID, consent: consent)
+        serverWorker.sendConsent(parameters: parameters, authToken: authorizationToken) { _ in }
     }
     
     fileprivate func getCorrectUUID() -> String {
