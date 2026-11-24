@@ -256,12 +256,13 @@ extension AttributionServerWorker: AttributionServerWorkerProtocol {
                 return
             }
             
-            guard let _ = data else {
+            guard let response = response as? HTTPURLResponse else {
                 completion(false)
                 return
             }
             
-            completion(true)
+            let isSuccess = (200..<300).contains(response.statusCode)
+            completion(isSuccess)
         }
         task.resume()
     }

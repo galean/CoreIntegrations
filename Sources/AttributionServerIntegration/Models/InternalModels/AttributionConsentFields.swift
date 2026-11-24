@@ -1,6 +1,6 @@
 import Foundation
 
-internal struct AttributionConsentFields: Codable {
+internal struct AttributionConsentFields: Codable, Equatable {
     let gdprApplies: Bool?
     let adUserData: Bool
     let adPersonalization: Bool
