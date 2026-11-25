@@ -29,4 +29,8 @@ internal protocol AttributionUserDefaultsWorkerProtocol {
     func getExternalAuthData() -> String?
     func saveExternalAuthData(_ externalAuthId: String)
     func deleteSavedExternalAuthData()
+    
+    func getConsentData() -> AttributionConsentFields?
+    func saveConsentData(_ data: AttributionConsentFields)
+    func deleteSavedConsentData()
 }

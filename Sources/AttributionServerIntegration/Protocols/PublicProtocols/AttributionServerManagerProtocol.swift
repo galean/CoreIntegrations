@@ -16,4 +16,6 @@ public protocol AttributionServerManagerProtocol {
     func syncOnAppStart(_ completion: @escaping (AttributionManagerResult?) -> Void)
     func sendExternalAuthorization(externalAuthID: String)
     func syncPurchase(data: AttributionPurchaseModel)
+    func setAdPartnersDataSharingEnabled(_ isEnabled: Bool)
+    func setAdConsent(_ consent: AttributionAdConsent?)
 }

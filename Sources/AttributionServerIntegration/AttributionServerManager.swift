@@ -22,6 +22,8 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
         self.appEnvironment = config.appEnvironment
         authorizationToken = config.authToken
         shouldAwaitExternalAuth = config.hasExternalAuth
+        isAdPartnersDataSharingEnabled = config.isAdPartnersDataSharingEnabled
+        adConsent = config.adConsent
         
         serverWorker = AttributionServerWorker(installServerURLPath: config.installServerURLPath,
                                                purchaseServerURLPath: config.purchaseServerURLPath,
@@ -52,9 +54,10 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
         
         guard let userID = validateInstallAttributed() else {
             Task {
-                let installData: AttributionInstallRequestModel
+                var installData: AttributionInstallRequestModel
                 if let savedInstallData = udefWorker.getInstallData() {
                     installData = savedInstallData
+                    installData.consent = await getCurrentConsentFields()
                 } else {
                     installData = await collectInstallData()
                 }
@@ -75,6 +78,8 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
         checkAndSendSavedPurchase(userId: userID)
         checkAndSendAppTransaction()
         checkAndSendSavedExternalAuth(userId: userID)
+        
+        DispatchQueue.main.async { self.sendSavedConsent() }
     }
 
     public func syncPurchase(data: AttributionPurchaseModel) {
@@ -98,6 +103,26 @@ extension AttributionServerManager: AttributionServerManagerProtocol {
             self.checkAndSendExternalAuth(externalAuthID)
         }
     }
+    
+    public func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {
+        // Only a change is sent: a user who never disabled data sharing sends nothing,
+        // and `true` is sent only when sharing is enabled again.
+        guard isAdPartnersDataSharingEnabled != isEnabled else { return }
+        isAdPartnersDataSharingEnabled = isEnabled
+        
+        // A CCPA update must not overwrite an explicit GDPR choice on the server.
+        guard adConsent == nil else { return }
+        let consentFields = AttributionConsentFields(isAdPartnersDataSharingEnabled: isEnabled)
+        sendConsent(consentFields)
+    }
+    
+    public func setAdConsent(_ consent: AttributionAdConsent?) {
+        adConsent = consent
+        
+        guard let consent else { return }
+        let consentFields = AttributionConsentFields(adConsent: consent)
+        sendConsent(consentFields)
+    }
 }
 
 open class AttributionServerManager {
@@ -117,6 +142,9 @@ open class AttributionServerManager {
     var appsflyerID: String? = nil
     var appEnvironment: String? = nil
     var shouldAwaitExternalAuth: Bool? = nil
+    var isAdPartnersDataSharingEnabled = true
+    var adConsent: AttributionAdConsent? = nil
+    var sendingConsent: AttributionConsentFields? = nil
         
     fileprivate func validateToken(_ token: AttributionServerToken?) -> Bool {
         guard authorizationToken != nil else {
@@ -177,8 +205,52 @@ open class AttributionServerManager {
                                                         environment: appEnvironment,
                                                         fb: fbFields, 
                                                         sa: saFields,
-                                                        externalAuthorization: shouldAwaitExternalAuth)
+                                                        externalAuthorization: shouldAwaitExternalAuth,
+                                                        consent: await getCurrentConsentFields())
         return parameters
+    }
+    
+    @MainActor
+    fileprivate func getCurrentConsentFields() -> AttributionConsentFields? {
+        return AttributionConsentFields(adConsent: adConsent,
+                                        isAdPartnersDataSharingEnabled: isAdPartnersDataSharingEnabled)
+    }
+    
+    fileprivate func sendConsent(_ consent: AttributionConsentFields) {
+        udefWorker.saveConsentData(consent)
+        sendSavedConsent()
+    }
+    
+    // Send consent requests sequentially: the server applies the last value it receives.
+    // Wait for install registration before sending a separate consent request.
+    fileprivate func sendSavedConsent() {
+        guard sendingConsent == nil,
+              validateInstallAttributed() != nil,
+              let serverWorker,
+              let authorizationToken,
+              let appsflyerID, !appsflyerID.isEmpty,
+              let consent = udefWorker.getConsentData() else {
+            return
+        }
+        
+        sendingConsent = consent
+        let parameters = AttributionConsentRequestModel(appsflyerId: appsflyerID, consent: consent)
+        serverWorker.sendConsent(parameters: parameters, authToken: authorizationToken) { result in
+            DispatchQueue.main.async {
+                self.handleSendConsentResult(result)
+            }
+        }
+    }
+    
+    fileprivate func handleSendConsentResult(_ result: Bool) {
+        let sentConsent = sendingConsent
+        sendingConsent = nil
+        
+        if udefWorker.getConsentData() != sentConsent {
+            sendSavedConsent()
+        } else if result {
+            udefWorker.deleteSavedConsentData()
+        }
     }
     
     fileprivate func getCorrectUUID() -> String {
@@ -259,6 +331,20 @@ extension AttributionServerManager {
         checkAndSendSavedPurchase(userId: uuid)
         checkAndSendAppTransaction()
         checkAndSendSavedExternalAuth(userId: uuid)
+        
+        DispatchQueue.main.async {
+            self.handleInstallConsentDelivered(parameters.consent)
+        }
+    }
+    
+    fileprivate func handleInstallConsentDelivered(_ consent: AttributionConsentFields?) {
+        guard sendingConsent == nil else { return }
+        
+        if udefWorker.getConsentData() == consent {
+            udefWorker.deleteSavedConsentData()
+        } else {
+            sendSavedConsent()
+        }
     }
 }
 

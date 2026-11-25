@@ -57,7 +57,6 @@ public class CoreManager {
     var isConfigured: Bool = false
     
     var configuration: CoreConfigurationProtocol?
-    var isAdPartnersDataSharingEnabled = true
     var appsflyerManager: AppfslyerManagerProtocol?
     var facebookManager: FacebookManagerProtocol?
     var purchaseManager: PurchasesManagerProtocol?
@@ -149,13 +148,15 @@ public class CoreManager {
             
             analyticsManager = AnalyticsManager.shared
             
-            isAdPartnersDataSharingEnabled = configuration.isAdPartnersDataSharingEnabled
+            let isAdPartnersDataSharingEnabled = configuration.isAdPartnersDataSharingEnabled
+            let adConsent = configuration.adConsent
             
             if configuration.hasCustomFirebaseConfiguration {
                 firebaseManager.handle(event: FirebaseConfigurationStateMachine.Event.waitForExternalConfiguration)
             }
             
             firebaseManager.setAdPartnersDataSharingEnabled(isAdPartnersDataSharingEnabled)
+            setFirebaseAdConsent(adConsent)
             
             let amplitudeDataSource = configuration.amplitudeDataSource
             analyticsManager?.configure(
@@ -186,6 +187,7 @@ public class CoreManager {
                                                 launchOptions: launchOptions)
             appsflyerManager?.delegate = self
             appsflyerManager?.setAdPartnersDataSharingEnabled(isAdPartnersDataSharingEnabled)
+            setAppsflyerAdConsent(adConsent)
             
             if configuration.isFacebookEnabled {
                 facebookManager = FacebookManager()
@@ -226,7 +228,9 @@ public class CoreManager {
                                                                  appEnvironment: AppEnvironment.current.rawValue,
                                                                  facebookData: facebookData,
                                                                  tokensPath: tokensPath,
-                                                                 hasExternalAuth: configuration.hasExternalAuthorization)
+                                                                 hasExternalAuth: configuration.hasExternalAuthorization,
+                                                                 isAdPartnersDataSharingEnabled: isAdPartnersDataSharingEnabled,
+                                                                 adConsent: attributionAdConsent(adConsent))
             
             AttributionServerManager.shared.configure(config: attributionConfiguration)
         }
@@ -356,6 +360,30 @@ public class CoreManager {
     
     func handleExternalFirebaseConfigurationFinished() {
         firebaseManager.handle(event: FirebaseConfigurationStateMachine.Event.handleExternalConfigurationFinished)
+    }
+    
+    func setFirebaseAdConsent(_ consent: AdConsent?) {
+        firebaseManager.setAdConsent(consent.map {
+            .init(
+                isAdUserDataGranted: $0.isAdUserDataGranted,
+                isAdPersonalizationGranted: $0.isAdPersonalizationGranted
+            )
+        })
+    }
+    
+    func setAppsflyerAdConsent(_ consent: AdConsent?) {
+        appsflyerManager?.setAdConsent(consent.map {
+            .init(
+                isAdUserDataGranted: $0.isAdUserDataGranted,
+                isAdPersonalizationGranted: $0.isAdPersonalizationGranted
+            )
+        })
+    }
+    
+    func attributionAdConsent(_ consent: AdConsent?) -> AttributionAdConsent? {
+        guard let consent else { return nil }
+        return AttributionAdConsent(isAdUserDataGranted: consent.isAdUserDataGranted,
+                                    isAdPersonalizationGranted: consent.isAdPersonalizationGranted)
     }
     
 }

@@ -14,6 +14,7 @@ class AttributionUserDefaultsWorker: AttributionUserDefaultsWorkerProtocol {
     fileprivate let uuidKey = "STORED_UUID_KEY"
 	fileprivate let appTransactionSentKey = "ANALYTICS_APP_TRANSACTION_SENT"
     fileprivate let fcmTokenKey = "ANALYTICS_FCM_TOKEN"
+    fileprivate let consentDataKey = "ANALYTICS_CONSENT_DATA"
     
     var uuid: String {
         if let storedUUID = userDefaults.string(forKey: uuidKey) {
@@ -102,6 +103,20 @@ class AttributionUserDefaultsWorker: AttributionUserDefaultsWorkerProtocol {
     
     func deleteSavedExternalAuthData() {
         userDefaults.removeObject(forKey: externalAuthDataKey)
+        userDefaults.synchronize()
+    }
+    
+    func getConsentData() -> AttributionConsentFields? {
+        return userDefaults.value(AttributionConsentFields.self, forKey: consentDataKey)
+    }
+    
+    func saveConsentData(_ data: AttributionConsentFields) {
+        userDefaults.set(encodable: data, forKey: consentDataKey)
+        userDefaults.synchronize()
+    }
+    
+    func deleteSavedConsentData() {
+        userDefaults.removeObject(forKey: consentDataKey)
         userDefaults.synchronize()
     }
     

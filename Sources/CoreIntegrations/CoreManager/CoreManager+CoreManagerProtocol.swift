@@ -5,6 +5,7 @@ import AppTrackingTransparency
 import StoreKit
 #if !COCOAPODS
 import PurchasesIntegration
+import AttributionServerIntegration
 #endif
 
 extension CoreManager: CoreManagerProtocol {
@@ -221,16 +222,35 @@ extension CoreManager: CoreManagerProtocol {
     }
     
     public func setAdPartnersDataSharingEnabled(_ isEnabled: Bool) {
-        guard isConfigured else {
-            if ProcessInfo.processInfo.environment["xctest_skip_config"] == nil {
-                assertionFailure("Set the launch value through CoreConfigurationProtocol.isAdPartnersDataSharingEnabled - this setter only applies changes made after the framework is configured.")
+        MainQueueExecutor.perform { [weak self] in
+            guard let self else { return }
+            guard self.isConfigured else {
+                if ProcessInfo.processInfo.environment["xctest_skip_config"] == nil {
+                    assertionFailure("Set the launch value through CoreConfigurationProtocol.isAdPartnersDataSharingEnabled - this setter only applies changes made after the framework is configured.")
+                }
+                return
             }
-            return
+            
+            self.appsflyerManager?.setAdPartnersDataSharingEnabled(isEnabled)
+            self.firebaseManager.setAdPartnersDataSharingEnabled(isEnabled)
+            AttributionServerManager.shared.setAdPartnersDataSharingEnabled(isEnabled)
         }
-        
-        isAdPartnersDataSharingEnabled = isEnabled
-        appsflyerManager?.setAdPartnersDataSharingEnabled(isEnabled)
-        firebaseManager.setAdPartnersDataSharingEnabled(isEnabled)
+    }
+    
+    public func setAdConsent(_ consent: AdConsent) {
+        MainQueueExecutor.perform { [weak self] in
+            guard let self else { return }
+            guard self.isConfigured else {
+                if ProcessInfo.processInfo.environment["xctest_skip_config"] == nil {
+                    assertionFailure("Set the launch value through CoreConfigurationProtocol.adConsent - this setter only applies changes made after the framework is configured.")
+                }
+                return
+            }
+            
+            self.setAppsflyerAdConsent(consent)
+            self.setFirebaseAdConsent(consent)
+            AttributionServerManager.shared.setAdConsent(self.attributionAdConsent(consent))
+        }
     }
     
     public func handleCustomFirebaseConfigured() {
