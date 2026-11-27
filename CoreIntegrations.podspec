@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CoreIntegrations'
-  s.version          = '2.10.7amplfinal'
+  s.version          = '2.10.8amplfinal'
   s.summary          = 'CoreIntegrations framework'
 
   s.description      = 'Description'

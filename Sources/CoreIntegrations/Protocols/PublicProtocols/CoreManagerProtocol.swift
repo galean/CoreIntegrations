@@ -52,6 +52,10 @@ public protocol CoreManagerProtocol {
     
     func stopSessionReplayRecord()
     
+    /// Immediately uploads all queued Amplitude events instead of waiting for the next batch flush.
+    /// Useful before the app may be terminated or right after critical events (e.g. purchase, onboarding finish).
+    func forceEventsUpload()
+    
 }
 
 public struct UserInfo: Codable {

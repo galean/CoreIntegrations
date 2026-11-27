@@ -16,6 +16,10 @@ extension CoreManager: CoreManagerProtocol {
         self.analyticsManager?.stopSessionReplayRecord()
     }
     
+    public func forceEventsUpload() {
+        self.analyticsManager?.forceEventsUpload()
+    }
+    
     @MainActor
     public func purchase(_ purchase: Purchase, activeController: UIViewController?) async -> PurchasesPurchaseResult {
         guard let purchaseManager = purchaseManager else {return .error("purchaseManager == nil")}
