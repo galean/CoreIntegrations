@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.homepage         = 'https://github.com/galean/CoreIntegrations.git'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'u-texas' => 'galean.pal@gmail.com' }
-  s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'releases/3.1.3' }
+  s.source           = { :git => 'https://github.com/galean/CoreIntegrations.git', :branch => 'release/3.1.3' }
 
   s.ios.deployment_target = '15.0'
   
