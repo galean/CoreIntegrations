@@ -18,6 +18,10 @@ extension CoreManager: CoreManagerProtocol {
         self.analyticsManager?.stopSessionReplayRecord()
     }
     
+    public func forceEventsUpload() {
+        self.analyticsManager?.forceEventsUpload()
+    }
+    
     @MainActor
     public func listenForPendingPurchases(_ result: @escaping (PurchasesIntegration.Transaction?, (any Error)?) -> Void) {
         guard let purchaseManager = purchaseManager else {return}
